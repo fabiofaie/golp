@@ -9,11 +9,13 @@ App mobile multi-tenant per circoli sportivi amatoriali di sport a squadre simme
 ## Personas
 
 ### Marco — Giocatore amatoriale
+
 - **Contesto:** Gioca 2-3 volte a settimana in un circolo, partite casual tra soci.
 - **Pain:** Non sa quanto vale oggettivamente rispetto agli altri. Il ranking attuale è percezione, non dato — genera discussioni e insoddisfazione.
 - **Job-to-be-done:** Voglio vedere la mia posizione reale in classifica, sapere con chi gioco meglio e contro chi faccio più fatica, basandomi su partite effettivamente giocate.
 
 ### Sara — Organizzatrice circolo (secondaria, post-MVP)
+
 - **Contesto:** Gestisce comunicazioni e iscrizioni del circolo, riceve lamentele sul ranking improvvisato.
 - **Pain:** Nessuno strumento per gestire classifiche in modo neutro e automatico.
 - **Job-to-be-done:** Voglio uno strumento che gestisca la classifica da solo, senza che io debba arbitrare.
@@ -21,6 +23,7 @@ App mobile multi-tenant per circoli sportivi amatoriali di sport a squadre simme
 ## MVP Scope
 
 ### In scope
+
 - Registrazione account giocatore + iscrizione a uno o più circoli
 - Inserimento risultato partita (4 giocatori + punteggio)
 - Conferma risultato da parte di tutti e 4 i giocatori prima che valga
@@ -30,6 +33,7 @@ App mobile multi-tenant per circoli sportivi amatoriali di sport a squadre simme
 - Statistiche personali: miglior compagno, avversario più ostico
 
 ### Out of scope (per ora)
+
 - Formati diversi dal 2v2 (1v1, NvN) — il MVP fissa `team_size = 2`; il formato per sport diventa configurabile in seguito, l'algoritmo è già compatibile (vedi sotto)
 - Tornei organizzati — complessità logistica non necessaria al lancio
 - Chat tra giocatori — non core al problema
@@ -59,11 +63,13 @@ effective_result = 0.5 + (score_ratio - 0.5) × amplifier
 ```
 
 Parametri:
+
 - `amplifier` = 0.7 (quanto pesa il margine rispetto al puro win/loss)
 - `K` = 32 default, 48 per i primi 15 match (stabilizzazione cold start)
 - Rating iniziale = 1000
 
 **Sport config** (per-circolo, estendibile):
+
 ```json
 { "sport": "padel",     "point_unit": "games",  "sets": true,  "team_size": 2 }
 { "sport": "basket2v2", "point_unit": "points", "sets": false, "team_size": 2 }

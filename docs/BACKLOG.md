@@ -29,10 +29,11 @@ Un utente nuovo si registra, riceve un token di sessione (JWT) e rivede i propri
 - [ ] Email già registrata → errore chiaro, nessun account duplicato
 - [ ] Password sotto i requisiti minimi (lunghezza ≥ 8) rifiutata in fase di registrazione
 - [ ] Il token scaduto o assente blocca l'accesso alle API protette
+- [ ] Recupero password via email: l'utente inserisce l'email, riceve un link con token temporaneo (scadenza 1 ora), imposta una nuova password; il vecchio token di sessione viene invalidato
+- [ ] Link di recupero già usato o scaduto → errore chiaro, nessuna modifica
 
 **Out of scope**
 - Social login (Google/Apple)
-- Recupero password (può arrivare subito dopo il MVP)
 - Profilo avanzato (foto, bio)
 
 **Open questions**
