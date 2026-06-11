@@ -1,0 +1,67 @@
+<div class="page">
+  <div class="bg-deco" aria-hidden="true">GL</div>
+
+  <header class="auth-header">
+    <a routerLink="/circles" class="back-nav">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      I miei circoli
+    </a>
+    <span class="brand">GOLP</span>
+  </header>
+
+  <main style="flex:1; display:flex; flex-direction:column;">
+    <h1 class="auth-title" style="margin-bottom:8px;">Scopri<br>Circoli.</h1>
+    <p class="auth-subtitle">Unisciti a un circolo per giocare e scalare la classifica.</p>
+
+    @if (loading) {
+      <p style="color:var(--color-text-secondary); font-size:13px;">Caricamento…</p>
+    } @else if (errorMessage) {
+      <div class="form-error">{{ errorMessage }}</div>
+    } @else if (circles.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon" aria-hidden="true">◎</div>
+        <p class="empty-title">Nessun circolo disponibile.</p>
+        <p class="empty-subtitle">Crea il primo circolo e invita i tuoi amici.</p>
+        <a routerLink="/circles/new" class="btn-primary" style="margin-top:24px;">Crea circolo</a>
+      </div>
+    } @else {
+      <div style="display:flex; flex-direction:column; gap:16px; flex:1;">
+        @for (circle of circles; track circle.id) {
+          <div class="circle-card" style="gap:12px;">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+              <div style="display:flex; flex-direction:column; gap:8px; flex:1; min-width:0;">
+                <h2 class="circle-name" style="font-size:17px;">{{ circle.name }}</h2>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span [class]="sportClass(circle.sport)">{{ sportLabel(circle.sport) }}</span>
+                  <span style="font-size:11px; color:var(--color-text-secondary);">
+                    {{ circle.memberCount }} {{ circle.memberCount === 1 ? 'membro' : 'membri' }}
+                  </span>
+                </div>
+              </div>
+              <div style="flex-shrink:0; display:flex; align-items:center;">
+                @if (circle.isAlreadyMember) {
+                  <span class="member-badge">
+                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                      <path d="M2 5.5l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Membro
+                  </span>
+                } @else {
+                  <button
+                    class="btn-join"
+                    [disabled]="joiningId === circle.id"
+                    (click)="join(circle.id)"
+                    [attr.aria-label]="'Unisciti a ' + circle.name">
+                    {{ joiningId === circle.id ? '…' : '+ Unisciti' }}
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </main>
+</div>

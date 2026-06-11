@@ -31,8 +31,11 @@
       <div class="empty-state">
         <div class="empty-icon" aria-hidden="true">◎</div>
         <p class="empty-title">Ancora nessun circolo.</p>
-        <p class="empty-subtitle">Crea il tuo primo circolo e inizia a giocare.</p>
-        <a routerLink="/circles/new" class="btn-primary" style="margin-top:24px;">Crea circolo</a>
+        <p class="empty-subtitle">Unisciti a un circolo esistente o creane uno nuovo.</p>
+        <a routerLink="/circles/browse" class="btn-primary" style="margin-top:24px;">Scopri circoli</a>
+        <a routerLink="/circles/new" style="margin-top:12px; font-size:13px; color:var(--color-text-secondary); text-decoration:none; display:block; text-align:center;">
+          Crea nuovo circolo →
+        </a>
       </div>
     } @else {
       <div style="display:flex; flex-direction:column; gap:16px; flex:1;">
@@ -57,8 +60,11 @@
         }
       </div>
 
-      <div style="margin-top:24px;">
-        <a routerLink="/circles/new" class="btn-primary">+ Nuovo circolo</a>
+      <div style="margin-top:24px; display:flex; flex-direction:column; gap:12px;">
+        <a routerLink="/circles/browse" class="btn-primary">Scopri altri circoli</a>
+        <a routerLink="/circles/new" style="font-size:13px; color:var(--color-text-secondary); text-decoration:none; text-align:center; display:block;">
+          + Crea nuovo circolo
+        </a>
       </div>
     }
   </main>

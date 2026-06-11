@@ -13,8 +13,11 @@ public static class CircleEndpoints
         app.MapGet("/sports", GetSports);
 
         var circles = app.MapGroup("/circles").RequireAuthorization();
+        circles.MapGet("/", GetAllCirclesAsync);
         circles.MapPost("/", CreateCircleAsync);
         circles.MapGet("/me", GetMyCirclesAsync);
+        circles.MapPost("/{id:guid}/join", JoinCircleAsync);
+        circles.MapGet("/{id:guid}/members", GetCircleMembersAsync);
 
         return app;
     }
@@ -22,6 +25,36 @@ public static class CircleEndpoints
     // GET /sports — public
     private static IResult GetSports() =>
         Results.Ok(SportsConfig.GetAll());
+
+    // GET /circles — lista tutti i circoli con flag isAlreadyMember per l'utente corrente
+    private static async Task<IResult> GetAllCirclesAsync(
+        ClaimsPrincipal user,
+        AppDbContext db)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
+            return Results.Unauthorized();
+
+        var circles = await db.Circles
+            .Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.Sport,
+                MemberCount     = db.CircleMemberships.Count(m => m.CircleId == c.Id),
+                IsAlreadyMember = db.CircleMemberships.Any(m => m.CircleId == c.Id && m.UserId == userId),
+            })
+            .ToListAsync();
+
+        return Results.Ok(circles.Select(c => new
+        {
+            id              = c.Id,
+            name            = c.Name,
+            sport           = c.Sport,
+            memberCount     = c.MemberCount,
+            isAlreadyMember = c.IsAlreadyMember,
+        }));
+    }
 
     // POST /circles — auth required
     private static async Task<IResult> CreateCircleAsync(
@@ -111,6 +144,73 @@ public static class CircleEndpoints
             memberCount = m.MemberCount,
             myRating    = m.MyRating,
             myRank      = m.MyRank,
+        }));
+    }
+
+    // POST /circles/{id}/join — iscrizione libera a circolo pubblico
+    private static async Task<IResult> JoinCircleAsync(
+        Guid id,
+        ClaimsPrincipal user,
+        AppDbContext db)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
+            return Results.Unauthorized();
+
+        var circle = await db.Circles.FindAsync(id);
+        if (circle == null)
+            return Results.NotFound(new { error = "Circolo non trovato" });
+
+        if (circle.IsPrivate)
+            return Results.Json(new { error = "Il circolo è privato" }, statusCode: 403);
+
+        var alreadyMember = await db.CircleMemberships
+            .AnyAsync(m => m.CircleId == id && m.UserId == userId);
+        if (alreadyMember)
+            return Results.Conflict(new { error = "Sei già membro di questo circolo" });
+
+        db.CircleMemberships.Add(new CircleMembership
+        {
+            CircleId = id,
+            UserId   = userId,
+            Rating   = 1000,
+        });
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new { circleId = id, myRating = 1000 });
+    }
+
+    // GET /circles/{id}/members — lista membri ordinata per rating
+    private static async Task<IResult> GetCircleMembersAsync(
+        Guid id,
+        ClaimsPrincipal user,
+        AppDbContext db)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
+            return Results.Unauthorized();
+
+        var circleExists = await db.Circles.AnyAsync(c => c.Id == id);
+        if (!circleExists)
+            return Results.NotFound(new { error = "Circolo non trovato" });
+
+        var members = await db.CircleMemberships
+            .Where(m => m.CircleId == id)
+            .OrderByDescending(m => m.Rating)
+            .Select(m => new
+            {
+                m.UserId,
+                Name   = m.User.Name,
+                m.Rating,
+            })
+            .ToListAsync();
+
+        return Results.Ok(members.Select((m, i) => new
+        {
+            userId = m.UserId,
+            name   = m.Name,
+            rating = m.Rating,
+            rank   = i + 1,
         }));
     }
 }

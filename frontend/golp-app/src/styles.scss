@@ -528,6 +528,48 @@ html, body {
   line-height: 1.6;
 }
 
+/* US-003 — browse circles components (from style-tokens.json) */
+
+.member-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-full);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  background: rgba(34, 197, 94, 0.10);
+  color: #22C55E;
+  white-space: nowrap;
+}
+
+.btn-join {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-full);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  white-space: nowrap;
+  background: var(--color-accent);
+  color: #fff;
+
+  &:hover  { background: var(--color-accent-hover); }
+  &:active { transform: scale(0.96); }
+
+  &:disabled {
+    background: var(--color-border);
+    color: var(--color-text-placeholder);
+    cursor: not-allowed;
+  }
+}
+
 @media (min-width: 600px) {
   body { background: #050505; }
   .page {

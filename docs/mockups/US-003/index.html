@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scopri Circoli — GOLP</title>
+  <link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+  <div class="page">
+    <!-- Background decoration -->
+    <span class="bg-deco" aria-hidden="true">G</span>
+
+    <!-- Header -->
+    <header class="page-header">
+      <a href="#" class="back-nav">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        I miei circoli
+      </a>
+      <span class="brand">GOLP</span>
+    </header>
+
+    <!-- Page title -->
+    <div class="page-title-row">
+      <h1 class="page-title">Scopri<br>Circoli</h1>
+    </div>
+    <p class="page-subtitle">Unisciti a un circolo per giocare e scalare la classifica.</p>
+
+    <!-- Sport filter tabs -->
+    <div class="filter-tabs" role="tablist">
+      <button class="tab active" role="tab" aria-selected="true" data-filter="all">Tutti</button>
+      <button class="tab" role="tab" aria-selected="false" data-filter="padel">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"/></svg>
+        Padel
+      </button>
+      <button class="tab" role="tab" aria-selected="false" data-filter="beachtennis">Beach Tennis</button>
+      <button class="tab" role="tab" aria-selected="false" data-filter="basket2v2">Basket 2v2</button>
+      <button class="tab" role="tab" aria-selected="false" data-filter="burraco">Burraco</button>
+    </div>
+
+    <!-- Circle list -->
+    <div class="circle-list" id="circle-list">
+
+      <!-- Card 1 — già membro -->
+      <div class="circle-join-card" data-sport="padel">
+        <div class="card-header">
+          <div class="card-info">
+            <span class="card-name">Padel Club Roma</span>
+            <div class="card-meta">
+              <span class="sport-badge sport-badge--padel">Padel</span>
+              <span class="meta-item">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M6 1a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM1 11c0-2.2 2.2-4 5-4s5 1.8 5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+                12 membri
+              </span>
+            </div>
+          </div>
+          <div class="card-actions">
+            <span class="member-badge">
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                <path d="M2 5.5l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Membro
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2 — non membro, azione join -->
+      <div class="circle-join-card" data-sport="padel" id="card-napoli">
+        <div class="card-header">
+          <div class="card-info">
+            <span class="card-name">Napoli Padel Open</span>
+            <div class="card-meta">
+              <span class="sport-badge sport-badge--padel">Padel</span>
+              <span class="meta-item">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M6 1a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM1 11c0-2.2 2.2-4 5-4s5 1.8 5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+                8 membri
+              </span>
+            </div>
+          </div>
+          <div class="card-actions" id="actions-napoli">
+            <button class="btn-join" id="btn-napoli" onclick="handleJoin('napoli')">
+              + Unisciti
+            </button>
+          </div>
+        </div>
+        <div class="card-divider"></div>
+        <div class="card-sport-strip">
+          <span class="members-count-large">Unisciti per iniziare a giocare</span>
+          <a href="members.html" style="font-size:var(--font-size-xs);color:var(--color-text-secondary);text-decoration:none;">
+            Vedi classifica →
+          </a>
+        </div>
+      </div>
+
+      <!-- Card 3 — beach tennis, non membro -->
+      <div class="circle-join-card" data-sport="beachtennis" id="card-beach">
+        <div class="card-header">
+          <div class="card-info">
+            <span class="card-name">Beach Rimini Summer</span>
+            <div class="card-meta">
+              <span class="sport-badge sport-badge--beachtennis">Beach Tennis</span>
+              <span class="meta-item">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M6 1a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM1 11c0-2.2 2.2-4 5-4s5 1.8 5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+                5 membri
+              </span>
+            </div>
+          </div>
+          <div class="card-actions" id="actions-beach">
+            <button class="btn-join" id="btn-beach" onclick="handleJoin('beach')">
+              + Unisciti
+            </button>
+          </div>
+        </div>
+        <div class="card-divider"></div>
+        <div class="card-sport-strip">
+          <span class="members-count-large">Unisciti per iniziare a giocare</span>
+          <a href="members.html" style="font-size:var(--font-size-xs);color:var(--color-text-secondary);text-decoration:none;">
+            Vedi classifica →
+          </a>
+        </div>
+      </div>
+
+      <!-- Card 4 — basket, non membro -->
+      <div class="circle-join-card" data-sport="basket2v2">
+        <div class="card-header">
+          <div class="card-info">
+            <span class="card-name">Basket 2v2 Milano</span>
+            <div class="card-meta">
+              <span class="sport-badge sport-badge--basket2v2">Basket 2v2</span>
+              <span class="meta-item">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M6 1a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM1 11c0-2.2 2.2-4 5-4s5 1.8 5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+                19 membri
+              </span>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn-join" onclick="handleJoin('basket')">
+              + Unisciti
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 5 — burraco, non membro -->
+      <div class="circle-join-card" data-sport="burraco">
+        <div class="card-header">
+          <div class="card-info">
+            <span class="card-name">Burraco Torino Est</span>
+            <div class="card-meta">
+              <span class="sport-badge sport-badge--burraco">Burraco</span>
+              <span class="meta-item">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M6 1a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM1 11c0-2.2 2.2-4 5-4s5 1.8 5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+                7 membri
+              </span>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn-join" onclick="handleJoin('burraco')">
+              + Unisciti
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /circle-list -->
+  </div><!-- /page -->
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // Filter tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+
+        const filter = tab.dataset.filter;
+        document.querySelectorAll('.circle-join-card').forEach(card => {
+          if (filter === 'all' || card.dataset.sport === filter) {
+            card.style.display = '';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    // Join simulation
+    function handleJoin(id) {
+      const btn = document.getElementById('btn-' + id);
+      const actions = document.getElementById('actions-' + id);
+      if (!btn || !actions) return;
+
+      // Loading state
+      btn.textContent = '…';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        // Replace button with member badge
+        actions.innerHTML = `
+          <span class="member-badge">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+              <path d="M2 5.5l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Membro
+          </span>`;
+
+        showToast('Iscritto! Rating iniziale: 1000 pt');
+      }, 700);
+    }
+
+    // Toast
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2800);
+    }
+  </script>
+</body>
+</html>
