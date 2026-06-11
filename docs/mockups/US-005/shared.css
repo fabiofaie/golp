@@ -1,0 +1,637 @@
+/* =============================================================
+   GOLP Design Tokens — US-005 Conferma Partita
+   Source of truth: style-tokens.json
+   Extends: US-004 visual language
+   ============================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+
+:root {
+  --color-bg:               #0A0A0A;
+  --color-surface:          #141414;
+  --color-surface-elevated: #1F1F1F;
+  --color-border:           #2C2C2C;
+  --color-accent:           #FF5500;
+  --color-accent-hover:     #E64D00;
+  --color-accent-dim:       rgba(255, 85, 0, 0.12);
+  --color-text-primary:     #FFFFFF;
+  --color-text-secondary:   #9A9A9A;
+  --color-text-placeholder: #484848;
+  --color-error:            #FF4444;
+  --color-error-bg:         rgba(255, 68, 68, 0.10);
+  --color-error-border:     rgba(255, 68, 68, 0.25);
+  --color-success:          #22C55E;
+  --color-success-bg:       rgba(34, 197, 94, 0.10);
+  --color-success-border:   rgba(34, 197, 94, 0.25);
+  --color-team1:            #FF5500;
+  --color-team1-bg:         rgba(255, 85, 0, 0.08);
+  --color-team1-border:     rgba(255, 85, 0, 0.25);
+  --color-team2:            #0EA5E9;
+  --color-team2-bg:         rgba(14, 165, 233, 0.08);
+  --color-team2-border:     rgba(14, 165, 233, 0.25);
+  --color-pending:          #F59E0B;
+  --color-pending-bg:       rgba(245, 158, 11, 0.10);
+  --color-pending-border:   rgba(245, 158, 11, 0.25);
+  --color-disputed:         #FF4444;
+  --color-disputed-bg:      rgba(255, 68, 68, 0.10);
+  --color-disputed-border:  rgba(255, 68, 68, 0.25);
+  --color-dot-empty:        #2C2C2C;
+  --color-dot-filled:       #22C55E;
+  --color-dot-you:          #FF5500;
+
+  --font-family:      'Inter', system-ui, -apple-system, sans-serif;
+  --font-size-xs:     11px;
+  --font-size-sm:     13px;
+  --font-size-base:   15px;
+  --font-size-lg:     18px;
+  --font-size-xl:     24px;
+  --font-size-2xl:    32px;
+  --font-size-hero:   120px;
+  --font-weight-reg:  400;
+  --font-weight-med:  500;
+  --font-weight-bold: 700;
+  --font-weight-blk:  900;
+  --line-height:      1.5;
+
+  --sp-1:  4px;  --sp-2:  8px;  --sp-3:  12px; --sp-4:  16px;
+  --sp-5:  20px; --sp-6:  24px; --sp-8:  32px; --sp-10: 40px;
+  --sp-12: 48px; --sp-16: 64px;
+
+  --r-sm:   4px;  --r-md:  8px;  --r-lg: 14px; --r-full: 9999px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.6);
+}
+
+/* ---- Reset ---- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  min-height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =============================================
+   LAYOUT
+   ============================================= */
+
+.page {
+  min-height: 100vh;
+  max-width: 390px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-6) var(--sp-6) var(--sp-12);
+}
+
+.bg-deco {
+  position: absolute;
+  top: 40px;
+  right: -20px;
+  font-size: var(--font-size-hero);
+  font-weight: var(--font-weight-blk);
+  color: var(--color-success);
+  opacity: 0.03;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: -8px;
+}
+
+/* =============================================
+   HEADER
+   ============================================= */
+
+.auth-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-8);
+}
+
+.brand {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-blk);
+  letter-spacing: -0.5px;
+  color: var(--color-accent);
+}
+
+.back-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.back-nav:hover { color: var(--color-text-primary); }
+
+.auth-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-blk);
+  letter-spacing: -0.8px;
+  line-height: 1.1;
+  margin-bottom: var(--sp-2);
+}
+
+.auth-subtitle {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--sp-6);
+}
+
+/* =============================================
+   CIRCLE CONTEXT BADGE
+   ============================================= */
+
+.circle-context {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-full);
+  padding: var(--sp-2) var(--sp-4);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-med);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--sp-6);
+  width: fit-content;
+}
+
+.circle-context .sport-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  flex-shrink: 0;
+}
+
+/* =============================================
+   SPORT BADGE
+   ============================================= */
+
+.sport-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 3px var(--sp-3);
+  border-radius: var(--r-full);
+  border: 1px solid transparent;
+}
+.sport-badge--padel {
+  color: #FF5500;
+  border-color: rgba(255, 85, 0, 0.35);
+  background: rgba(255, 85, 0, 0.08);
+}
+.sport-badge--beachtennis {
+  color: #0EA5E9;
+  border-color: rgba(14, 165, 233, 0.35);
+  background: rgba(14, 165, 233, 0.08);
+}
+.sport-badge--basket2v2 {
+  color: #F59E0B;
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+/* =============================================
+   STATUS BADGES
+   ============================================= */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  border-radius: var(--r-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.3px;
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid transparent;
+}
+.status-badge--pending {
+  color: var(--color-pending);
+  background: var(--color-pending-bg);
+  border-color: var(--color-pending-border);
+}
+.status-badge--confirmed {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+}
+.status-badge--disputed {
+  color: var(--color-disputed);
+  background: var(--color-disputed-bg);
+  border-color: var(--color-disputed-border);
+}
+
+/* =============================================
+   MATCH CARD
+   ============================================= */
+
+.match-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.match-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.match-card:hover { border-color: #3A3A3A; }
+
+.match-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.match-date {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-placeholder);
+  font-weight: var(--font-weight-med);
+}
+
+.match-body {
+  padding: var(--sp-4);
+}
+
+/* =============================================
+   TEAMS DISPLAY (compact)
+   ============================================= */
+
+.teams-display {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+
+.team-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  border-left: 2px solid transparent;
+}
+.team-row--team1 {
+  border-left-color: var(--color-team1);
+  background: var(--color-team1-bg);
+}
+.team-row--team2 {
+  border-left-color: var(--color-team2);
+  background: var(--color-team2-bg);
+}
+.team-row--winner .team-row-names {
+  font-weight: var(--font-weight-bold);
+}
+
+.team-row-names {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-reg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.you-tag {
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-accent);
+  background: var(--color-accent-dim);
+  border-radius: var(--r-sm);
+  padding: 1px 5px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.win-tag {
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-success);
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.team-score {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-blk);
+  color: var(--color-text-primary);
+  letter-spacing: -0.3px;
+  flex-shrink: 0;
+  min-width: 36px;
+  text-align: right;
+}
+.team-score--loser {
+  color: var(--color-text-placeholder);
+  font-weight: var(--font-weight-reg);
+}
+
+.score-sets {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  text-align: center;
+  margin-bottom: var(--sp-3);
+  letter-spacing: 0.3px;
+}
+
+/* =============================================
+   CONFIRM PROGRESS DOTS
+   ============================================= */
+
+.confirm-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--sp-3);
+}
+
+.confirm-dots {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+}
+
+.confirm-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-dot-empty);
+  border: 1px solid var(--color-border);
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.confirm-dot--filled {
+  background: var(--color-dot-filled);
+  border-color: rgba(34, 197, 94, 0.5);
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.35);
+}
+.confirm-dot--you {
+  background: var(--color-dot-you);
+  border-color: rgba(255, 85, 0, 0.5);
+  box-shadow: 0 0 6px rgba(255, 85, 0, 0.35);
+}
+
+.confirm-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-med);
+}
+
+.confirmed-by-you {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-success);
+  font-weight: var(--font-weight-bold);
+}
+
+/* =============================================
+   ACTION BUTTONS
+   ============================================= */
+
+.match-actions {
+  display: flex;
+  gap: var(--sp-3);
+}
+
+.btn-dispute {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--r-md);
+  color: var(--color-error);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  padding: var(--sp-3) var(--sp-4);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  text-align: center;
+}
+.btn-dispute:hover {
+  background: var(--color-error-bg);
+  border-color: var(--color-error);
+}
+
+.btn-confirm {
+  flex: 2;
+  background: var(--color-success);
+  border: none;
+  border-radius: var(--r-md);
+  color: #fff;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  padding: var(--sp-3) var(--sp-4);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+}
+.btn-confirm:hover  { background: #1DAF52; }
+.btn-confirm:active { transform: scale(0.98); }
+
+/* =============================================
+   EMPTY STATE
+   ============================================= */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-12) var(--sp-6);
+  text-align: center;
+  gap: var(--sp-3);
+}
+
+.empty-icon {
+  font-size: 48px;
+  line-height: 1;
+  opacity: 0.4;
+}
+
+.empty-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.empty-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  max-width: 240px;
+  line-height: 1.6;
+}
+
+/* =============================================
+   BUTTONS (generic)
+   ============================================= */
+
+.btn-primary {
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--r-md);
+  color: #fff;
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.2px;
+  padding: var(--sp-4) var(--sp-6);
+  text-align: center;
+  transition: background 0.15s, transform 0.1s;
+  width: 100%;
+  text-decoration: none;
+  display: block;
+}
+.btn-primary:hover  { background: var(--color-accent-hover); color: #fff; }
+.btn-primary:active { transform: scale(0.98); }
+
+/* =============================================
+   MODAL OVERLAY
+   ============================================= */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+  padding: 0 var(--sp-4) var(--sp-8);
+}
+.modal-overlay.hidden { display: none; }
+
+.modal-sheet {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-6);
+  width: 100%;
+  max-width: 390px;
+}
+
+.modal-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-blk);
+  margin-bottom: var(--sp-2);
+  letter-spacing: -0.3px;
+}
+.modal-title--danger { color: var(--color-error); }
+.modal-title--confirm { color: var(--color-success); }
+
+.modal-body {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--sp-6);
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  gap: var(--sp-3);
+}
+
+.btn-ghost {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-md);
+  color: var(--color-text-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-med);
+  padding: var(--sp-3) var(--sp-4);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-ghost:hover { border-color: var(--color-text-secondary); color: var(--color-text-primary); }
+
+.btn-danger {
+  flex: 2;
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--r-md);
+  color: var(--color-error);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  padding: var(--sp-3) var(--sp-4);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-danger:hover { background: rgba(255, 68, 68, 0.18); }
+
+.btn-success {
+  flex: 2;
+  background: var(--color-success);
+  border: none;
+  border-radius: var(--r-md);
+  color: #fff;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  padding: var(--sp-3) var(--sp-4);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-success:hover { background: #1DAF52; }
+
+/* =============================================
+   FORM ERROR
+   ============================================= */
+
+.form-error {
+  background: var(--color-error-bg);
+  border: 1px solid rgba(255, 68, 68, 0.25);
+  border-radius: var(--r-md);
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+
+/* =============================================
+   RESPONSIVE FRAME
+   ============================================= */
+
+@media (min-width: 600px) {
+  body { background: #050505; }
+  .page {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--r-lg);
+    min-height: calc(100vh - 80px);
+  }
+}

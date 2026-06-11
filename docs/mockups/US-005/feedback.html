@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOLP — Esito conferma</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .feedback-icon {
+      font-size: 64px;
+      line-height: 1;
+      margin-bottom: var(--sp-4);
+      display: block;
+    }
+
+    .feedback-title {
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-blk);
+      letter-spacing: -0.8px;
+      line-height: 1.1;
+      margin-bottom: var(--sp-2);
+    }
+
+    .feedback-subtitle {
+      font-size: var(--font-size-base);
+      color: var(--color-text-secondary);
+      margin-bottom: var(--sp-8);
+      line-height: 1.6;
+    }
+
+    .result-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      margin-bottom: var(--sp-6);
+    }
+
+    .result-card--confirmed { border-color: rgba(34, 197, 94, 0.25); }
+    .result-card--disputed  { border-color: rgba(255, 68, 68, 0.25); }
+
+    .result-card-header {
+      padding: var(--sp-3) var(--sp-4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .result-card-body {
+      padding: var(--sp-4);
+    }
+
+    /* All-confirmed dots row */
+    .all-confirmed {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sp-2);
+      padding: var(--sp-4) 0 var(--sp-2);
+    }
+
+    .all-confirmed-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--color-dot-filled);
+      box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+    }
+
+    .all-confirmed-label {
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-success);
+      text-align: center;
+      letter-spacing: 0.3px;
+      padding-bottom: var(--sp-3);
+    }
+
+    /* Score display */
+    .score-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sp-5);
+      padding: var(--sp-3) 0 var(--sp-4);
+    }
+
+    .score-side {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--sp-2);
+      flex: 1;
+    }
+
+    .score-big {
+      font-size: 52px;
+      font-weight: var(--font-weight-blk);
+      letter-spacing: -2px;
+      line-height: 1;
+    }
+    .score-big--winner { color: var(--color-text-primary); }
+    .score-big--loser  { color: var(--color-text-placeholder); }
+
+    .score-team-tag {
+      font-size: 10px;
+      font-weight: var(--font-weight-bold);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .score-team-tag--t1      { color: var(--color-team1); }
+    .score-team-tag--t2      { color: var(--color-text-placeholder); }
+    .score-team-tag--t1-lose { color: var(--color-text-placeholder); }
+    .score-team-tag--t2-win  { color: var(--color-team2); }
+
+    .score-vs {
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-blk);
+      color: var(--color-text-placeholder);
+      letter-spacing: 1px;
+    }
+
+    .score-sets-row {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-secondary);
+      text-align: center;
+      padding-bottom: var(--sp-4);
+    }
+
+    .players-row {
+      display: flex;
+      gap: var(--sp-3);
+      font-size: var(--font-size-xs);
+      color: var(--color-text-secondary);
+      padding: var(--sp-3) 0;
+      border-top: 1px solid var(--color-border);
+    }
+
+    .players-col {
+      flex: 1;
+    }
+
+    .players-col-label {
+      font-size: 10px;
+      font-weight: var(--font-weight-bold);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: var(--sp-1);
+    }
+    .players-col-label--t1 { color: var(--color-team1); }
+    .players-col-label--t2 { color: var(--color-team2); }
+
+    .players-col-names {
+      color: var(--color-text-primary);
+      font-weight: var(--font-weight-med);
+      font-size: var(--font-size-xs);
+      line-height: 1.7;
+    }
+
+    /* Delta rating preview */
+    .delta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--sp-3) var(--sp-4);
+      background: var(--color-success-bg);
+      border-top: 1px solid var(--color-success-border);
+      font-size: var(--font-size-xs);
+    }
+
+    .delta-label {
+      color: var(--color-text-secondary);
+      font-weight: var(--font-weight-med);
+    }
+
+    .delta-value {
+      font-weight: var(--font-weight-blk);
+      color: var(--color-success);
+      letter-spacing: -0.3px;
+    }
+    .delta-value--neg { color: var(--color-error); }
+
+    /* Disputed card */
+    .disputed-icon-row {
+      text-align: center;
+      padding: var(--sp-5) 0 var(--sp-3);
+      font-size: 40px;
+    }
+
+    .disputed-message {
+      text-align: center;
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+      padding: 0 var(--sp-2) var(--sp-4);
+      line-height: 1.6;
+    }
+
+    /* Tab switcher (demo) */
+    .tab-switcher {
+      display: flex;
+      gap: var(--sp-2);
+      margin-bottom: var(--sp-6);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--r-md);
+      padding: var(--sp-1);
+    }
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      border-radius: calc(var(--r-md) - 2px);
+      color: var(--color-text-secondary);
+      font-family: var(--font-family);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-med);
+      padding: var(--sp-2) var(--sp-3);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tab-btn.active {
+      background: var(--color-surface-elevated);
+      color: var(--color-text-primary);
+      font-weight: var(--font-weight-bold);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="bg-deco" id="bgDeco">✓</div>
+
+    <!-- HEADER -->
+    <header class="auth-header">
+      <span class="brand">GOLP</span>
+      <a href="index.html" class="back-nav">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Partite
+      </a>
+    </header>
+
+    <!-- TAB DEMO SWITCHER -->
+    <div class="tab-switcher">
+      <button class="tab-btn active" id="tabConfirmed" onclick="showState('confirmed')">✓ Confermata (4/4)</button>
+      <button class="tab-btn" id="tabDisputed" onclick="showState('disputed')">✗ Contestata</button>
+    </div>
+
+    <!-- STATE: CONFIRMED -->
+    <div id="stateConfirmed">
+      <span class="feedback-icon">🏆</span>
+      <h1 class="feedback-title" style="color: var(--color-success)">Partita confermata!</h1>
+      <p class="feedback-subtitle">Tutti e 4 i giocatori hanno confermato. Il rating è stato aggiornato.</p>
+
+      <div class="result-card result-card--confirmed">
+        <div class="result-card-header">
+          <span class="sport-badge sport-badge--padel">Padel</span>
+          <span class="status-badge status-badge--confirmed">Confermata</span>
+        </div>
+        <div class="result-card-body">
+          <!-- Score display -->
+          <div class="score-display">
+            <div class="score-side">
+              <span class="score-big score-big--winner">2</span>
+              <span class="score-team-tag score-team-tag--t1">Team 1</span>
+            </div>
+            <span class="score-vs">VS</span>
+            <div class="score-side">
+              <span class="score-big score-big--loser">1</span>
+              <span class="score-team-tag score-team-tag--t2">Team 2</span>
+            </div>
+          </div>
+          <div class="score-sets-row">6-4 &nbsp;·&nbsp; 3-6 &nbsp;·&nbsp; 7-5</div>
+
+          <!-- All 4 dots confirmed -->
+          <div class="all-confirmed">
+            <div class="all-confirmed-dot"></div>
+            <div class="all-confirmed-dot"></div>
+            <div class="all-confirmed-dot"></div>
+            <div class="all-confirmed-dot"></div>
+          </div>
+          <div class="all-confirmed-label">4 di 4 conferme — risultato validato</div>
+
+          <!-- Players -->
+          <div class="players-row">
+            <div class="players-col">
+              <div class="players-col-label players-col-label--t1">Team 1 (Vince)</div>
+              <div class="players-col-names">Marco<br>Luca</div>
+            </div>
+            <div class="players-col">
+              <div class="players-col-label players-col-label--t2">Team 2</div>
+              <div class="players-col-names">Sara<br>Giorgio</div>
+            </div>
+          </div>
+        </div>
+        <!-- Delta rating preview (Team 1 winners) -->
+        <div class="delta-row">
+          <span class="delta-label">Il tuo rating (Marco)</span>
+          <span class="delta-value">+14 pt</span>
+        </div>
+      </div>
+
+      <a href="index.html" class="btn-primary">Torna alle partite</a>
+    </div>
+
+    <!-- STATE: DISPUTED -->
+    <div id="stateDisputed" style="display:none;">
+      <span class="feedback-icon">⚠️</span>
+      <h1 class="feedback-title" style="color: var(--color-error)">Partita contestata</h1>
+      <p class="feedback-subtitle">Hai segnalato un problema con questa partita. È stata esclusa dalla classifica.</p>
+
+      <div class="result-card result-card--disputed">
+        <div class="result-card-header">
+          <span class="sport-badge sport-badge--padel">Padel</span>
+          <span class="status-badge status-badge--disputed">Contestata</span>
+        </div>
+        <div class="result-card-body">
+          <div class="disputed-icon-row">🚫</div>
+          <div class="disputed-message">
+            Questa partita è stata esclusa dalla classifica.<br>
+            Contatta il gestore del circolo per risolvere la disputa.
+          </div>
+
+          <!-- Players -->
+          <div class="players-row">
+            <div class="players-col">
+              <div class="players-col-label players-col-label--t1">Team 1</div>
+              <div class="players-col-names">Marco<br>Luca</div>
+            </div>
+            <div class="players-col">
+              <div class="players-col-label players-col-label--t2">Team 2</div>
+              <div class="players-col-names">Sara<br>Giorgio</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <a href="index.html" class="btn-primary">Torna alle partite</a>
+    </div>
+
+  </div><!-- /page -->
+
+  <script>
+    function showState(state) {
+      document.getElementById('stateConfirmed').style.display = state === 'confirmed' ? '' : 'none';
+      document.getElementById('stateDisputed').style.display  = state === 'disputed'  ? '' : 'none';
+      document.getElementById('tabConfirmed').classList.toggle('active', state === 'confirmed');
+      document.getElementById('tabDisputed').classList.toggle('active', state === 'disputed');
+      document.getElementById('bgDeco').textContent = state === 'confirmed' ? '✓' : '✗';
+      document.getElementById('bgDeco').style.color = state === 'confirmed'
+        ? 'var(--color-success)' : 'var(--color-error)';
+    }
+  </script>
+</body>
+</html>

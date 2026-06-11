@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOLP — Da confermare</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .section-heading {
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-placeholder);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: var(--sp-3);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="bg-deco">✓</div>
+
+    <!-- HEADER -->
+    <header class="auth-header">
+      <span class="brand">GOLP</span>
+      <a href="#" class="back-nav">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        I miei circoli
+      </a>
+    </header>
+
+    <!-- TITLE -->
+    <h1 class="auth-title">Da confermare</h1>
+    <p class="auth-subtitle">Le partite in attesa della tua risposta</p>
+
+    <!-- CIRCLE CONTEXT -->
+    <div class="circle-context">
+      <span class="sport-dot"></span>
+      Padel Club Roma
+    </div>
+
+    <!-- MATCH LIST -->
+    <div class="match-list" id="matchList">
+
+      <!-- CARD 1: user non ha ancora confermato -->
+      <div class="match-card" id="card1">
+        <div class="match-card-header">
+          <span class="sport-badge sport-badge--padel">Padel</span>
+          <span class="match-date">ieri, 19:30</span>
+        </div>
+        <div class="match-body">
+          <!-- Teams -->
+          <div class="teams-display">
+            <div class="team-row team-row--team1 team-row--winner">
+              <span class="team-row-names">
+                Marco <span class="you-tag">Tu</span> &amp; Luca
+              </span>
+              <span class="win-tag">✓ Vince</span>
+            </div>
+            <div class="team-row team-row--team2">
+              <span class="team-row-names">Sara &amp; Giorgio</span>
+            </div>
+          </div>
+          <!-- Score -->
+          <div class="score-sets">6-4 &nbsp;·&nbsp; 3-6 &nbsp;·&nbsp; 7-5</div>
+
+          <!-- Confirm progress -->
+          <div class="confirm-progress">
+            <div class="confirm-dots">
+              <div class="confirm-dot confirm-dot--filled" title="Marco (inseritore)"></div>
+              <div class="confirm-dot" title="In attesa"></div>
+              <div class="confirm-dot" title="In attesa"></div>
+              <div class="confirm-dot" title="In attesa"></div>
+            </div>
+            <span class="confirm-label">1 di 4 conferme</span>
+          </div>
+
+          <!-- Actions -->
+          <div class="match-actions">
+            <button class="btn-dispute" onclick="openDispute('card1')">Contesta</button>
+            <button class="btn-confirm" onclick="openConfirm('card1')">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2 7l4 4 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Conferma
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: user ha già confermato, in attesa degli altri -->
+      <div class="match-card" id="card2">
+        <div class="match-card-header">
+          <span class="sport-badge sport-badge--padel">Padel</span>
+          <span class="match-date">oggi, 14:00</span>
+        </div>
+        <div class="match-body">
+          <!-- Teams -->
+          <div class="teams-display">
+            <div class="team-row team-row--team1">
+              <span class="team-row-names">Filippo &amp; Anna</span>
+              <span class="win-tag">✓ Vince</span>
+            </div>
+            <div class="team-row team-row--team2">
+              <span class="team-row-names">
+                Marco <span class="you-tag">Tu</span> &amp; Luca
+              </span>
+            </div>
+          </div>
+          <!-- Score -->
+          <div class="score-sets">6-3 &nbsp;·&nbsp; 6-4</div>
+
+          <!-- Confirm progress: user (tu) + 1 altro hanno confermato -->
+          <div class="confirm-progress">
+            <div class="confirm-dots">
+              <div class="confirm-dot confirm-dot--filled" title="Filippo (inseritore)"></div>
+              <div class="confirm-dot confirm-dot--you" title="Marco (Tu)"></div>
+              <div class="confirm-dot" title="In attesa"></div>
+              <div class="confirm-dot" title="In attesa"></div>
+            </div>
+            <span class="confirm-label">
+              <span class="confirmed-by-you">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <path d="M2 5l2.5 2.5 3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Hai confermato
+              </span>
+              &nbsp;· 2 di 4
+            </span>
+          </div>
+
+          <!-- No action buttons: user ha già confermato -->
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-placeholder); text-align: center; padding: var(--sp-2) 0;">
+            In attesa di Luca e Giorgio…
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /match-list -->
+
+    <!-- EMPTY STATE (hidden by default — toggle via JS for demo) -->
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div class="empty-icon">✓</div>
+      <div class="empty-title">Tutto confermato</div>
+      <div class="empty-subtitle">Non ci sono partite in attesa della tua conferma in questo circolo.</div>
+    </div>
+
+    <!-- DEMO TOGGLE -->
+    <div style="margin-top:var(--sp-8); text-align:center;">
+      <button onclick="toggleEmpty()"
+        style="background:transparent; border:1px dashed var(--color-border); border-radius:var(--r-md);
+               color:var(--color-text-placeholder); font-family:var(--font-family);
+               font-size:var(--font-size-xs); padding:var(--sp-2) var(--sp-4); cursor:pointer;">
+        [Demo] Mostra stato vuoto
+      </button>
+    </div>
+
+  </div><!-- /page -->
+
+  <!-- MODAL: Confirm -->
+  <div class="modal-overlay hidden" id="confirmModal">
+    <div class="modal-sheet">
+      <div class="modal-title modal-title--confirm">Confermi il risultato?</div>
+      <div class="modal-body">Stai confermando che il punteggio inserito corrisponde a quanto giocato. Non potrai cambiare idea dopo.</div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeModals()">Annulla</button>
+        <button class="btn-success" onclick="doConfirm()">
+          Sì, conferma
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Dispute -->
+  <div class="modal-overlay hidden" id="disputeModal">
+    <div class="modal-sheet">
+      <div class="modal-title modal-title--danger">Contestare la partita?</div>
+      <div class="modal-body">La partita verrà marcata come <strong style="color:var(--color-error)">contestata</strong> ed esclusa dalla classifica. Contattate il gestore del circolo per risolvere.</div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeModals()">Annulla</button>
+        <button class="btn-danger" onclick="doDispute()">Contesta</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

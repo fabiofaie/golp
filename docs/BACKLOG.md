@@ -140,7 +140,7 @@ Un utente inserisce una partita di padel con 4 membri del circolo e punteggio se
 
 #### US-005: Conferma collettiva del risultato (4/4)
 
-**Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 5 | **Status:** TODO
+**Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 5 | **Status:** PLANNED
 **Blocked by:** US-004
 
 **Story**
@@ -241,7 +241,7 @@ Dopo la conferma di una partita, la classifica del circolo riflette immediatamen
 - [ ] L'aggiornamento è visibile subito dopo la conferma della partita (da PRD §RF-4)
 - [ ] La posizione del giocatore corrente è evidenziata
 - [ ] A parità di rating, criterio di ordinamento secondario deterministico (es. numero partite giocate)
-- [ ] Giocatori senza partite confermate visibili con rating 1000 (o sezione separata — vedi open question)
+- [ ] Giocatori senza partite confermate mostrati in fondo alla classifica senza punteggio (non viene visualizzato il rating 1000)
 - [ ] Cambiando circolo, la classifica mostrata è solo quella del circolo selezionato
 
 **Out of scope**
@@ -249,7 +249,7 @@ Dopo la conferma di una partita, la classifica del circolo riflette immediatamen
 - Filtri per periodo (mese/anno — coperti dai premi in US-010)
 
 **Open questions**
-- I giocatori a 0 partite compaiono in classifica a 1000 pt o in una lista "non classificati"?
+- (nessuna)
 
 ---
 
