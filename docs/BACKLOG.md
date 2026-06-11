@@ -76,8 +76,8 @@ Un utente crea il circolo "Padel Club Roma" con sport `padel`; il circolo appare
 
 #### US-003: Iscrizione a uno o più circoli
 
-**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 3 | **Status:** REVIEW
-**Approved:** —
+**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-06-11):** Review umana OK.
 **Blocked by:** US-002
 **Review note (2026-06-11):** Backend in `src/Golp.Api/Endpoints/CircleEndpoints.cs` (+3 endpoint: GET /circles, POST /circles/{id}/join, GET /circles/{id}/members). Test in `src/Golp.Tests/Integration/CircleIntegrationTests.cs` (nuove classi `JoinCircleTests` + `MembersAndDiscoveryTests`, 42 test totali verdi). Frontend in `frontend/golp-app/src/app/circles/browse-circles/` (BrowseCirclesComponent), `circle.service.ts` (+3 metodi +3 interface), `app.routes.ts` (+route /circles/browse), `my-circles.component.html` (link Scopri circoli), `styles.scss` (`.member-badge`, `.btn-join`). Reviewer APPROVE. **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-003`.
 **Visual evidence (2026-06-11):** docs/test-results/US-003/report.md (5 AC pass / 0 AC fail / 0 console errors)
