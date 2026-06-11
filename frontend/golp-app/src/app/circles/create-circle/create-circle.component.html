@@ -1,0 +1,72 @@
+<div class="page">
+  <div class="bg-deco" aria-hidden="true">+</div>
+
+  <header class="auth-header">
+    <a routerLink="/circles" class="back-nav">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      I miei circoli
+    </a>
+    <span class="brand">GOLP</span>
+  </header>
+
+  <main class="auth-main">
+    <h1 class="auth-title">Nuovo circolo.</h1>
+    <p class="auth-subtitle">Scegli nome e disciplina.</p>
+
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()">
+      @if (errorMessage) {
+        <div class="form-error" role="alert">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="8" cy="8" r="7" stroke="#FF4444" stroke-width="1.5"/>
+            <path d="M8 5v3.5M8 10.5v.5" stroke="#FF4444" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          {{ errorMessage }}
+        </div>
+      }
+
+      <div class="field">
+        <label for="circle-name">Nome circolo</label>
+        <input
+          id="circle-name"
+          type="text"
+          formControlName="name"
+          placeholder="Es. Padel Roma Sud"
+          maxlength="100"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="field">
+        <label for="circle-sport">Disciplina</label>
+        <div class="select-wrapper">
+          <select id="circle-sport" formControlName="sport">
+            <option value="">Scegli una disciplina…</option>
+            @for (s of sports; track s.sport) {
+              <option [value]="s.sport">{{ sportLabel(s.sport) }}</option>
+            }
+          </select>
+          <svg class="select-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+
+      @if (selectedSport) {
+        <div class="sport-preview">
+          <span class="sport-preview-label">Config assegnata automaticamente</span>
+          <div class="sport-preview-pills">
+            <span class="pill">{{ selectedSport.pointUnit }}</span>
+            <span class="pill">{{ selectedSport.sets ? 'Con set' : 'Senza set' }}</span>
+            <span class="pill">{{ selectedSport.teamSize }}v{{ selectedSport.teamSize }}</span>
+          </div>
+        </div>
+      }
+
+      <button type="submit" class="btn-primary" [disabled]="form.invalid || loading">
+        {{ loading ? 'Creazione…' : 'Crea circolo' }}
+      </button>
+    </form>
+  </main>
+</div>

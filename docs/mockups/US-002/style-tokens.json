@@ -1,0 +1,114 @@
+{
+  "colors": {
+    "bg":               "#0A0A0A",
+    "surface":          "#141414",
+    "surfaceElevated":  "#1F1F1F",
+    "border":           "#2C2C2C",
+    "accent":           "#FF5500",
+    "accentHover":      "#E64D00",
+    "accentDim":        "rgba(255, 85, 0, 0.12)",
+    "textPrimary":      "#FFFFFF",
+    "textSecondary":    "#9A9A9A",
+    "textPlaceholder":  "#484848",
+    "error":            "#FF4444",
+    "errorBg":          "rgba(255, 68, 68, 0.10)",
+    "success":          "#22C55E",
+    "successBg":        "rgba(34, 197, 94, 0.10)",
+    "sportPadel":       "#FF5500",
+    "sportBeachtennis": "#0EA5E9",
+    "sportBasket2v2":   "#F59E0B",
+    "sportBurraco":     "#8B5CF6"
+  },
+  "typography": {
+    "fontFamily": "Inter, system-ui, -apple-system, sans-serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap",
+    "scale": {
+      "xs":   "11px",
+      "sm":   "13px",
+      "base": "15px",
+      "lg":   "18px",
+      "xl":   "24px",
+      "2xl":  "32px",
+      "hero": "120px"
+    },
+    "weights": {
+      "regular": 400,
+      "medium":  500,
+      "bold":    700,
+      "black":   900
+    },
+    "lineHeight": 1.5
+  },
+  "spacing": {
+    "1":  "4px",
+    "2":  "8px",
+    "3":  "12px",
+    "4":  "16px",
+    "5":  "20px",
+    "6":  "24px",
+    "8":  "32px",
+    "10": "40px",
+    "12": "48px",
+    "16": "64px"
+  },
+  "borderRadius": {
+    "sm":   "4px",
+    "md":   "8px",
+    "lg":   "14px",
+    "full": "9999px"
+  },
+  "shadows": {
+    "sm": "0 1px 3px rgba(0,0,0,0.5)",
+    "md": "0 4px 16px rgba(0,0,0,0.6)"
+  },
+  "components": {
+    "circleCard": {
+      "bg":            "colors.surface",
+      "border":        "colors.border",
+      "borderRadius":  "borderRadius.lg",
+      "padding":       "spacing.5",
+      "hoverBorder":   "colors.accent"
+    },
+    "sportBadge": {
+      "fontSize":     "typography.scale.xs",
+      "fontWeight":   "typography.weights.bold",
+      "paddingX":     "spacing.3",
+      "paddingY":     "3px",
+      "borderRadius": "borderRadius.full"
+    },
+    "ratingValue": {
+      "fontSize":   "typography.scale.xl",
+      "fontWeight": "typography.weights.black",
+      "color":      "colors.accent"
+    },
+    "rankingValue": {
+      "fontSize":       "typography.scale.xl",
+      "fontWeight":     "typography.weights.black",
+      "color":          "colors.textPrimary",
+      "totalFontSize":  "typography.scale.sm",
+      "totalFontWeight":"typography.weights.regular",
+      "totalColor":     "colors.textSecondary"
+    },
+    "selectWrapper": {
+      "bg":           "colors.surface",
+      "border":       "colors.border",
+      "borderRadius": "borderRadius.md",
+      "focusBorder":  "colors.accent",
+      "focusShadow":  "colors.accentDim"
+    },
+    "sportPreview": {
+      "bg":           "colors.surfaceElevated",
+      "border":       "colors.border",
+      "borderRadius": "borderRadius.md",
+      "padding":      "spacing.4"
+    },
+    "pill": {
+      "bg":           "colors.border",
+      "borderRadius": "borderRadius.full",
+      "fontSize":     "typography.scale.xs",
+      "fontWeight":   "typography.weights.medium",
+      "paddingX":     "spacing.3",
+      "paddingY":     "3px"
+    }
+  }
+}

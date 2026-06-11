@@ -5,7 +5,7 @@
 ## Riepilogo
 - Epic totali: 4
 - Storie totali: 11
-- Storie TODO: 10 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 0
+- Storie TODO: 10 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 0 | DONE: 1
 
 ---
 
@@ -14,10 +14,10 @@
 
 #### US-001: Registrazione e accesso account giocatore
 
-**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 3 | **Status:** REVIEW
+**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-06-11):** Review umana OK.
 **Review note (2026-06-11):** Codice in `src/Golp.Api/` (Minimal API, EF Core, JWT, BCrypt), test in `src/Golp.Tests/` (5 unit + 14 integration). Frontend in `frontend/golp-app/src/app/auth/` (4 componenti standalone, AuthService, guard, interceptor). E2E spec in `frontend/golp-app/e2e/`. Reviewer APPROVE — no critical aperti.
 **Visual evidence (2026-06-11):** docs/test-results/US-001/report.md (7 AC pass / 0 AC fail / 0 console errors inattesi)
-> **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-001` (o aggiorna manualmente lo status a `DONE`).
 **Blocked by:** -
 
 **Story**
@@ -46,8 +46,10 @@ Un utente nuovo si registra, riceve un token di sessione (JWT) e rivede i propri
 
 #### US-002: Creazione circolo con configurazione sport
 
-**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 3 | **Status:** TODO
+**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-06-11):** Review umana OK.
 **Blocked by:** US-001
+**Review note (2026-06-11):** Backend in `src/Golp.Api/Endpoints/CircleEndpoints.cs`, `Services/SportsConfig.cs`, entità in `Data/Entities/`. Frontend in `frontend/golp-app/src/app/circles/`. Test in `src/Golp.Tests/Integration/CircleIntegrationTests.cs` (12 test, 31 totali verdi). Reviewer APPROVE. `IsPrivate`+`JoinCode` nel modello ma non nel DTO — intenzionale per future US. **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-002`.
 
 **Story**
 Come giocatore autenticato, voglio creare un circolo scegliendo lo sport praticato, così che il mio gruppo abbia uno spazio isolato con regole di punteggio corrette.

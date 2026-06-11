@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GOLP — Nuovo circolo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+  <div class="page">
+
+    <!-- Decorative watermark -->
+    <div class="bg-deco" aria-hidden="true">+</div>
+
+    <!-- Header -->
+    <header class="page-header">
+      <a href="index.html" class="back-nav">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        I miei circoli
+      </a>
+      <span class="brand">GOLP</span>
+    </header>
+
+    <!-- Main -->
+    <main class="auth-main" id="form-container">
+      <h1 class="auth-title">Nuovo circolo.</h1>
+      <p class="auth-subtitle">Scegli nome e disciplina.</p>
+
+      <form class="auth-form" id="create-form" novalidate>
+
+        <!-- Error banner (hidden by default) -->
+        <div class="form-error" id="error-banner" style="display:none;" role="alert">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="8" cy="8" r="7" stroke="#FF4444" stroke-width="1.5"/>
+            <path d="M8 5v3.5M8 10.5v.5" stroke="#FF4444" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span id="error-text"></span>
+        </div>
+
+        <!-- Nome circolo -->
+        <div class="field">
+          <label for="circle-name">Nome circolo</label>
+          <input
+            id="circle-name"
+            type="text"
+            placeholder="Es. Padel Roma Sud"
+            maxlength="100"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </div>
+
+        <!-- Disciplina -->
+        <div class="field">
+          <label for="circle-sport">Disciplina</label>
+          <div class="select-wrapper">
+            <select id="circle-sport" aria-label="Scegli disciplina">
+              <option value="">Scegli una disciplina…</option>
+              <option value="padel">Padel</option>
+              <option value="beachtennis">Beach Tennis</option>
+              <option value="basket2v2">Basket 2v2</option>
+              <option value="burraco">Burraco</option>
+            </select>
+            <svg class="select-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Sport config preview (shown after sport selection) -->
+        <div class="sport-preview" id="sport-preview" style="display:none;" aria-live="polite">
+          <span class="sport-preview-label">Config assegnata automaticamente</span>
+          <div class="sport-preview-pills" id="preview-pills"></div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-primary" id="submit-btn" disabled>
+          Crea circolo
+        </button>
+
+      </form>
+
+    </main>
+
+    <!-- Success state (hidden, shown after submit) -->
+    <main class="auth-main" id="success-container" style="display:none;">
+      <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:var(--sp-4);">
+        <div style="
+          width: 56px; height: 56px;
+          background: var(--color-success-bg);
+          border: 1px solid rgba(34,197,94,0.3);
+          border-radius: var(--r-full);
+          display: flex; align-items: center; justify-content: center;
+        ">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M5 12l5 5L19 7" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <p style="font-size:var(--font-size-lg); font-weight:var(--font-weight-bold); margin-bottom:var(--sp-2);" id="success-name">Circolo creato!</p>
+          <p style="font-size:var(--font-size-sm); color:var(--color-text-secondary);">Sei il primo membro. Rating iniziale: <strong style="color:var(--color-accent);">1000</strong></p>
+        </div>
+        <p style="font-size:var(--font-size-xs); color:var(--color-text-placeholder); margin-top:var(--sp-2);">Reindirizzamento…</p>
+      </div>
+    </main>
+
+    <!-- Duplicate name error state (hidden, shown via "Simulate 409" button) -->
+    <div id="simulate-btns" style="
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 99;
+    ">
+      <button onclick="simulateError('Nome già in uso per questo account.')" style="
+        background: var(--color-surface-elevated);
+        color: var(--color-text-secondary);
+        border: 1px solid var(--color-border);
+        border-radius: var(--r-full);
+        padding: 6px 14px;
+        font-family: var(--font-family);
+        font-size: 11px;
+        cursor: pointer;
+      ">simulate 409</button>
+      <button onclick="resetError()" style="
+        background: var(--color-surface-elevated);
+        color: var(--color-text-secondary);
+        border: 1px solid var(--color-border);
+        border-radius: var(--r-full);
+        padding: 6px 14px;
+        font-family: var(--font-family);
+        font-size: 11px;
+        cursor: pointer;
+      ">reset</button>
+    </div>
+
+  </div>
+
+  <script>
+    const SPORTS = {
+      padel:       { label: 'Padel',        pointUnit: 'Giochi', sets: true,  teamSize: 2 },
+      beachtennis: { label: 'Beach Tennis', pointUnit: 'Giochi', sets: true,  teamSize: 2 },
+      basket2v2:   { label: 'Basket 2v2',   pointUnit: 'Punti',  sets: false, teamSize: 2 },
+      burraco:     { label: 'Burraco',      pointUnit: 'Score',  sets: false, teamSize: 2 },
+    };
+
+    const nameInput   = document.getElementById('circle-name');
+    const sportSelect = document.getElementById('circle-sport');
+    const preview     = document.getElementById('sport-preview');
+    const previewPills= document.getElementById('preview-pills');
+    const submitBtn   = document.getElementById('submit-btn');
+    const errorBanner = document.getElementById('error-banner');
+    const errorText   = document.getElementById('error-text');
+
+    function validate() {
+      const ok = nameInput.value.trim().length > 0 && sportSelect.value !== '';
+      submitBtn.disabled = !ok;
+    }
+
+    function updatePreview() {
+      const sport = SPORTS[sportSelect.value];
+      if (sport) {
+        previewPills.innerHTML = [
+          `<span class="pill">${sport.pointUnit}</span>`,
+          `<span class="pill">${sport.sets ? 'Con set' : 'Senza set'}</span>`,
+          `<span class="pill">${sport.teamSize}v${sport.teamSize}</span>`,
+        ].join('');
+        preview.style.display = 'block';
+      } else {
+        preview.style.display = 'none';
+      }
+      validate();
+    }
+
+    function simulateError(msg) {
+      errorText.textContent = msg;
+      errorBanner.style.display = 'flex';
+      nameInput.style.borderColor = 'var(--color-error)';
+    }
+
+    function resetError() {
+      errorBanner.style.display = 'none';
+      nameInput.style.borderColor = '';
+    }
+
+    sportSelect.addEventListener('change', updatePreview);
+    nameInput.addEventListener('input', () => { resetError(); validate(); });
+
+    document.getElementById('create-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (submitBtn.disabled) return;
+
+      const name = nameInput.value.trim();
+      const sport = SPORTS[sportSelect.value];
+
+      // Simulate success
+      document.getElementById('success-name').textContent = `"${name}" creato!`;
+      document.getElementById('form-container').style.display = 'none';
+      document.getElementById('success-container').style.display = 'flex';
+      document.getElementById('simulate-btns').style.display = 'none';
+
+      setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+    });
+  </script>
+</body>
+</html>

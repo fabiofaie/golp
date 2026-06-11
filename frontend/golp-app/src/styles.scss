@@ -17,6 +17,12 @@
   --color-success:          #22C55E;
   --color-success-bg:       rgba(34, 197, 94, 0.10);
 
+  /* Sport-specific colors (US-002, from style-tokens.json) */
+  --color-sport-padel:          #FF5500;
+  --color-sport-beachtennis:    #0EA5E9;
+  --color-sport-basket2v2:      #F59E0B;
+  --color-sport-burraco:        #8B5CF6;
+
   --font-family:      'Inter', system-ui, -apple-system, sans-serif;
   --font-size-xs:     11px;
   --font-size-sm:     13px;
@@ -259,6 +265,267 @@ html, body {
   text-decoration: none;
   transition: color 0.15s;
   &:hover { color: var(--color-text-primary); }
+}
+
+/* ---- Select (US-002) ---- */
+.select-wrapper {
+  position: relative;
+
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--r-md);
+    color: var(--color-text-primary);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    padding: var(--sp-4);
+    padding-right: var(--sp-10);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    width: 100%;
+    cursor: pointer;
+
+    &:focus {
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 3px var(--color-accent-dim);
+    }
+
+    option {
+      background: var(--color-surface-elevated);
+      color: var(--color-text-primary);
+    }
+  }
+
+  .select-chevron {
+    position: absolute;
+    right: var(--sp-4);
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--color-text-secondary);
+  }
+}
+
+/* ---- Sport config preview (US-002) ---- */
+.sport-preview {
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-md);
+  padding: var(--sp-4);
+  animation: fadeIn 0.15s ease;
+}
+
+.sport-preview-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: var(--font-weight-med);
+  display: block;
+  margin-bottom: var(--sp-3);
+}
+
+.sport-preview-pills {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.pill {
+  display: inline-block;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-med);
+  color: var(--color-text-primary);
+  background: var(--color-border);
+  border-radius: var(--r-full);
+  padding: 3px var(--sp-3);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Back nav (US-002) ---- */
+.back-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  transition: color 0.15s;
+  &:hover { color: var(--color-text-primary); }
+}
+
+/* ---- Icon button (US-002) ---- */
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-md);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--color-surface-elevated);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
+
+/* ---- Circle card (US-002) ---- */
+.circle-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  transition: border-color 0.15s, transform 0.12s;
+}
+
+.circle-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.circle-name {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.3px;
+}
+
+.circle-members {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.circle-rating-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.rating-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.ranking-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sp-1);
+}
+
+.rating-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: var(--font-weight-med);
+}
+
+.rating-value {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-blk);
+  color: var(--color-accent);
+  letter-spacing: -0.5px;
+}
+
+.ranking-value {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-blk);
+  color: var(--color-text-primary);
+  letter-spacing: -0.5px;
+}
+
+.ranking-total {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-reg);
+  color: var(--color-text-secondary);
+}
+
+/* ---- Sport badge (US-002) ---- */
+.sport-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 3px var(--sp-3);
+  border-radius: var(--r-full);
+  border: 1px solid transparent;
+}
+
+.sport-badge--padel {
+  color: var(--color-sport-padel);
+  border-color: rgba(255, 85, 0, 0.35);
+  background: rgba(255, 85, 0, 0.08);
+}
+
+.sport-badge--beachtennis {
+  color: var(--color-sport-beachtennis);
+  border-color: rgba(14, 165, 233, 0.35);
+  background: rgba(14, 165, 233, 0.08);
+}
+
+.sport-badge--basket2v2 {
+  color: var(--color-sport-basket2v2);
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.sport-badge--burraco {
+  color: var(--color-sport-burraco);
+  border-color: rgba(139, 92, 246, 0.35);
+  background: rgba(139, 92, 246, 0.08);
+}
+
+/* ---- Empty state (US-002) ---- */
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--sp-12) 0;
+}
+
+.empty-icon {
+  font-size: 52px;
+  line-height: 1;
+  color: var(--color-border);
+  margin-bottom: var(--sp-5);
+}
+
+.empty-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--sp-2);
+}
+
+.empty-subtitle {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  max-width: 240px;
+  line-height: 1.6;
 }
 
 @media (min-width: 600px) {

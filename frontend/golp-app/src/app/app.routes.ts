@@ -24,5 +24,15 @@ export const routes: Routes = [
     loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'circles',
+    loadComponent: () => import('./circles/my-circles/my-circles.component').then(m => m.MyCirclesComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'circles/new',
+    loadComponent: () => import('./circles/create-circle/create-circle.component').then(m => m.CreateCircleComponent),
+    canActivate: [authGuard]
+  },
   { path: '**', redirectTo: '/dashboard' }
 ];

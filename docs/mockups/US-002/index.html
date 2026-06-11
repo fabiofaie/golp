@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GOLP — I miei circoli</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+  <div class="page">
+
+    <!-- Decorative watermark -->
+    <div class="bg-deco" aria-hidden="true">RL</div>
+
+    <!-- Header -->
+    <header class="page-header">
+      <a href="#" class="back-nav" onclick="return false;">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Dashboard
+      </a>
+      <span class="brand">GOLP</span>
+    </header>
+
+    <!-- Main — populated state -->
+    <main class="circles-main" id="state-populated">
+      <div class="section-title-row">
+        <h1 class="section-title">I miei circoli.</h1>
+        <a href="create-circle.html" class="btn-icon" aria-label="Crea nuovo circolo">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M9 3v12M3 9h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </a>
+      </div>
+      <p class="section-subtitle">I circoli di cui fai parte.</p>
+
+      <div class="circle-list">
+
+        <!-- Card 1 — Padel -->
+        <a href="#" class="circle-card" onclick="return false;">
+          <div class="circle-card-header">
+            <span class="sport-badge sport-badge--padel">Padel</span>
+            <span class="circle-members">3 membri</span>
+          </div>
+          <h2 class="circle-name">Padel Roma Sud</h2>
+          <div class="circle-meta">
+            <span class="circle-meta-item">Giochi · Set · 2v2</span>
+          </div>
+          <div class="circle-rating-row">
+            <div class="rating-group">
+              <span class="rating-label">Rating</span>
+              <span class="rating-value">1000</span>
+            </div>
+            <div class="ranking-group">
+              <span class="rating-label">Posizione</span>
+              <span class="ranking-value">4 <span class="ranking-total">/ 20</span></span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Card 2 — Beach Tennis -->
+        <a href="#" class="circle-card" onclick="return false;">
+          <div class="circle-card-header">
+            <span class="sport-badge sport-badge--beachtennis">Beach Tennis</span>
+            <span class="circle-members">5 membri</span>
+          </div>
+          <h2 class="circle-name">BT Ostia Inverno</h2>
+          <div class="circle-meta">
+            <span class="circle-meta-item">Giochi · Set · 2v2</span>
+          </div>
+          <div class="circle-rating-row">
+            <div class="rating-group">
+              <span class="rating-label">Rating</span>
+              <span class="rating-value">1032</span>
+            </div>
+            <div class="ranking-group">
+              <span class="rating-label">Posizione</span>
+              <span class="ranking-value">2 <span class="ranking-total">/ 5</span></span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Card 3 — Basket 2v2 -->
+        <a href="#" class="circle-card" onclick="return false;">
+          <div class="circle-card-header">
+            <span class="sport-badge sport-badge--basket2v2">Basket 2v2</span>
+            <span class="circle-members">2 membri</span>
+          </div>
+          <h2 class="circle-name">Basket Estate</h2>
+          <div class="circle-meta">
+            <span class="circle-meta-item">Punti · No set · 2v2</span>
+          </div>
+          <div class="circle-rating-row">
+            <div class="rating-group">
+              <span class="rating-label">Rating</span>
+              <span class="rating-value">1000</span>
+            </div>
+            <div class="ranking-group">
+              <span class="rating-label">Posizione</span>
+              <span class="ranking-value">1 <span class="ranking-total">/ 2</span></span>
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </main>
+
+    <!-- Main — empty state (hidden by default) -->
+    <main class="circles-main" id="state-empty" style="display:none;">
+      <div class="section-title-row">
+        <h1 class="section-title">I miei circoli.</h1>
+      </div>
+      <p class="section-subtitle">I circoli di cui fai parte.</p>
+
+      <div class="empty-state">
+        <div class="empty-icon" aria-hidden="true">◎</div>
+        <p class="empty-title">Ancora nessun circolo.</p>
+        <p class="empty-subtitle">Crea il tuo primo circolo e inizia a giocare.</p>
+        <a href="create-circle.html" class="btn-primary" style="margin-top:var(--sp-6);">Crea circolo</a>
+      </div>
+    </main>
+
+    <!-- Footer CTA (only in populated state) -->
+    <div class="page-footer" id="footer-populated">
+      <a href="create-circle.html" class="btn-primary">+ Nuovo circolo</a>
+    </div>
+
+  </div>
+
+  <!-- Design exploration toggle -->
+  <button id="toggle-state" style="
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    background: var(--color-surface-elevated);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--r-full);
+    padding: 6px 14px;
+    font-family: var(--font-family);
+    font-size: 11px;
+    cursor: pointer;
+    z-index: 99;
+    transition: color 0.15s, border-color 0.15s;
+  ">toggle empty state</button>
+
+  <script>
+    const btnToggle = document.getElementById('toggle-state');
+    const populated = document.getElementById('state-populated');
+    const empty     = document.getElementById('state-empty');
+    const footer    = document.getElementById('footer-populated');
+    let showingEmpty = false;
+
+    btnToggle.addEventListener('click', () => {
+      showingEmpty = !showingEmpty;
+      populated.style.display = showingEmpty ? 'none' : 'flex';
+      empty.style.display     = showingEmpty ? 'flex' : 'none';
+      footer.style.display    = showingEmpty ? 'none' : 'block';
+      btnToggle.textContent   = showingEmpty ? 'toggle populated state' : 'toggle empty state';
+    });
+  </script>
+</body>
+</html>

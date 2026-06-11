@@ -1,10 +1,12 @@
 import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
+  imports: [RouterLink],
   template: `
     <div class="page">
       <header class="auth-header">
@@ -13,7 +15,11 @@ import { Router } from '@angular/router';
       </header>
       <main class="auth-main">
         <h1 class="auth-title">Dashboard</h1>
-        <p class="auth-subtitle">Prossimamente: la tua classifica.</p>
+        <p class="auth-subtitle">Cosa vuoi fare oggi?</p>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
+          <a routerLink="/circles" class="btn-ghost">I miei circoli</a>
+          <a routerLink="/circles/new" class="btn-ghost">+ Nuovo circolo</a>
+        </div>
       </main>
     </div>
   `

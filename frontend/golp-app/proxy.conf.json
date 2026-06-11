@@ -4,5 +4,17 @@
     "secure": false,
     "changeOrigin": true,
     "logLevel": "warn"
+  },
+  "/circles": {
+    "target": "http://localhost:5120",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "warn"
+  },
+  "/sports": {
+    "target": "http://localhost:5120",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "warn"
   }
 }
