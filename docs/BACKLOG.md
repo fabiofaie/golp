@@ -5,7 +5,7 @@
 ## Riepilogo
 - Epic totali: 4
 - Storie totali: 11
-- Storie TODO: 11 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 0 | DONE: 0
+- Storie TODO: 10 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 0 | DONE: 0
 
 ---
 
@@ -14,7 +14,7 @@
 
 #### US-001: Registrazione e accesso account giocatore
 
-**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 3 | **Status:** TODO
+**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 3 | **Status:** PLANNED
 **Blocked by:** -
 
 **Story**

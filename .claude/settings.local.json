@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(not exist *)"
+      "Bash(not exist *)",
+      "PowerShell(if \\(!\\(Test-Path \"C:\\\\Users\\\\fabio\\\\source\\\\repos\\\\golp\\\\docs\\\\planning\"\\)\\) { New-Item -ItemType Directory -Path \"C:\\\\Users\\\\fabio\\\\source\\\\repos\\\\golp\\\\docs\\\\planning\" })",
+      "PowerShell(New-Item *)"
     ]
   }
 }
