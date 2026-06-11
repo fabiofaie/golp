@@ -1,0 +1,45 @@
+<div class="page">
+  <div class="bg-deco" aria-hidden="true">1000</div>
+
+  <header class="auth-header">
+    <span class="brand">GOLP</span>
+    <span style="font-size:11px;color:var(--color-text-placeholder);letter-spacing:0.5px;text-transform:uppercase;">Accedi</span>
+  </header>
+
+  <main class="auth-main">
+    <h1 class="auth-title">Bentornato.</h1>
+    <p class="auth-subtitle">Accedi per vedere la tua posizione.</p>
+
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()">
+      @if (errorMessage) {
+        <div class="form-error">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="7" stroke="#FF4444" stroke-width="1.5"/>
+            <path d="M8 5v3.5M8 10.5v.5" stroke="#FF4444" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          {{ errorMessage }}
+        </div>
+      }
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" formControlName="email" placeholder="marco@esempio.it" autocomplete="email">
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" type="password" formControlName="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+
+      <a routerLink="/forgot-password" class="forgot-link">Password dimenticata?</a>
+
+      <button type="submit" class="btn-primary" [disabled]="loading">
+        {{ loading ? 'Accesso…' : 'Accedi' }}
+      </button>
+    </form>
+
+    <p class="auth-footer">
+      Non hai un account? <a routerLink="/register">Registrati</a>
+    </p>
+  </main>
+</div>

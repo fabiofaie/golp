@@ -1,0 +1,6 @@
+@Golp.Api_HostAddress = http://localhost:5120
+
+GET {{Golp.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

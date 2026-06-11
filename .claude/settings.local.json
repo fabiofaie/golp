@@ -3,7 +3,22 @@
     "allow": [
       "Bash(not exist *)",
       "PowerShell(if \\(!\\(Test-Path \"C:\\\\Users\\\\fabio\\\\source\\\\repos\\\\golp\\\\docs\\\\planning\"\\)\\) { New-Item -ItemType Directory -Path \"C:\\\\Users\\\\fabio\\\\source\\\\repos\\\\golp\\\\docs\\\\planning\" })",
-      "PowerShell(New-Item *)"
+      "PowerShell(New-Item *)",
+      "Bash(dotnet new *)",
+      "Bash(dotnet sln *)",
+      "Bash(dotnet add *)",
+      "Bash(npm --version)",
+      "Bash(npx @angular/cli@latest version)",
+      "Bash(npx @angular/cli@19 new golp-app --directory frontend/golp-app --routing --style=scss --no-interactive)",
+      "Bash(dotnet build *)",
+      "Bash(npx ng *)",
+      "Bash(dotnet tool *)",
+      "Bash(dotnet ef *)",
+      "Bash(del *)",
+      "Bash(dotnet test *)",
+      "Bash(npx playwright *)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)"
     ]
   }
 }

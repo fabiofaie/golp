@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Golp.Api/Golp.Api.csproj" />
+    <Project Path="src/Golp.Tests/Golp.Tests.csproj" />
+  </Folder>
+</Solution>
