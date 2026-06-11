@@ -9,6 +9,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<Circle> Circles => Set<Circle>();
     public DbSet<CircleMembership> CircleMemberships => Set<CircleMembership>();
+    public DbSet<Match> Matches => Set<Match>();
+    public DbSet<MatchSet> MatchSets => Set<MatchSet>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -57,6 +59,34 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
              .WithMany()
              .HasForeignKey(m => m.UserId)
              .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Match>(e =>
+        {
+            e.HasKey(m => m.Id);
+            e.Property(m => m.Status).HasMaxLength(20).IsRequired();
+            e.HasIndex(m => new { m.CircleId, m.Status });
+            e.HasOne(m => m.Circle)
+             .WithMany()
+             .HasForeignKey(m => m.CircleId)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(m => m.CreatedBy)
+             .WithMany()
+             .HasForeignKey(m => m.CreatedById)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<User>().WithMany().HasForeignKey(m => m.Team1Player1Id).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<User>().WithMany().HasForeignKey(m => m.Team1Player2Id).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<User>().WithMany().HasForeignKey(m => m.Team2Player1Id).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<User>().WithMany().HasForeignKey(m => m.Team2Player2Id).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MatchSet>(e =>
+        {
+            e.HasKey(s => s.Id);
+            e.HasOne(s => s.Match)
+             .WithMany(m => m.Sets)
+             .HasForeignKey(s => s.MatchId)
+             .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

@@ -128,11 +128,13 @@ public static class CircleEndpoints
             .Select(m => new
             {
                 m.CircleId,
-                CircleName  = m.Circle.Name,
-                CircleSport = m.Circle.Sport,
-                MyRating    = m.Rating,
-                MemberCount = db.CircleMemberships.Count(x => x.CircleId == m.CircleId),
-                MyRank      = db.CircleMemberships.Count(x => x.CircleId == m.CircleId && x.Rating > m.Rating) + 1,
+                CircleName       = m.Circle.Name,
+                CircleSport      = m.Circle.Sport,
+                CircleSets       = m.Circle.Sets,
+                CirclePointUnit  = m.Circle.PointUnit,
+                MyRating         = m.Rating,
+                MemberCount      = db.CircleMemberships.Count(x => x.CircleId == m.CircleId),
+                MyRank           = db.CircleMemberships.Count(x => x.CircleId == m.CircleId && x.Rating > m.Rating) + 1,
             })
             .ToListAsync();
 
@@ -141,6 +143,8 @@ public static class CircleEndpoints
             id          = m.CircleId,
             name        = m.CircleName,
             sport       = m.CircleSport,
+            sets        = m.CircleSets,
+            pointUnit   = m.CirclePointUnit,
             memberCount = m.MemberCount,
             myRating    = m.MyRating,
             myRank      = m.MyRank,

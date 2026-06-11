@@ -39,5 +39,10 @@ export const routes: Routes = [
     loadComponent: () => import('./circles/browse-circles/browse-circles.component').then(m => m.BrowseCirclesComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'circles/:circleId/match/new',
+    loadComponent: () => import('./circles/record-match/record-match.component').then(m => m.RecordMatchComponent),
+    canActivate: [authGuard]
+  },
   { path: '**', redirectTo: '/dashboard' }
 ];

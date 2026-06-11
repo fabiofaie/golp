@@ -13,6 +13,8 @@ export interface CircleSummary {
   id: string;
   name: string;
   sport: string;
+  sets: boolean;
+  pointUnit: string;
   memberCount: number;
   myRating: number;
   myRank: number;

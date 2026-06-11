@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOLP — Registra Partita (Padel)</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* page-specific tweaks */
+    .sport-toggle {
+      display: flex;
+      gap: var(--sp-2);
+      margin-bottom: var(--sp-6);
+    }
+    .sport-toggle-btn {
+      flex: 1;
+      padding: var(--sp-2) var(--sp-3);
+      border-radius: var(--r-full);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      color: var(--color-text-secondary);
+      font-family: var(--font-family);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-med);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .sport-toggle-btn.active {
+      background: var(--color-surface-elevated);
+      border-color: var(--color-text-placeholder);
+      color: var(--color-text-primary);
+    }
+    .demo-note {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-placeholder);
+      text-align: center;
+      margin-bottom: var(--sp-4);
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="bg-deco" aria-hidden="true">RP</div>
+
+  <header class="auth-header">
+    <a href="#" class="back-nav">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      I miei circoli
+    </a>
+    <span class="brand">GOLP</span>
+  </header>
+
+  <h1 class="auth-title">Registra<br>Partita.</h1>
+
+  <!-- Context badge: which circle + sport -->
+  <div class="circle-context">
+    <span class="sport-dot"></span>
+    <span>Padel Club Roma</span>
+    <span class="sport-badge sport-badge--padel" style="margin-left: 4px;">Padel</span>
+  </div>
+
+  <!-- Demo mode toggle (sets=true / sets=false) -->
+  <p class="demo-note">Demo: cambia formato sport →</p>
+  <div class="sport-toggle">
+    <button class="sport-toggle-btn active" onclick="showSets(true, this)">Sets (padel, beach)</button>
+    <button class="sport-toggle-btn" onclick="showSets(false, this)">Score unico (basket, burraco)</button>
+  </div>
+
+  <!-- ─── TEAMS ─────────────────────────────── -->
+
+  <p class="section-label">Giocatori</p>
+
+  <div class="teams-container">
+
+    <!-- Team 1 -->
+    <div class="team-block team-block--team1">
+      <p class="team-label team-label--team1">Squadra 1</p>
+      <div class="team-players">
+        <!-- Slot 1: YOU (pre-selected) -->
+        <div class="player-slot player-slot--filled team1 player-slot--self">
+          <div class="player-avatar player-avatar--accent">M</div>
+          <div class="player-slot-info">
+            <div class="player-slot-name">Marco Rossi</div>
+            <div class="player-slot-you">Tu</div>
+          </div>
+          <span class="player-slot-chevron" style="color: var(--color-text-placeholder);">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </div>
+        <!-- Slot 2: filled -->
+        <div class="player-slot player-slot--filled team1">
+          <div class="player-avatar" style="background: rgba(14,165,233,0.1); color:#0EA5E9; border-color:rgba(14,165,233,0.25)">L</div>
+          <div class="player-slot-info">
+            <div class="player-slot-name">Luca Bianchi</div>
+          </div>
+          <span class="player-slot-chevron">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- VS -->
+    <div class="vs-divider">
+      <span class="vs-text">VS</span>
+    </div>
+
+    <!-- Team 2 -->
+    <div class="team-block team-block--team2">
+      <p class="team-label team-label--team2">Squadra 2</p>
+      <div class="team-players">
+        <!-- Slot 3: filled -->
+        <div class="player-slot player-slot--filled team2">
+          <div class="player-avatar" style="background: rgba(139,92,246,0.1); color:#8B5CF6; border-color:rgba(139,92,246,0.25)">G</div>
+          <div class="player-slot-info">
+            <div class="player-slot-name">Giulia Neri</div>
+          </div>
+          <span class="player-slot-chevron">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </div>
+        <!-- Slot 4: empty -->
+        <div class="player-slot">
+          <div class="player-avatar">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.3"/>
+              <path d="M2 13c0-2.5 2.5-4 6-4s6 1.5 6 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="player-slot-info">
+            <span class="player-slot-placeholder">Seleziona giocatore</span>
+          </div>
+          <span class="player-slot-chevron">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SCORE: SETS variant ─────────────── -->
+  <div id="score-sets">
+    <p class="section-label">Punteggio (set)</p>
+    <div class="score-section">
+      <div class="score-header">
+        <div class="score-team-labels">
+          <span class="score-team-label score-team-label--t1">Sq. 1</span>
+          <span class="score-team-label score-team-label--t2">Sq. 2</span>
+        </div>
+      </div>
+
+      <div class="score-sets-list" id="sets-list">
+        <!-- Set 1 -->
+        <div class="score-row">
+          <span class="score-set-label">Set 1</span>
+          <div class="score-inputs">
+            <div class="score-input-wrap">
+              <input type="number" class="score-input score-input--team1" value="6" min="0" max="99">
+            </div>
+            <span class="score-dash">—</span>
+            <div class="score-input-wrap">
+              <input type="number" class="score-input score-input--team2" value="4" min="0" max="99">
+            </div>
+          </div>
+          <button class="score-remove-btn" onclick="removeSet(this)" title="Rimuovi set">×</button>
+        </div>
+        <!-- Set 2 -->
+        <div class="score-row">
+          <span class="score-set-label">Set 2</span>
+          <div class="score-inputs">
+            <div class="score-input-wrap">
+              <input type="number" class="score-input score-input--team1" value="3" min="0" max="99">
+            </div>
+            <span class="score-dash">—</span>
+            <div class="score-input-wrap">
+              <input type="number" class="score-input score-input--team2" value="6" min="0" max="99">
+            </div>
+          </div>
+          <button class="score-remove-btn" onclick="removeSet(this)" title="Rimuovi set">×</button>
+        </div>
+        <!-- Set 3 (focused) -->
+        <div class="score-row">
+          <span class="score-set-label">Set 3</span>
+          <div class="score-inputs">
+            <div class="score-input-wrap">
+              <input type="number" class="score-input score-input--team1" placeholder="0" min="0" max="99">
+            </div>
+            <span class="score-dash">—</span>
+            <div class="score-input-wrap">
+              <input type="number" class="score-input score-input--team2" placeholder="0" min="0" max="99">
+            </div>
+          </div>
+          <button class="score-remove-btn" onclick="removeSet(this)" title="Rimuovi set">×</button>
+        </div>
+      </div>
+
+      <button class="add-set-btn" onclick="addSet()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Aggiungi set
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── SCORE: FLAT variant (hidden by default) ──── -->
+  <div id="score-flat" style="display:none">
+    <p class="section-label">Punteggio</p>
+    <div class="score-section">
+      <div style="display:flex; align-items:center; gap: var(--sp-4);">
+        <div style="flex:1; text-align:center;">
+          <div class="score-team-label score-team-label--t1" style="margin-bottom: var(--sp-2);">Squadra 1</div>
+          <input type="number" class="score-single-input score-single-input--t1" value="54" min="0" style="max-width:120px;">
+        </div>
+        <div class="score-dash" style="font-size: var(--font-size-xl); margin-top:20px;">–</div>
+        <div style="flex:1; text-align:center;">
+          <div class="score-team-label score-team-label--t2" style="margin-bottom: var(--sp-2);">Squadra 2</div>
+          <input type="number" class="score-single-input score-single-input--t2" value="38" min="0" style="max-width:120px;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── ERROR (stato visibile se validazione fallisce) ─ -->
+  <div class="form-error" style="display:none" id="error-msg">
+    Il giocatore "Giulia Neri" non è in questa squadra o è già selezionato.
+  </div>
+
+  <!-- ─── SUBMIT ─────────────────────────────────────── -->
+  <button class="btn-primary" onclick="location.href='success.html'">Inserisci partita</button>
+  <p style="font-size: var(--font-size-xs); color: var(--color-text-placeholder); text-align:center; margin-top:var(--sp-3);">
+    La partita sarà in attesa di conferma degli altri 3 giocatori.
+  </p>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

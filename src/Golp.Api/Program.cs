@@ -55,6 +55,7 @@ app.UseAuthorization();
 
 app.MapAuthEndpoints();
 app.MapCircleEndpoints();
+app.MapMatchEndpoints();
 
 app.Run();
 

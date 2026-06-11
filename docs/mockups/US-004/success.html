@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOLP — Partita Inserita</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="page">
+  <div class="bg-deco" aria-hidden="true">OK</div>
+
+  <header class="auth-header">
+    <a href="index.html" class="back-nav">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      I miei circoli
+    </a>
+    <span class="brand">GOLP</span>
+  </header>
+
+  <!-- Success card -->
+  <div class="success-card">
+    <div class="success-icon">✓</div>
+    <div class="success-title">Partita inserita!</div>
+    <div class="success-subtitle">In attesa di conferma degli altri 3 giocatori.</div>
+  </div>
+
+  <!-- Match summary -->
+  <div class="match-summary">
+
+    <!-- Score overview: sets won -->
+    <div class="match-score-display">
+      <div class="score-team-block">
+        <div class="score-num score-num--winner">2</div>
+        <div style="display:flex; flex-direction:column; gap:2px; align-items:center; margin-top:4px;">
+          <div style="font-size:11px; color:var(--color-text-secondary);">Marco R.</div>
+          <div style="font-size:11px; color:var(--color-text-secondary);">Luca B.</div>
+        </div>
+        <div class="score-team-name score-team-name--winner" style="margin-top:4px;">Squadra 1</div>
+      </div>
+      <div class="score-vs-text">set</div>
+      <div class="score-team-block">
+        <div class="score-num score-num--loser">1</div>
+        <div style="display:flex; flex-direction:column; gap:2px; align-items:center; margin-top:4px;">
+          <div style="font-size:11px; color:var(--color-text-secondary);">Giulia N.</div>
+          <div style="font-size:11px; color:var(--color-text-secondary);">Fabio V.</div>
+        </div>
+        <div class="score-team-name score-team-name--loser" style="margin-top:4px;">Squadra 2</div>
+      </div>
+    </div>
+
+    <!-- Set breakdown -->
+    <div style="padding: 0 var(--sp-2); margin-bottom: var(--sp-3);">
+      <p class="section-label" style="margin-bottom:var(--sp-2);">Dettaglio set</p>
+      <div style="display:flex; flex-direction:column; gap:var(--sp-2);">
+        <!-- Set 1 -->
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <span style="font-size:var(--font-size-xs); color:var(--color-text-placeholder); width:40px;">Set 1</span>
+          <div style="display:flex; align-items:center; gap:var(--sp-3); flex:1; justify-content:center;">
+            <span style="font-size:var(--font-size-lg); font-weight:900; color:var(--color-text-primary);">6</span>
+            <span style="font-size:var(--font-size-xs); color:var(--color-text-placeholder);">—</span>
+            <span style="font-size:var(--font-size-lg); font-weight:900; color:var(--color-text-placeholder);">4</span>
+          </div>
+          <span style="font-size:var(--font-size-xs); color:var(--color-team1); font-weight:700; width:40px; text-align:right;">Sq.1 ✓</span>
+        </div>
+        <!-- Set 2 -->
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <span style="font-size:var(--font-size-xs); color:var(--color-text-placeholder); width:40px;">Set 2</span>
+          <div style="display:flex; align-items:center; gap:var(--sp-3); flex:1; justify-content:center;">
+            <span style="font-size:var(--font-size-lg); font-weight:900; color:var(--color-text-placeholder);">3</span>
+            <span style="font-size:var(--font-size-xs); color:var(--color-text-placeholder);">—</span>
+            <span style="font-size:var(--font-size-lg); font-weight:900; color:var(--color-text-primary);">6</span>
+          </div>
+          <span style="font-size:var(--font-size-xs); color:var(--color-team2); font-weight:700; width:40px; text-align:right;">Sq.2 ✓</span>
+        </div>
+        <!-- Set 3 -->
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <span style="font-size:var(--font-size-xs); color:var(--color-text-placeholder); width:40px;">Set 3</span>
+          <div style="display:flex; align-items:center; gap:var(--sp-3); flex:1; justify-content:center;">
+            <span style="font-size:var(--font-size-lg); font-weight:900; color:var(--color-text-primary);">7</span>
+            <span style="font-size:var(--font-size-xs); color:var(--color-text-placeholder);">—</span>
+            <span style="font-size:var(--font-size-lg); font-weight:900; color:var(--color-text-placeholder);">5</span>
+          </div>
+          <span style="font-size:var(--font-size-xs); color:var(--color-team1); font-weight:700; width:40px; text-align:right;">Sq.1 ✓</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:1px; background:var(--color-border); margin: var(--sp-3) 0;"></div>
+
+    <!-- Meta -->
+    <div class="match-summary-row">
+      <span class="match-summary-label">Circolo</span>
+      <span class="match-summary-value">Padel Club Roma</span>
+    </div>
+    <div class="match-summary-row">
+      <span class="match-summary-label">Sport</span>
+      <span><span class="sport-badge sport-badge--padel">Padel</span></span>
+    </div>
+    <div class="match-summary-row">
+      <span class="match-summary-label">Stato</span>
+      <span class="pending-badge">
+        <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;flex-shrink:0;"></span>
+        In attesa (1/4)
+      </span>
+    </div>
+    <div class="match-summary-row" style="border-bottom:none;">
+      <span class="match-summary-label">Inserita da</span>
+      <span class="match-summary-value" style="color:var(--color-accent);">Marco Rossi (tu)</span>
+    </div>
+  </div>
+
+  <p style="font-size:var(--font-size-sm); color:var(--color-text-secondary); margin-bottom:var(--sp-5); line-height:1.6;">
+    Il ranking si aggiornerà solo dopo la conferma di tutti e 4 i giocatori.
+  </p>
+
+  <a href="index.html" class="btn-primary">Inserisci un'altra partita</a>
+  <a href="#" style="display:block; text-align:center; margin-top:var(--sp-4); font-size:var(--font-size-sm); color:var(--color-text-secondary); text-decoration:none;">
+    Torna ai miei circoli
+  </a>
+</div>
+</body>
+</html>

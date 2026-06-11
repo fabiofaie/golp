@@ -570,6 +570,184 @@ html, body {
   }
 }
 
+/* US-004 — record match components (from style-tokens.json) */
+
+:root {
+  --color-team1:        #FF5500;
+  --color-team1-bg:     rgba(255, 85, 0, 0.08);
+  --color-team1-border: rgba(255, 85, 0, 0.25);
+  --color-team2:        #0EA5E9;
+  --color-team2-bg:     rgba(14, 165, 233, 0.08);
+  --color-team2-border: rgba(14, 165, 233, 0.25);
+  --font-size-score:    40px;
+}
+
+.team-block {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-4) var(--sp-5);
+  border-left-width: 3px;
+}
+
+.team-block--team1 { border-left-color: var(--color-team1); }
+.team-block--team2 { border-left-color: var(--color-team2); }
+
+.team-label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: var(--sp-3);
+}
+
+.team-label--team1 { color: var(--color-team1); }
+.team-label--team2 { color: var(--color-team2); }
+
+.vs-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-2) 0;
+}
+
+.vs-text {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-blk);
+  letter-spacing: 2px;
+  color: var(--color-text-placeholder);
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+
+.score-set-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  width: 36px;
+  flex-shrink: 0;
+}
+
+.score-inputs {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex: 1;
+}
+
+.score-input-wrap {
+  flex: 1;
+}
+
+.score-input {
+  width: 100%;
+  background: #0F0F0F;
+  border: 1px solid #3A3A3A;
+  border-radius: var(--r-md);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-blk);
+  text-align: center;
+  padding: var(--sp-3) var(--sp-2);
+  outline: none;
+  -moz-appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  &:focus { border-color: var(--color-accent); }
+}
+
+.score-input--team1 { border-top: 2px solid var(--color-team1); }
+.score-input--team2 { border-top: 2px solid var(--color-team2); }
+
+.score-single-input {
+  width: 100%;
+  max-width: 120px;
+  background: #0F0F0F;
+  border: 1px solid #3A3A3A;
+  border-radius: var(--r-md);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-score);
+  font-weight: var(--font-weight-blk);
+  text-align: center;
+  padding: var(--sp-3) var(--sp-2);
+  outline: none;
+  -moz-appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  &:focus { border-color: var(--color-accent); }
+}
+
+.score-single-input--t1 { border-top: 2px solid var(--color-team1); }
+.score-single-input--t2 { border-top: 2px solid var(--color-team2); }
+
+.score-dash {
+  color: var(--color-text-placeholder);
+  font-size: var(--font-size-base);
+  flex-shrink: 0;
+}
+
+.score-remove-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-placeholder);
+  cursor: pointer;
+  font-size: var(--font-size-lg);
+  padding: 0 var(--sp-1);
+  line-height: 1;
+  transition: color 0.15s;
+  flex-shrink: 0;
+
+  &:hover { color: var(--color-error); }
+}
+
+.add-set-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: var(--sp-3);
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--r-md);
+  color: var(--color-text-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+
+  &:hover { border-color: var(--color-accent); color: var(--color-accent); }
+}
+
+.section-label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--sp-3);
+}
+
+.score-team-label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.score-team-label--t1 { color: var(--color-team1); }
+.score-team-label--t2 { color: var(--color-team2); }
+
 @media (min-width: 600px) {
   body { background: #050505; }
   .page {

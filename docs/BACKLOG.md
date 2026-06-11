@@ -5,7 +5,7 @@
 ## Riepilogo
 - Epic totali: 4
 - Storie totali: 11
-- Storie TODO: 10 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 0 | DONE: 1
+- Storie TODO: 7 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 3
 
 ---
 
@@ -109,8 +109,10 @@ Un utente si unisce a due circoli diversi e li vede entrambi nella propria lista
 
 #### US-004: Inserimento risultato partita 2v2
 
-**Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 5 | **Status:** TODO
+**Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-11):** Review umana OK.
 **Blocked by:** US-003
+**Review note (2026-06-11):** Backend in `src/Golp.Api/Endpoints/MatchEndpoints.cs`, entities in `src/Golp.Api/Data/Entities/Match.cs|MatchSet.cs`, migration `AddMatchesAndMatchSets`. Tests in `src/Golp.Tests/Integration/MatchIntegrationTests.cs` (13 tests, 55 totali verdi). Frontend in `frontend/golp-app/src/app/circles/record-match/` (RecordMatchComponent), `match.service.ts`, route `circles/:circleId/match/new`, link "Registra partita" su ogni circle card. `GET /circles/me` ora include `sets` + `pointUnit`. Reviewer APPROVE — no critical aperti. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-004`.
 
 **Story**
 Come Marco, voglio registrare una partita selezionando i 4 giocatori (2 coppie) e inserendo il punteggio, così che il risultato entri nel sistema e possa essere convalidato.
