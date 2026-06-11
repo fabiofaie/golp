@@ -1,28 +1,24 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const CI = !!process.env['CI'];
-
 export default defineConfig({
   testDir: './e2e',
-  testMatch: ['auth.spec.ts'],
+  testMatch: 'walkthrough-us-001.spec.ts',
   fullyParallel: false,
-  forbidOnly: CI,
-  retries: CI ? 1 : 0,
   workers: 1,
-  reporter: CI ? 'list' : [['list'], ['html', { open: 'never' }]],
+  reporter: 'list',
   use: {
     baseURL: 'http://localhost:4200',
-    trace: 'on-first-retry',
-    video: CI ? 'off' : 'retain-on-failure',
-    headless: CI,
+    video: 'on',
+    trace: 'off',
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } }
   ],
   webServer: {
-    command: 'npx ng serve --port 4200 --proxy-config proxy.conf.json',
+    command: 'npx ng serve --port 4200',
     url: 'http://localhost:4200',
     reuseExistingServer: true,
     timeout: 120000
-  }
+  },
+  outputDir: 'C:/Users/fabio/source/repos/golp/docs/test-results/US-001/pw-output'
 });

@@ -1,0 +1,247 @@
+Uso delle impostazioni di avvio di C:\Users\fabio\source\repos\golp\src\Golp.Api\Properties\launchSettings.json...
+Compilazione...
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5120
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: C:\Users\fabio\source\repos\golp\src\Golp.Api
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (33ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [u].[Id], [u].[CreatedAt], [u].[Email], [u].[Name], [u].[PasswordHash]
+      FROM [Users] AS [u]
+      WHERE [u].[Email] = @ToLowerInvariant
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT CASE
+          WHEN EXISTS (
+              SELECT 1
+              FROM [Users] AS [u]
+              WHERE [u].[Email] = @ToLowerInvariant) THEN CAST(1 AS bit)
+          ELSE CAST(0 AS bit)
+      END
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime2), @p2='?' (Size = 254), @p3='?' (Size = 100), @p4='?' (Size = 100)], CommandType='Text', CommandTimeout='30']
+      SET IMPLICIT_TRANSACTIONS OFF;
+      SET NOCOUNT ON;
+      INSERT INTO [Users] ([Id], [CreatedAt], [Email], [Name], [PasswordHash])
+      VALUES (@p0, @p1, @p2, @p3, @p4);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [u].[Id], [u].[CreatedAt], [u].[Email], [u].[Name], [u].[PasswordHash]
+      FROM [Users] AS [u]
+      WHERE [u].[Email] = @ToLowerInvariant
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [u].[Id], [u].[CreatedAt], [u].[Email], [u].[Name], [u].[PasswordHash]
+      FROM [Users] AS [u]
+      WHERE [u].[Email] = @ToLowerInvariant
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT CASE
+          WHEN EXISTS (
+              SELECT 1
+              FROM [Users] AS [u]
+              WHERE [u].[Email] = @ToLowerInvariant) THEN CAST(1 AS bit)
+          ELSE CAST(0 AS bit)
+      END
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [u].[Id], [u].[CreatedAt], [u].[Email], [u].[Name], [u].[PasswordHash]
+      FROM [Users] AS [u]
+      WHERE [u].[Email] = @ToLowerInvariant
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@userId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT [p].[Id], [p].[ExpiresAt], [p].[TokenHash], [p].[UsedAt], [p].[UserId]
+      FROM [PasswordResetTokens] AS [p]
+      WHERE [p].[UserId] = @userId AND [p].[UsedAt] IS NULL
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime2), @p2='?' (Size = 64), @p3='?' (DbType = DateTime2), @p4='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SET IMPLICIT_TRANSACTIONS OFF;
+      SET NOCOUNT ON;
+      INSERT INTO [PasswordResetTokens] ([Id], [ExpiresAt], [TokenHash], [UsedAt], [UserId])
+      VALUES (@p0, @p1, @p2, @p3, @p4);
+info: Golp.Api.Services.DevelopmentEmailService[0]
+      PASSWORD RESET LINK for verify_1781179014836@test.com: http://localhost:4200/reset-password?token=nm7NtAgDceNkSKgrusi1J%2BuB%2FaOx3yrtcoMXbAQZchg%3D
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[@tokenHash='?' (Size = 64)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [p].[Id], [p].[ExpiresAt], [p].[TokenHash], [p].[UsedAt], [p].[UserId], [u].[Id], [u].[CreatedAt], [u].[Email], [u].[Name], [u].[PasswordHash]
+      FROM [PasswordResetTokens] AS [p]
+      INNER JOIN [Users] AS [u] ON [p].[UserId] = [u].[Id]
+      WHERE [p].[TokenHash] = @tokenHash
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT CASE
+          WHEN EXISTS (
+              SELECT 1
+              FROM [Users] AS [u]
+              WHERE [u].[Email] = @ToLowerInvariant) THEN CAST(1 AS bit)
+          ELSE CAST(0 AS bit)
+      END
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime2), @p2='?' (Size = 254), @p3='?' (Size = 100), @p4='?' (Size = 100)], CommandType='Text', CommandTimeout='30']
+      SET IMPLICIT_TRANSACTIONS OFF;
+      SET NOCOUNT ON;
+      INSERT INTO [Users] ([Id], [CreatedAt], [Email], [Name], [PasswordHash])
+      VALUES (@p0, @p1, @p2, @p3, @p4);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [u].[Id], [u].[CreatedAt], [u].[Email], [u].[Name], [u].[PasswordHash]
+      FROM [Users] AS [u]
+      WHERE [u].[Email] = @ToLowerInvariant
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [u].[Id], [u].[CreatedAt], [u].[Email], [u].[Name], [u].[PasswordHash]
+      FROM [Users] AS [u]
+      WHERE [u].[Email] = @ToLowerInvariant
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@userId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT [p].[Id], [p].[ExpiresAt], [p].[TokenHash], [p].[UsedAt], [p].[UserId]
+      FROM [PasswordResetTokens] AS [p]
+      WHERE [p].[UserId] = @userId AND [p].[UsedAt] IS NULL
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime2), @p2='?' (Size = 64), @p3='?' (DbType = DateTime2), @p4='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SET IMPLICIT_TRANSACTIONS OFF;
+      SET NOCOUNT ON;
+      INSERT INTO [PasswordResetTokens] ([Id], [ExpiresAt], [TokenHash], [UsedAt], [UserId])
+      VALUES (@p0, @p1, @p2, @p3, @p4);
+info: Golp.Api.Services.DevelopmentEmailService[0]
+      PASSWORD RESET LINK for walk_1781179052199@test.com: http://localhost:4200/reset-password?token=ykbAZgvReatUByfTt5XzMWSp3%2BFr%2Fn6jAsi1SwmLVY8%3D
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT CASE
+          WHEN EXISTS (
+              SELECT 1
+              FROM [Users] AS [u]
+              WHERE [u].[Email] = @ToLowerInvariant) THEN CAST(1 AS bit)
+          ELSE CAST(0 AS bit)
+      END
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime2), @p2='?' (Size = 254), @p3='?' (Size = 100), @p4='?' (Size = 100)], CommandType='Text', CommandTimeout='30']
+      SET IMPLICIT_TRANSACTIONS OFF;
+      SET NOCOUNT ON;
+      INSERT INTO [Users] ([Id], [CreatedAt], [Email], [Name], [PasswordHash])
+      VALUES (@p0, @p1, @p2, @p3, @p4);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [u].[Id], [u].[CreatedAt], [u].[Email], [u].[Name], [u].[PasswordHash]
+      FROM [Users] AS [u]
+      WHERE [u].[Email] = @ToLowerInvariant
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [u].[Id], [u].[CreatedAt], [u].[Email], [u].[Name], [u].[PasswordHash]
+      FROM [Users] AS [u]
+      WHERE [u].[Email] = @ToLowerInvariant
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@userId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT [p].[Id], [p].[ExpiresAt], [p].[TokenHash], [p].[UsedAt], [p].[UserId]
+      FROM [PasswordResetTokens] AS [p]
+      WHERE [p].[UserId] = @userId AND [p].[UsedAt] IS NULL
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime2), @p2='?' (Size = 64), @p3='?' (DbType = DateTime2), @p4='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SET IMPLICIT_TRANSACTIONS OFF;
+      SET NOCOUNT ON;
+      INSERT INTO [PasswordResetTokens] ([Id], [ExpiresAt], [TokenHash], [UsedAt], [UserId])
+      VALUES (@p0, @p1, @p2, @p3, @p4);
+info: Golp.Api.Services.DevelopmentEmailService[0]
+      PASSWORD RESET LINK for walk_1781179079976@test.com: http://localhost:4200/reset-password?token=xA%2FtJCmq38zXfidJ1QWLsYOc4WbEDTIPN3XjH3yE82U%3D
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT CASE
+          WHEN EXISTS (
+              SELECT 1
+              FROM [Users] AS [u]
+              WHERE [u].[Email] = @ToLowerInvariant) THEN CAST(1 AS bit)
+          ELSE CAST(0 AS bit)
+      END
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime2), @p2='?' (Size = 254), @p3='?' (Size = 100), @p4='?' (Size = 100)], CommandType='Text', CommandTimeout='30']
+      SET IMPLICIT_TRANSACTIONS OFF;
+      SET NOCOUNT ON;
+      INSERT INTO [Users] ([Id], [CreatedAt], [Email], [Name], [PasswordHash])
+      VALUES (@p0, @p1, @p2, @p3, @p4);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [u].[Id], [u].[CreatedAt], [u].[Email], [u].[Name], [u].[PasswordHash]
+      FROM [Users] AS [u]
+      WHERE [u].[Email] = @ToLowerInvariant
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [u].[Id], [u].[CreatedAt], [u].[Email], [u].[Name], [u].[PasswordHash]
+      FROM [Users] AS [u]
+      WHERE [u].[Email] = @ToLowerInvariant
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@userId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT [p].[Id], [p].[ExpiresAt], [p].[TokenHash], [p].[UsedAt], [p].[UserId]
+      FROM [PasswordResetTokens] AS [p]
+      WHERE [p].[UserId] = @userId AND [p].[UsedAt] IS NULL
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime2), @p2='?' (Size = 64), @p3='?' (DbType = DateTime2), @p4='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SET IMPLICIT_TRANSACTIONS OFF;
+      SET NOCOUNT ON;
+      INSERT INTO [PasswordResetTokens] ([Id], [ExpiresAt], [TokenHash], [UsedAt], [UserId])
+      VALUES (@p0, @p1, @p2, @p3, @p4);
+info: Golp.Api.Services.DevelopmentEmailService[0]
+      PASSWORD RESET LINK for walk_1781179130335@test.com: http://localhost:4200/reset-password?token=WjuRelBrnXvxyrZfw9wZCgX8t0RC0fOzNNJQ9skNUsQ%3D
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (4ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT CASE
+          WHEN EXISTS (
+              SELECT 1
+              FROM [Users] AS [u]
+              WHERE [u].[Email] = @ToLowerInvariant) THEN CAST(1 AS bit)
+          ELSE CAST(0 AS bit)
+      END
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime2), @p2='?' (Size = 254), @p3='?' (Size = 100), @p4='?' (Size = 100)], CommandType='Text', CommandTimeout='30']
+      SET IMPLICIT_TRANSACTIONS OFF;
+      SET NOCOUNT ON;
+      INSERT INTO [Users] ([Id], [CreatedAt], [Email], [Name], [PasswordHash])
+      VALUES (@p0, @p1, @p2, @p3, @p4);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [u].[Id], [u].[CreatedAt], [u].[Email], [u].[Name], [u].[PasswordHash]
+      FROM [Users] AS [u]
+      WHERE [u].[Email] = @ToLowerInvariant
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [u].[Id], [u].[CreatedAt], [u].[Email], [u].[Name], [u].[PasswordHash]
+      FROM [Users] AS [u]
+      WHERE [u].[Email] = @ToLowerInvariant
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT CASE
+          WHEN EXISTS (
+              SELECT 1
+              FROM [Users] AS [u]
+              WHERE [u].[Email] = @ToLowerInvariant) THEN CAST(1 AS bit)
+          ELSE CAST(0 AS bit)
+      END
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime2), @p2='?' (Size = 254), @p3='?' (Size = 100), @p4='?' (Size = 100)], CommandType='Text', CommandTimeout='30']
+      SET IMPLICIT_TRANSACTIONS OFF;
+      SET NOCOUNT ON;
+      INSERT INTO [Users] ([Id], [CreatedAt], [Email], [Name], [PasswordHash])
+      VALUES (@p0, @p1, @p2, @p3, @p4);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT CASE
+          WHEN EXISTS (
+              SELECT 1
+              FROM [Users] AS [u]
+              WHERE [u].[Email] = @ToLowerInvariant) THEN CAST(1 AS bit)
+          ELSE CAST(0 AS bit)
+      END
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@ToLowerInvariant='?' (Size = 254)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [u].[Id], [u].[CreatedAt], [u].[Email], [u].[Name], [u].[PasswordHash]
+      FROM [Users] AS [u]
+      WHERE [u].[Email] = @ToLowerInvariant
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[@tokenHash='?' (Size = 64)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [p].[Id], [p].[ExpiresAt], [p].[TokenHash], [p].[UsedAt], [p].[UserId], [u].[Id], [u].[CreatedAt], [u].[Email], [u].[Name], [u].[PasswordHash]
+      FROM [PasswordResetTokens] AS [p]
+      INNER JOIN [Users] AS [u] ON [p].[UserId] = [u].[Id]
+      WHERE [p].[TokenHash] = @tokenHash

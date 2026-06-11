@@ -16,6 +16,7 @@
 
 **Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 3 | **Status:** REVIEW
 **Review note (2026-06-11):** Codice in `src/Golp.Api/` (Minimal API, EF Core, JWT, BCrypt), test in `src/Golp.Tests/` (5 unit + 14 integration). Frontend in `frontend/golp-app/src/app/auth/` (4 componenti standalone, AuthService, guard, interceptor). E2E spec in `frontend/golp-app/e2e/`. Reviewer APPROVE — no critical aperti.
+**Visual evidence (2026-06-11):** docs/test-results/US-001/report.md (7 AC pass / 0 AC fail / 0 console errors inattesi)
 > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-001` (o aggiorna manualmente lo status a `DONE`).
 **Blocked by:** -
 

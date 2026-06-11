@@ -1,0 +1,3 @@
+POST http://localhost:5120/auth/login → 401
+POST http://localhost:5120/auth/register → 409
+POST http://localhost:5120/auth/password-reset/confirm → 400

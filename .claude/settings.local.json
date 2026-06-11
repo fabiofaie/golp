@@ -18,7 +18,8 @@
       "Bash(dotnet test *)",
       "Bash(npx playwright *)",
       "Bash(npm install *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5120/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"test\",\"password\":\"test\"}')"
     ]
   }
 }
