@@ -4,7 +4,7 @@ const CI = !!process.env['CI'];
 
 export default defineConfig({
   testDir: './e2e',
-  testMatch: ['auth.spec.ts', 'circle-leaderboard.spec.ts', 'circle-match-history.spec.ts', 'circle-awards.spec.ts'],
+  testMatch: ['auth.spec.ts', 'circle-leaderboard.spec.ts', 'circle-match-history.spec.ts', 'circle-awards.spec.ts', 'circle-stats.spec.ts'],
   fullyParallel: false,
   forbidOnly: CI,
   retries: CI ? 1 : 0,
@@ -20,7 +20,7 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } }
   ],
   webServer: {
-    command: 'npx ng serve --port 4200 --proxy-config proxy.conf.json',
+    command: 'npx ng serve --port 4200 --proxy-config proxy.conf.js',
     url: 'http://localhost:4200',
     reuseExistingServer: true,
     timeout: 120000

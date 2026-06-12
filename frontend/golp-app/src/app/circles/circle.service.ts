@@ -86,6 +86,19 @@ export interface CircleAwardsResponse {
   currentYear: AwardPeriodResult;
 }
 
+export interface PlayerStatSummary {
+  userId: string;
+  name: string;
+  winRate: number;
+  gamesTogether?: number;
+  gamesAgainst?: number;
+}
+
+export interface CircleStatsResponse {
+  bestPartner: PlayerStatSummary | null;
+  toughestOpponent: PlayerStatSummary | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CircleService {
   private readonly http = inject(HttpClient);
@@ -120,5 +133,9 @@ export class CircleService {
 
   getAwards(circleId: string): Observable<CircleAwardsResponse> {
     return this.http.get<CircleAwardsResponse>(`/circles/${circleId}/awards`);
+  }
+
+  getMyStats(circleId: string): Observable<CircleStatsResponse> {
+    return this.http.get<CircleStatsResponse>(`/circles/${circleId}/stats/me`);
   }
 }

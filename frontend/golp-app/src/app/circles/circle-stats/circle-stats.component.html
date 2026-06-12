@@ -1,0 +1,93 @@
+<div class="page">
+  <div class="bg-deco" aria-hidden="true">ST</div>
+
+  <header class="auth-header">
+    <a routerLink="/circles" class="back-nav">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      I miei circoli
+    </a>
+    <span class="brand">GOLP</span>
+  </header>
+
+  <main style="flex:1; display:flex; flex-direction:column;">
+    <h1 class="auth-title">Statistiche.</h1>
+    <p class="auth-subtitle">I tuoi compagni e avversari nel circolo.</p>
+
+    @if (loading) {
+      <p style="color:var(--color-text-secondary); font-size:13px; margin-top:24px;">Caricamento…</p>
+    } @else if (errorMessage) {
+      <div class="form-error">{{ errorMessage }}</div>
+    } @else if (stats) {
+
+      @if (isEmpty) {
+        <div class="empty-state" style="margin-top:40px;">
+          <div class="empty-icon" aria-hidden="true">◎</div>
+          <p class="empty-title">Ancora nessuna statistica.</p>
+          <p class="empty-subtitle">Gioca altre partite per vedere il tuo miglior compagno e l'avversario più ostico.</p>
+        </div>
+      } @else {
+        <div class="stats-list">
+
+          <!-- Miglior compagno -->
+          <div class="stat-card stat-card--partner">
+            <div class="stat-card-header">
+              <span class="stat-label stat-label--partner">Miglior compagno</span>
+            </div>
+            @if (stats.bestPartner; as bp) {
+              <div class="stat-content">
+                <div class="ring-wrap">
+                  <svg class="ring-svg" viewBox="0 0 100 100" [attr.aria-label]="winRatePct(bp.winRate) + '% win rate'">
+                    <circle class="ring-track" cx="50" cy="50" r="44"/>
+                    <circle class="ring-fill ring-fill--partner" cx="50" cy="50" r="44"
+                      [attr.stroke-dasharray]="winRateCircumference"
+                      [attr.stroke-dashoffset]="partnerDashOffset(bp.winRate)"/>
+                  </svg>
+                  <div class="ring-label">
+                    <span class="ring-pct ring-pct--partner">{{ winRatePct(bp.winRate) }}%</span>
+                  </div>
+                </div>
+                <div class="stat-info">
+                  <p class="stat-name">{{ bp.name }}</p>
+                  <p class="stat-games">{{ bp.gamesTogether }} {{ bp.gamesTogether === 1 ? 'partita' : 'partite' }} insieme</p>
+                </div>
+              </div>
+            } @else {
+              <p class="stat-empty">Dati non sufficienti (servono ≥3 partite con lo stesso compagno)</p>
+            }
+          </div>
+
+          <!-- Avversario più ostico -->
+          <div class="stat-card stat-card--opponent">
+            <div class="stat-card-header">
+              <span class="stat-label stat-label--opponent">Avversario più ostico</span>
+            </div>
+            @if (stats.toughestOpponent; as to) {
+              <div class="stat-content">
+                <div class="ring-wrap">
+                  <svg class="ring-svg" viewBox="0 0 100 100" [attr.aria-label]="winRatePct(to.winRate) + '% win rate vs'">
+                    <circle class="ring-track" cx="50" cy="50" r="44"/>
+                    <circle class="ring-fill ring-fill--opponent" cx="50" cy="50" r="44"
+                      [attr.stroke-dasharray]="winRateCircumference"
+                      [attr.stroke-dashoffset]="opponentDashOffset(to.winRate)"/>
+                  </svg>
+                  <div class="ring-label">
+                    <span class="ring-pct ring-pct--opponent">{{ winRatePct(to.winRate) }}%</span>
+                  </div>
+                </div>
+                <div class="stat-info">
+                  <p class="stat-name">{{ to.name }}</p>
+                  <p class="stat-games">{{ to.gamesAgainst }} {{ to.gamesAgainst === 1 ? 'partita' : 'partite' }} contro</p>
+                </div>
+              </div>
+            } @else {
+              <p class="stat-empty">Dati non sufficienti (servono ≥3 partite contro lo stesso avversario)</p>
+            }
+          </div>
+
+        </div>
+      }
+    }
+  </main>
+</div>

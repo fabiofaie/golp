@@ -67,9 +67,12 @@
                 + Registra
               </a>
             </div>
-            <div style="margin-top:8px;">
-              <a [routerLink]="['/circles', circle.id, 'awards']" class="btn-ghost" style="width:100%; text-align:center; display:block;">
+            <div style="margin-top:8px; display:flex; gap:8px;">
+              <a [routerLink]="['/circles', circle.id, 'awards']" class="btn-ghost" style="flex:1; text-align:center;">
                 Premi
+              </a>
+              <a [routerLink]="['/circles', circle.id, 'stats']" class="btn-ghost" style="flex:1; text-align:center;">
+                Stats
               </a>
             </div>
           </div>

@@ -64,5 +64,10 @@ export const routes: Routes = [
     loadComponent: () => import('./circles/circle-awards/circle-awards.component').then(m => m.CircleAwardsComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'circles/:circleId/stats',
+    loadComponent: () => import('./circles/circle-stats/circle-stats.component').then(m => m.CircleStatsComponent),
+    canActivate: [authGuard]
+  },
   { path: '**', redirectTo: '/dashboard' }
 ];

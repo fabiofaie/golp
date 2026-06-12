@@ -6,7 +6,7 @@
 
 - Epic totali: 4
 - Storie totali: 11
-- Storie TODO: 0 | PLANNED: 2 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 8
+- Storie TODO: 0 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 2 | DONE: 8
 
 ---
 
@@ -359,7 +359,9 @@ Nella schermata del circolo compaiono il giocatore del mese corrente e dell'anno
 
 #### US-011: Statistiche personali — compagni e avversari
 
-**Epic:** EP-004 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** PLANNED
+**Epic:** EP-004 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-06-13):** Review umana OK.
+**Review note (2026-06-13):** Backend: `StatsEndpoints.cs` (`GET /circles/{circleId}/stats/me`) con 2 query EF + aggregazione in-memory, soglia N=3, tie-break deterministico. Frontend: `CircleStatsComponent` (ts/html/scss) con ring SVG da style-tokens.json, stato vuoto + card "Dati non sufficienti" per null indipendenti. Route `/circles/:circleId/stats` + link "Stats" in MyCircles. Fix `proxy.conf.js` (bypass HTML navigation) necessario per E2E. Test: 125 BE verdi (+9 integration `PlayerStatsEndpointTests`) + 6 unit Angular + 3 E2E Playwright. Reviewer APPROVE. > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-011`.
 **Blocked by:** US-007
 
 **Story**

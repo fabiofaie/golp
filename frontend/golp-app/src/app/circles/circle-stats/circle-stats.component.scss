@@ -1,0 +1,137 @@
+.stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  margin-top: var(--sp-6);
+  flex: 1;
+}
+
+.stat-card {
+  border-radius: var(--r-xl);
+  padding: var(--sp-6);
+  border: 1px solid;
+}
+
+.stat-card--partner {
+  background: var(--color-partner-bg);
+  border-color: var(--color-partner-border);
+  box-shadow: var(--shadow-partner);
+}
+
+.stat-card--opponent {
+  background: var(--color-opponent-bg);
+  border-color: var(--color-opponent-border);
+  box-shadow: var(--shadow-opponent);
+}
+
+.stat-card-header {
+  margin-bottom: var(--sp-4);
+}
+
+.stat-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-label--partner {
+  color: var(--color-partner);
+}
+
+.stat-label--opponent {
+  color: var(--color-opponent);
+}
+
+.stat-content {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+}
+
+.ring-wrap {
+  position: relative;
+  width: var(--stat-ring-size);
+  height: var(--stat-ring-size);
+  flex-shrink: 0;
+}
+
+.ring-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ring-track {
+  fill: none;
+  stroke: var(--color-partner-ring-trk);
+  stroke-width: 8;
+}
+
+.stat-card--opponent .ring-track {
+  stroke: var(--color-opponent-ring-trk);
+}
+
+.ring-fill {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s ease;
+}
+
+.ring-fill--partner {
+  stroke: var(--color-partner-ring);
+}
+
+.ring-fill--opponent {
+  stroke: var(--color-opponent-ring);
+}
+
+.ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-pct {
+  font-size: 22px;
+  font-weight: var(--font-weight-black);
+  line-height: 1;
+}
+
+.ring-pct--partner {
+  color: var(--color-partner);
+}
+
+.ring-pct--opponent {
+  color: var(--color-opponent);
+}
+
+.stat-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-name {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--sp-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stat-games {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.stat-empty {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-style: italic;
+  padding-top: var(--sp-2);
+}

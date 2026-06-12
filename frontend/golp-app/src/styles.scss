@@ -32,6 +32,22 @@
   --color-rating:           #FF5500;
   --color-unclassified-bg:  #0D0D0D;
 
+  /* Stats partner/opponent colors (US-011, from style-tokens.json) */
+  --color-partner:          #22C55E;
+  --color-partner-bg:       rgba(34, 197, 94, 0.08);
+  --color-partner-border:   rgba(34, 197, 94, 0.22);
+  --color-partner-ring:     #22C55E;
+  --color-partner-ring-trk: rgba(34, 197, 94, 0.15);
+  --shadow-partner:         0 4px 20px rgba(34, 197, 94, 0.15);
+  --color-opponent:         #FF4444;
+  --color-opponent-bg:      rgba(255, 68, 68, 0.08);
+  --color-opponent-border:  rgba(255, 68, 68, 0.22);
+  --color-opponent-ring:    #FF4444;
+  --color-opponent-ring-trk:rgba(255, 68, 68, 0.15);
+  --shadow-opponent:        0 4px 20px rgba(255, 68, 68, 0.15);
+  --r-xl:   20px;
+  --stat-ring-size: 96px;
+
   /* Sport-specific colors (US-002, from style-tokens.json) */
   --color-sport-padel:          #FF5500;
   --color-sport-beachtennis:    #0EA5E9;
