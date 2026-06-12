@@ -758,3 +758,159 @@ html, body {
     min-height: calc(100vh - 80px);
   }
 }
+
+/* US-005 — match history & confirmation (from style-tokens.json) */
+
+:root {
+  --color-pending:        #F59E0B;
+  --color-pending-bg:     rgba(245, 158, 11, 0.10);
+  --color-pending-border: rgba(245, 158, 11, 0.25);
+  --color-disputed:       #FF4444;
+  --color-disputed-bg:    rgba(255, 68, 68, 0.10);
+  --color-disputed-border:rgba(255, 68, 68, 0.25);
+  --color-dot-empty:      #2C2C2C;
+  --color-dot-filled:     #22C55E;
+  --color-dot-you:        #FF5500;
+}
+
+.match-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-4) var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+
+  &.match-card--confirmed { border-color: rgba(34, 197, 94, 0.25); }
+  &.match-card--disputed  { border-color: rgba(255, 68, 68, 0.25); }
+}
+
+.match-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.match-date {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-placeholder);
+}
+
+.status-badge {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  padding: 2px var(--sp-2);
+  border-radius: var(--r-full);
+  border: 1px solid transparent;
+
+  &.status-badge--pending  { color: var(--color-pending);  background: var(--color-pending-bg);  border-color: var(--color-pending-border); }
+  &.status-badge--confirmed { color: var(--color-success); background: var(--color-success-bg);  border-color: var(--color-success-border); }
+  &.status-badge--disputed  { color: var(--color-error);   background: var(--color-error-bg);    border-color: var(--color-error-border); }
+}
+
+.teams-display {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.team-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  background: transparent;
+  border-left: 2px solid transparent;
+
+  &.team-row--winner { background: rgba(34, 197, 94, 0.05); border-left-color: var(--color-success); }
+}
+
+.team-names {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.win-tag {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-success);
+}
+
+.confirm-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+}
+
+.confirm-dots {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.confirm-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-dot-empty);
+  transition: background 0.2s;
+
+  &.confirm-dot--filled { background: var(--color-dot-filled); }
+  &.confirm-dot--you    { background: var(--color-dot-you); }
+}
+
+.confirm-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.match-actions {
+  display: flex;
+  gap: var(--sp-3);
+  margin-top: var(--sp-1);
+}
+
+.btn-confirm {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--color-success);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+
+  &:hover    { background: #1DAF52; }
+  &:active   { transform: scale(0.97); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.btn-dispute {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-3) var(--sp-4);
+  background: transparent;
+  color: var(--color-error);
+  border: 1px solid rgba(255, 68, 68, 0.25);
+  border-radius: var(--r-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover    { background: rgba(255, 68, 68, 0.06); border-color: rgba(255, 68, 68, 0.5); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}

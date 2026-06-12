@@ -3,14 +3,16 @@
 **Generato il:** 2026-06-11 | **Ultima modifica:** 2026-06-11
 
 ## Riepilogo
+
 - Epic totali: 4
 - Storie totali: 11
-- Storie TODO: 7 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 3
+- Storie TODO: 0 | PLANNED: 6 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 4
 
 ---
 
 ## EP-001 — Onboarding e Circoli
-*Fondamenta multi-tenant: account giocatore, creazione circolo, appartenenza a più circoli. Senza questo nessun'altra storia è giocabile. (da PRD §RF-1)*
+
+_Fondamenta multi-tenant: account giocatore, creazione circolo, appartenenza a più circoli. Senza questo nessun'altra storia è giocabile. (da PRD §RF-1)_
 
 #### US-001: Registrazione e accesso account giocatore
 
@@ -27,6 +29,7 @@ Come Marco (giocatore amatoriale), voglio registrarmi con email e password e acc
 Un utente nuovo si registra, riceve un token di sessione (JWT) e rivede i propri dati al login successivo.
 
 **Acceptance Criteria**
+
 - [ ] Registrazione con nome, email e password crea un account e autentica subito l'utente
 - [ ] Login con credenziali valide restituisce un token JWT; con credenziali errate restituisce errore esplicito senza rivelare quale campo è sbagliato
 - [ ] Email già registrata → errore chiaro, nessun account duplicato
@@ -36,10 +39,12 @@ Un utente nuovo si registra, riceve un token di sessione (JWT) e rivede i propri
 - [ ] Link di recupero già usato o scaduto → errore chiaro, nessuna modifica
 
 **Out of scope**
+
 - Social login (Google/Apple)
 - Profilo avanzato (foto, bio)
 
 **Open questions**
+
 - Serve verifica email alla registrazione, o si accetta l'account subito?
 
 ---
@@ -58,6 +63,7 @@ Come giocatore autenticato, voglio creare un circolo scegliendo lo sport pratica
 Un utente crea il circolo "Padel Club Roma" con sport `padel`; il circolo appare nella sua lista e la config sport (`point_unit`, `sets`, `team_size`) è persistita.
 
 **Acceptance Criteria**
+
 - [ ] Creazione circolo richiede nome e sport scelto da lista predefinita (padel, beach tennis, basket 2v2, burraco)
 - [ ] La config sport (`point_unit`, `sets`, `team_size=2`) viene assegnata automaticamente dallo sport scelto (da PRD §Sport config)
 - [ ] Il creatore risulta automaticamente membro del circolo
@@ -65,11 +71,13 @@ Un utente crea il circolo "Padel Club Roma" con sport `padel`; il circolo appare
 - [ ] Ogni circolo è uno spazio isolato: dati di un circolo mai visibili da un altro (da PRD §RF-1)
 
 **Out of scope**
+
 - Formati diversi dal 2v2: `team_size` è fisso a 2 nel MVP (da PRD §Out of scope)
 - Modifica sport dopo la creazione
 - Ruoli admin/gestore (Sara è post-MVP)
 
 **Open questions**
+
 - Creazione libera o invite-only tramite codice? (open question già nel PRD — da decidere prima del plan)
 
 ---
@@ -89,6 +97,7 @@ Come Marco, voglio iscrivermi a uno o più circoli esistenti, così che possa gi
 Un utente si unisce a due circoli diversi e li vede entrambi nella propria lista; in ciascuno parte con rating iniziale 1000 indipendente.
 
 **Acceptance Criteria**
+
 - [ ] Un giocatore può unirsi a un circolo esistente e appare nella lista membri
 - [ ] Lo stesso giocatore può appartenere a più circoli contemporaneamente (da PRD §RF-1)
 - [ ] Il rating è per-circolo: iscrizione a un nuovo circolo parte da 1000, senza influenzare gli altri
@@ -96,16 +105,19 @@ Un utente si unisce a due circoli diversi e li vede entrambi nella propria lista
 - [ ] La lista membri di un circolo mostra solo i suoi iscritti
 
 **Out of scope**
+
 - Abbandono/espulsione dal circolo
 - Approvazione manuale delle iscrizioni da parte di un gestore
 
 **Open questions**
+
 - Il meccanismo di join dipende dalla risposta su invite-only vs libero (vedi US-002)
 
 ---
 
 ## EP-002 — Partite e Validazione
-*Il cuore del dato oggettivo: inserire una partita 2v2 e farla confermare da tutti e 4 i giocatori. Senza conferma 4/4 il ranking perde credibilità. (da PRD §RF-2, §RF-3)*
+
+_Il cuore del dato oggettivo: inserire una partita 2v2 e farla confermare da tutti e 4 i giocatori. Senza conferma 4/4 il ranking perde credibilità. (da PRD §RF-2, §RF-3)_
 
 #### US-004: Inserimento risultato partita 2v2
 
@@ -121,6 +133,7 @@ Come Marco, voglio registrare una partita selezionando i 4 giocatori (2 coppie) 
 Un utente inserisce una partita di padel con 4 membri del circolo e punteggio set per set; la partita appare in stato "in attesa di conferma".
 
 **Acceptance Criteria**
+
 - [ ] Selezione di 4 giocatori distinti, tutti membri del circolo, divisi in 2 coppie (da PRD §RF-2)
 - [ ] Inserimento punteggio coerente con la config sport: set per set se `sets=true`, punteggio singolo altrimenti
 - [ ] L'inseritore deve essere uno dei 4 giocatori della partita
@@ -129,18 +142,21 @@ Un utente inserisce una partita di padel con 4 membri del circolo e punteggio se
 - [ ] La partita creata è in stato `pending` e non tocca la classifica
 
 **Out of scope**
+
 - Modifica/cancellazione partita dopo l'inserimento
 - Formati 1v1 / NvN (post-MVP)
 - Partite tra circoli diversi
 
 **Open questions**
+
 - Per gli sport a set: il punteggio del singolo set va validato secondo le regole dello sport (es. 6-4 padel) o accettato libero?
 
 ---
 
 #### US-005: Conferma collettiva del risultato (4/4)
 
-**Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 5 | **Status:** PLANNED
+**Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 5 | **Status:** REVIEW
+**Review note (2026-06-12):** Backend in `src/Golp.Api/Endpoints/MatchEndpoints.cs` (confirm + dispute endpoints), `Data/Entities/MatchConfirmation.cs`, migration `AddMatchConfirmations`. Frontend in `frontend/golp-app/src/app/circles/circle-match-history/`. Test: 16 integration (ConfirmMatchTests + DisputeMatchTests) + 9 unit (component spec). Suite 71/71 verde. Reviewer APPROVE — no critical aperti. **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-005`.
 **Blocked by:** US-004
 
 **Story**
@@ -150,6 +166,7 @@ Come giocatore coinvolto in una partita, voglio confermare (o contestare) il ris
 I 3 giocatori che non hanno inserito la partita la vedono in pending, la confermano uno a uno; alla quarta conferma la partita diventa `confirmed`.
 
 **Acceptance Criteria**
+
 - [ ] Ogni partecipante vede le proprie partite in attesa di conferma
 - [ ] L'inserimento vale come conferma implicita dell'inseritore (1/4 alla creazione)
 - [ ] La partita passa a `confirmed` solo quando tutti e 4 hanno confermato (da PRD §RF-3)
@@ -158,17 +175,19 @@ I 3 giocatori che non hanno inserito la partita la vedono in pending, la conferm
 - [ ] Conferma doppia dello stesso giocatore è idempotente (nessun doppio conteggio)
 
 **Out of scope**
+
 - Flusso di risoluzione della disputa (correzione e re-invio) — per ora la disputa congela la partita
 - Timeout automatico di conferma (dipende da open question PRD)
 
 **Open questions**
+
 - Cosa succede se uno dei 4 non conferma entro X ore? (open question già nel PRD: annullata o valida con 3/4?)
 
 ---
 
 #### US-006: Notifica push di richiesta conferma
 
-**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** TODO
+**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** PLANNED
 **Blocked by:** US-005
 
 **Story**
@@ -178,26 +197,30 @@ Come giocatore coinvolto in una partita appena inserita, voglio ricevere una not
 All'inserimento di una partita, i 3 giocatori da confermare ricevono una push; il tap apre la schermata di conferma.
 
 **Acceptance Criteria**
+
 - [ ] Push inviata ai 3 partecipanti che devono ancora confermare, non all'inseritore
 - [ ] Il tap sulla notifica porta direttamente alla partita da confermare
 - [ ] Permesso push negato dall'utente → l'app funziona comunque, la partita resta visibile nella lista pending
 - [ ] Nessuna notifica duplicata per la stessa partita allo stesso giocatore
 
 **Out of scope**
+
 - Reminder periodici di sollecito (dipende dalla decisione sul timeout)
 - Notifiche per eventi diversi dalla conferma (classifica, premi)
 
 **Open questions**
+
 - (nessuna)
 
 ---
 
 ## EP-003 — Ranking e Classifica
-*Il valore core: trasformare partite confermate in una classifica oggettiva, aggiornata in tempo reale. (da PRD §RF-4, §Algoritmo di ranking)*
+
+_Il valore core: trasformare partite confermate in una classifica oggettiva, aggiornata in tempo reale. (da PRD §RF-4, §Algoritmo di ranking)_
 
 #### US-007: Calcolo rating ELO alla conferma partita
 
-**Epic:** EP-003 | **Priority:** HIGH | **Story Points:** 5 | **Status:** TODO
+**Epic:** EP-003 | **Priority:** HIGH | **Story Points:** 5 | **Status:** PLANNED
 **Blocked by:** US-005
 
 **Story**
@@ -207,6 +230,7 @@ Come Marco, voglio che il mio rating si aggiorni automaticamente appena la parti
 Alla quarta conferma di una partita, i rating dei 4 giocatori cambiano secondo la formula ELO del PRD; i delta sono persistiti per ogni giocatore.
 
 **Acceptance Criteria**
+
 - [ ] Alla transizione a `confirmed`, i rating dei 4 giocatori vengono ricalcolati con la formula del PRD §Algoritmo (team_rating = media, amplifier 0.7, K=32)
 - [ ] K=48 per giocatori con meno di 15 partite confermate nel circolo (cold start)
 - [ ] `score_ratio` calcolato sommando tutte le unità di entrambe le squadre, qualunque sia lo sport
@@ -216,18 +240,20 @@ Alla quarta conferma di una partita, i rating dei 4 giocatori cambiano secondo l
 - [ ] Rating iniziale di ogni giocatore = 1000 per circolo
 
 **Out of scope**
+
 - Esposizione della formula all'utente (decisione PRD: algoritmo opaco)
 - Ricalcolo storico retroattivo in caso di dispute risolte
 - Tuning dei parametri (amplifier, K) via config
 
 **Open questions**
+
 - (nessuna)
 
 ---
 
 #### US-008: Classifica circolo in tempo reale
 
-**Epic:** EP-003 | **Priority:** HIGH | **Story Points:** 3 | **Status:** TODO
+**Epic:** EP-003 | **Priority:** HIGH | **Story Points:** 3 | **Status:** PLANNED
 **Blocked by:** US-007
 
 **Story**
@@ -235,27 +261,31 @@ Come Marco, voglio vedere la classifica aggiornata del mio circolo, così che sa
 
 **Demonstrates**
 Dopo la conferma di una partita, la classifica del circolo riflette immediatamente i nuovi rating; l'utente vede la propria posizione evidenziata.
+Tutti i giocatori iscritti al circolo che non hanno nessuna classifica pur avendo un punteggio iniziale pari a 1000 vanno mostrati in fondo alla classifica senza punteggio.
 
 **Acceptance Criteria**
+
 - [ ] La classifica mostra i membri del circolo ordinati per rating decrescente
 - [ ] L'aggiornamento è visibile subito dopo la conferma della partita (da PRD §RF-4)
 - [ ] La posizione del giocatore corrente è evidenziata
 - [ ] A parità di rating, criterio di ordinamento secondario deterministico (es. numero partite giocate)
-- [ ] Giocatori senza partite confermate mostrati in fondo alla classifica senza punteggio (non viene visualizzato il rating 1000)
+- [ ] Giocatori senza partite confermate visibili con rating 1000 (o sezione separata — vedi open question)
 - [ ] Cambiando circolo, la classifica mostrata è solo quella del circolo selezionato
 
 **Out of scope**
+
 - Storico evoluzione classifica nel tempo
 - Filtri per periodo (mese/anno — coperti dai premi in US-010)
 
 **Open questions**
-- (nessuna)
+
+- I giocatori a 0 partite compaiono in classifica a 1000 pt o in una lista "non classificati"?
 
 ---
 
 #### US-009: Esito partita con delta punti (+N / −N)
 
-**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 2 | **Status:** TODO
+**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 2 | **Status:** PLANNED
 **Blocked by:** US-007
 
 **Story**
@@ -265,26 +295,30 @@ Come Marco, voglio vedere quanti punti ho guadagnato o perso dopo ogni partita c
 Aperta una partita confermata, ogni giocatore vede il proprio `+12 pt` o `−8 pt`; la formula non è mai esposta (da PRD §UX).
 
 **Acceptance Criteria**
+
 - [ ] Dopo la conferma, ogni giocatore vede il proprio delta (`+N pt` / `−N pt`) sulla partita
 - [ ] Il delta mostrato corrisponde esattamente a quello applicato al rating (stesso dato persistito in US-007)
 - [ ] Nessun elemento UI espone formula, expected score o rating degli avversari usati nel calcolo
 - [ ] Partite pending/disputed non mostrano alcun delta
 
 **Out of scope**
+
 - Spiegazione del calcolo ("perché +12?") — decisione PRD: algoritmo opaco
 - Grafici andamento rating
 
 **Open questions**
+
 - (nessuna)
 
 ---
 
 ## EP-004 — Premi e Statistiche
-*Gamification leggera e insight personali: giocatore del mese/anno e statistiche su compagni e avversari. (da PRD §RF-5, §RF-6)*
+
+_Gamification leggera e insight personali: giocatore del mese/anno e statistiche su compagni e avversari. (da PRD §RF-5, §RF-6)_
 
 #### US-010: Giocatore del mese e dell'anno
 
-**Epic:** EP-004 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** TODO
+**Epic:** EP-004 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** PLANNED
 **Blocked by:** US-007
 
 **Story**
@@ -294,6 +328,7 @@ Come membro del circolo, voglio vedere chi è il giocatore del mese e dell'anno,
 Nella schermata del circolo compaiono il giocatore del mese corrente e dell'anno corrente; al cambio mese il conteggio mensile riparte (da PRD §RF-5).
 
 **Acceptance Criteria**
+
 - [ ] Il giocatore del mese è calcolato sui risultati delle sole partite confermate nel mese corrente
 - [ ] Il giocatore dell'anno è calcolato sulle partite confermate nell'anno corrente
 - [ ] Al cambio mese/anno il conteggio riparte (reset), lo storico dei premi passati resta consultabile
@@ -301,17 +336,19 @@ Nella schermata del circolo compaiono il giocatore del mese corrente e dell'anno
 - [ ] Il premio è per-circolo, mai cross-circolo
 
 **Out of scope**
+
 - Notifiche push per il premio
 - Badge/trofei collezionabili
 
 **Open questions**
+
 - Metrica esatta del premio: maggior guadagno di rating nel periodo, o miglior win-rate con un minimo di partite?
 
 ---
 
 #### US-011: Statistiche personali — compagni e avversari
 
-**Epic:** EP-004 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** TODO
+**Epic:** EP-004 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** PLANNED
 **Blocked by:** US-007
 
 **Story**
@@ -321,6 +358,7 @@ Come Marco, voglio sapere con quale compagno vinco di più e contro quale avvers
 La schermata profilo mostra "miglior compagno" (win-rate più alto insieme) e "avversario più ostico" (win-rate più basso contro), calcolati sulle partite confermate del circolo.
 
 **Acceptance Criteria**
+
 - [ ] Miglior compagno = compagno con il win-rate più alto giocando in coppia con me (da PRD §RF-6)
 - [ ] Avversario più ostico = avversario contro cui ho il win-rate più basso
 - [ ] Solo partite `confirmed` entrano nel calcolo
@@ -329,10 +367,12 @@ La schermata profilo mostra "miglior compagno" (win-rate più alto insieme) e "a
 - [ ] Nessuna partita giocata → schermata con stato vuoto chiaro, niente errori
 
 **Out of scope**
+
 - Statistiche avanzate (trend, grafici, head-to-head dettagliato) — esplicitamente out of scope nel PRD
 - Confronto statistiche tra giocatori
 
 **Open questions**
+
 - Soglia minima di partite per compagno/avversario: 3 va bene?
 
 ---

@@ -46,6 +46,16 @@ export class AuthService {
     return localStorage.getItem(TOKEN_KEY);
   }
 
+  getCurrentUserId(): string | null {
+    const token = this.getToken();
+    if (!token) return null;
+    try {
+      return JSON.parse(atob(token.split('.')[1])).sub ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   private storeToken(token: string): void {
     localStorage.setItem(TOKEN_KEY, token);
     this.isAuthenticated.set(true);

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOLP — Classifica</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+  <div class="page">
+    <div class="bg-deco">1</div>
+
+    <!-- HEADER -->
+    <header class="auth-header">
+      <span class="brand">GOLP</span>
+      <a href="#" class="back-nav">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        I miei circoli
+      </a>
+    </header>
+
+    <!-- TITLE -->
+    <h1 class="auth-title">Classifica</h1>
+    <p class="auth-subtitle">Ranking per rating ELO nel circolo</p>
+
+    <!-- CIRCLE CONTEXT -->
+    <div class="circle-context">
+      <span class="sport-dot"></span>
+      Padel Club Roma
+    </div>
+
+    <!-- PODIUM TOP 3 -->
+    <div class="podium" style="position:relative;">
+      <!-- 2nd place -->
+      <div class="podium-slot podium-slot--2">
+        <div class="podium-medal">🥈</div>
+        <div class="podium-name">Luca</div>
+        <div class="podium-rating">1048</div>
+      </div>
+      <!-- 1st place -->
+      <div class="podium-slot podium-slot--1">
+        <div class="podium-medal">🥇</div>
+        <div class="podium-name">Marco</div>
+        <div class="podium-rating">1082</div>
+        <span class="podium-you">Tu</span>
+      </div>
+      <!-- 3rd place -->
+      <div class="podium-slot podium-slot--3">
+        <div class="podium-medal">🥉</div>
+        <div class="podium-name">Sara</div>
+        <div class="podium-rating">1021</div>
+      </div>
+    </div>
+
+    <!-- FULL LEADERBOARD -->
+    <div class="section-label">Classifica completa</div>
+
+    <div class="leaderboard-list" id="leaderboard">
+
+      <!-- Rank 1 — current user -->
+      <div class="leaderboard-row leaderboard-row--current">
+        <div class="rank-badge rank-badge--1">1</div>
+        <div class="player-info">
+          <div class="player-name">
+            Marco
+            <span class="you-tag">Tu</span>
+          </div>
+          <div class="player-matches">12 partite</div>
+        </div>
+        <div class="player-rating">1082</div>
+      </div>
+
+      <!-- Rank 2 -->
+      <div class="leaderboard-row">
+        <div class="rank-badge rank-badge--2">2</div>
+        <div class="player-info">
+          <div class="player-name">Luca</div>
+          <div class="player-matches">10 partite</div>
+        </div>
+        <div class="player-rating">1048</div>
+      </div>
+
+      <!-- Rank 3 -->
+      <div class="leaderboard-row">
+        <div class="rank-badge rank-badge--3">3</div>
+        <div class="player-info">
+          <div class="player-name">Sara</div>
+          <div class="player-matches">8 partite</div>
+        </div>
+        <div class="player-rating">1021</div>
+      </div>
+
+      <!-- Rank 4 -->
+      <div class="leaderboard-row">
+        <div class="rank-badge rank-badge--n">4</div>
+        <div class="player-info">
+          <div class="player-name">Giorgio</div>
+          <div class="player-matches">7 partite</div>
+        </div>
+        <div class="player-rating" style="color:var(--color-text-secondary);font-size:var(--font-size-base);">998</div>
+      </div>
+
+      <!-- Rank 5 -->
+      <div class="leaderboard-row">
+        <div class="rank-badge rank-badge--n">5</div>
+        <div class="player-info">
+          <div class="player-name">Anna</div>
+          <div class="player-matches">5 partite</div>
+        </div>
+        <div class="player-rating" style="color:var(--color-text-secondary);font-size:var(--font-size-base);">974</div>
+      </div>
+
+      <!-- Rank 6 -->
+      <div class="leaderboard-row">
+        <div class="rank-badge rank-badge--n">6</div>
+        <div class="player-info">
+          <div class="player-name">Filippo</div>
+          <div class="player-matches">4 partite</div>
+        </div>
+        <div class="player-rating" style="color:var(--color-text-secondary);font-size:var(--font-size-base);">962</div>
+      </div>
+
+    </div>
+
+    <!-- UNCLASSIFIED SECTION -->
+    <div class="unclassified-section">
+      <div class="unclassified-header">
+        <span class="unclassified-title">Non classificati</span>
+        <span class="unclassified-count">2</span>
+        <span class="unclassified-hint" style="margin-left:auto;">Nessuna partita confirmed</span>
+      </div>
+      <div class="unclassified-list">
+        <div class="unclassified-row">
+          <div class="unclassified-dash">—</div>
+          <div class="unclassified-name">Elena</div>
+        </div>
+        <div class="unclassified-row unclassified-row--current">
+          <div class="unclassified-dash">—</div>
+          <div class="unclassified-name">
+            Roberto
+            <!-- example: if current user were unclassified -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEMO: empty state toggle -->
+    <div style="margin-top:var(--sp-8); text-align:center;">
+      <button onclick="toggleEmpty()"
+        style="background:transparent; border:1px dashed var(--color-border); border-radius:var(--r-md);
+               color:var(--color-text-placeholder); font-family:var(--font-family);
+               font-size:var(--font-size-xs); padding:var(--sp-2) var(--sp-4); cursor:pointer;">
+        [Demo] Stato vuoto (tutti a 0 partite)
+      </button>
+    </div>
+
+    <!-- EMPTY STATE (hidden) -->
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div class="empty-icon">🏆</div>
+      <div class="empty-title">Classifica vuota</div>
+      <div class="empty-subtitle">Nessuna partita ancora confermata in questo circolo. Iniziate a giocare!</div>
+    </div>
+
+  </div><!-- /page -->
+
+  <script>
+    function toggleEmpty() {
+      const lb = document.getElementById('leaderboard');
+      const es = document.getElementById('emptyState');
+      const podium = document.querySelector('.podium');
+      const sectionLabel = document.querySelector('.section-label');
+      const unclassified = document.querySelector('.unclassified-section');
+      const circleCtx = document.querySelector('.circle-context');
+      if (es.style.display === 'none') {
+        lb.style.display = 'none';
+        podium.style.display = 'none';
+        sectionLabel.style.display = 'none';
+        unclassified.style.display = 'none';
+        es.style.display = 'flex';
+      } else {
+        lb.style.display = 'flex';
+        podium.style.display = 'grid';
+        sectionLabel.style.display = 'block';
+        unclassified.style.display = 'block';
+        es.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>

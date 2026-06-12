@@ -1,0 +1,503 @@
+/* =============================================================
+   GOLP Design Tokens — US-009 Storico Partite con Delta
+   Source of truth: style-tokens.json
+   Extends: US-005 visual language
+   ============================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+
+:root {
+  --color-bg:               #0A0A0A;
+  --color-surface:          #141414;
+  --color-surface-elevated: #1F1F1F;
+  --color-border:           #2C2C2C;
+  --color-accent:           #FF5500;
+  --color-accent-hover:     #E64D00;
+  --color-accent-dim:       rgba(255, 85, 0, 0.12);
+  --color-text-primary:     #FFFFFF;
+  --color-text-secondary:   #9A9A9A;
+  --color-text-placeholder: #484848;
+  --color-error:            #FF4444;
+  --color-error-bg:         rgba(255, 68, 68, 0.10);
+  --color-error-border:     rgba(255, 68, 68, 0.25);
+  --color-success:          #22C55E;
+  --color-success-bg:       rgba(34, 197, 94, 0.10);
+  --color-success-border:   rgba(34, 197, 94, 0.25);
+  --color-delta-pos:        #22C55E;
+  --color-delta-pos-bg:     rgba(34, 197, 94, 0.08);
+  --color-delta-pos-border: rgba(34, 197, 94, 0.22);
+  --color-delta-neg:        #FF4444;
+  --color-delta-neg-bg:     rgba(255, 68, 68, 0.08);
+  --color-delta-neg-border: rgba(255, 68, 68, 0.22);
+  --color-delta-zero:       #9A9A9A;
+  --color-delta-zero-bg:    rgba(154, 154, 154, 0.08);
+  --color-delta-zero-border:rgba(154, 154, 154, 0.20);
+  --color-team1:            #FF5500;
+  --color-team1-bg:         rgba(255, 85, 0, 0.08);
+  --color-team1-border:     rgba(255, 85, 0, 0.25);
+  --color-team2:            #0EA5E9;
+  --color-team2-bg:         rgba(14, 165, 233, 0.08);
+  --color-team2-border:     rgba(14, 165, 233, 0.25);
+  --color-pending:          #F59E0B;
+  --color-pending-bg:       rgba(245, 158, 11, 0.10);
+  --color-pending-border:   rgba(245, 158, 11, 0.25);
+  --color-disputed:         #FF4444;
+  --color-disputed-bg:      rgba(255, 68, 68, 0.10);
+  --color-disputed-border:  rgba(255, 68, 68, 0.25);
+  --color-tab-active:       #FF5500;
+  --color-tab-active-bg:    rgba(255, 85, 0, 0.10);
+  --color-tab-inactive:     #484848;
+
+  --font-family:      'Inter', system-ui, -apple-system, sans-serif;
+  --font-size-xs:     11px;
+  --font-size-sm:     13px;
+  --font-size-base:   15px;
+  --font-size-lg:     18px;
+  --font-size-xl:     24px;
+  --font-size-2xl:    32px;
+  --font-size-delta:  28px;
+  --font-size-hero:   120px;
+  --font-weight-reg:  400;
+  --font-weight-med:  500;
+  --font-weight-bold: 700;
+  --font-weight-blk:  900;
+  --line-height:      1.5;
+
+  --sp-1:  4px;  --sp-2:  8px;  --sp-3:  12px; --sp-4:  16px;
+  --sp-5:  20px; --sp-6:  24px; --sp-8:  32px; --sp-10: 40px;
+  --sp-12: 48px; --sp-16: 64px;
+
+  --r-sm:   4px;  --r-md:  8px;  --r-lg: 14px; --r-full: 9999px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.6);
+}
+
+/* ---- Reset ---- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  min-height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =============================================
+   LAYOUT
+   ============================================= */
+
+.page {
+  min-height: 100vh;
+  max-width: 390px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-6) var(--sp-6) var(--sp-12);
+}
+
+.bg-deco {
+  position: absolute;
+  top: 40px;
+  right: -20px;
+  font-size: var(--font-size-hero);
+  font-weight: var(--font-weight-blk);
+  color: var(--color-accent);
+  opacity: 0.03;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: -8px;
+}
+
+/* =============================================
+   HEADER
+   ============================================= */
+
+.auth-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-8);
+}
+
+.brand {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-blk);
+  letter-spacing: -0.5px;
+  color: var(--color-accent);
+}
+
+.back-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.back-nav:hover { color: var(--color-text-primary); }
+
+.auth-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-blk);
+  letter-spacing: -0.8px;
+  line-height: 1.1;
+  margin-bottom: var(--sp-2);
+}
+
+.auth-subtitle {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--sp-4);
+}
+
+/* =============================================
+   CIRCLE CONTEXT BADGE
+   ============================================= */
+
+.circle-context {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-full);
+  padding: var(--sp-2) var(--sp-4);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-med);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--sp-4);
+  width: fit-content;
+}
+
+.circle-context .sport-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  flex-shrink: 0;
+}
+
+/* =============================================
+   TAB BAR
+   ============================================= */
+
+.tab-bar {
+  display: flex;
+  gap: var(--sp-1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-full);
+  padding: 3px;
+  margin-bottom: var(--sp-5);
+}
+
+.tab-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.3px;
+  color: var(--color-tab-inactive);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  border: none;
+  background: transparent;
+  font-family: var(--font-family);
+  white-space: nowrap;
+}
+
+.tab-item.active {
+  background: var(--color-tab-active-bg);
+  color: var(--color-tab-active);
+}
+
+.tab-item:hover:not(.active) {
+  color: var(--color-text-secondary);
+}
+
+/* =============================================
+   SPORT BADGE
+   ============================================= */
+
+.sport-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 3px var(--sp-3);
+  border-radius: var(--r-full);
+  border: 1px solid transparent;
+}
+.sport-badge--padel {
+  color: #FF5500;
+  border-color: rgba(255, 85, 0, 0.35);
+  background: rgba(255, 85, 0, 0.08);
+}
+.sport-badge--beachtennis {
+  color: #0EA5E9;
+  border-color: rgba(14, 165, 233, 0.35);
+  background: rgba(14, 165, 233, 0.08);
+}
+
+/* =============================================
+   STATUS BADGES
+   ============================================= */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  border-radius: var(--r-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.3px;
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid transparent;
+}
+.status-badge--pending {
+  color: var(--color-pending);
+  background: var(--color-pending-bg);
+  border-color: var(--color-pending-border);
+}
+.status-badge--confirmed {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+}
+.status-badge--disputed {
+  color: var(--color-disputed);
+  background: var(--color-disputed-bg);
+  border-color: var(--color-disputed-border);
+}
+
+/* =============================================
+   MATCH CARD
+   ============================================= */
+
+.match-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.match-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: border-color 0.15s;
+  display: flex;
+  flex-direction: column;
+}
+.match-card:hover { border-color: #3A3A3A; }
+
+.match-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.match-date {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-placeholder);
+  font-weight: var(--font-weight-med);
+}
+
+.match-card-body {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+/* =============================================
+   MATCH BODY — left content + right delta
+   ============================================= */
+
+.match-content {
+  flex: 1;
+  padding: var(--sp-4);
+  min-width: 0;
+}
+
+.match-delta-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--color-border);
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-3);
+}
+
+/* =============================================
+   DELTA BADGE — hero element
+   ============================================= */
+
+.delta-value {
+  font-size: var(--font-size-delta);
+  font-weight: var(--font-weight-blk);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+.delta-value--pos { color: var(--color-delta-pos); }
+.delta-value--neg { color: var(--color-delta-neg); }
+.delta-value--zero { color: var(--color-delta-zero); }
+
+.delta-unit {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.3px;
+  text-transform: lowercase;
+  color: var(--color-text-placeholder);
+}
+
+.delta-pending {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.delta-dots {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.delta-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-text-placeholder);
+}
+
+/* =============================================
+   TEAMS DISPLAY
+   ============================================= */
+
+.teams-display {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+.team-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  border-left: 2px solid transparent;
+}
+.team-row--team1 {
+  border-left-color: var(--color-team1);
+  background: var(--color-team1-bg);
+}
+.team-row--team2 {
+  border-left-color: var(--color-team2);
+  background: var(--color-team2-bg);
+}
+.team-row--winner .team-row-names {
+  font-weight: var(--font-weight-bold);
+}
+
+.team-row-names {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-reg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.you-tag {
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-accent);
+  background: var(--color-accent-dim);
+  border-radius: var(--r-sm);
+  padding: 1px 5px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.win-tag {
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-success);
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.score-sets {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.3px;
+  margin-top: var(--sp-1);
+}
+
+/* =============================================
+   EMPTY STATE
+   ============================================= */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-12) var(--sp-6);
+  text-align: center;
+  gap: var(--sp-3);
+}
+
+.empty-icon {
+  font-size: 40px;
+  line-height: 1;
+  opacity: 0.35;
+}
+
+.empty-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.empty-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  max-width: 240px;
+  line-height: 1.6;
+}
+
+/* =============================================
+   RESPONSIVE FRAME
+   ============================================= */
+
+@media (min-width: 600px) {
+  body { background: #050505; }
+  .page {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--r-lg);
+    min-height: calc(100vh - 80px);
+  }
+}

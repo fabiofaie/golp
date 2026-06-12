@@ -1,0 +1,84 @@
+{
+  "extends": "US-005/style-tokens.json",
+  "colors": {
+    "bg":               "#0A0A0A",
+    "surface":          "#141414",
+    "surfaceElevated":  "#1F1F1F",
+    "border":           "#2C2C2C",
+    "accent":           "#FF5500",
+    "accentHover":      "#E64D00",
+    "accentDim":        "rgba(255, 85, 0, 0.12)",
+    "textPrimary":      "#FFFFFF",
+    "textSecondary":    "#9A9A9A",
+    "textPlaceholder":  "#484848",
+    "gold":             "#F59E0B",
+    "goldBg":           "rgba(245, 158, 11, 0.08)",
+    "goldBorder":       "rgba(245, 158, 11, 0.22)",
+    "goldGlow":         "rgba(245, 158, 11, 0.15)",
+    "year":             "#0EA5E9",
+    "yearBg":           "rgba(14, 165, 233, 0.08)",
+    "yearBorder":       "rgba(14, 165, 233, 0.22)",
+    "yearGlow":         "rgba(14, 165, 233, 0.15)",
+    "gainPositive":     "#22C55E",
+    "emptyColor":       "#484848",
+    "emptyBorder":      "#1F1F1F"
+  },
+  "typography": {
+    "fontFamily": "Inter, system-ui, -apple-system, sans-serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap",
+    "scale": {
+      "xs":   "11px",
+      "sm":   "13px",
+      "base": "15px",
+      "lg":   "18px",
+      "xl":   "24px",
+      "2xl":  "32px",
+      "award": "48px",
+      "decoNumber": "96px",
+      "hero": "120px"
+    },
+    "weights": {
+      "regular": 400,
+      "medium":  500,
+      "bold":    700,
+      "black":   900
+    },
+    "lineHeight": 1.5
+  },
+  "spacing": {
+    "1": "4px",  "2": "8px",  "3": "12px", "4": "16px",
+    "5": "20px", "6": "24px", "8": "32px", "10": "40px",
+    "12": "48px", "16": "64px"
+  },
+  "borderRadius": {
+    "sm":   "4px",
+    "md":   "8px",
+    "lg":   "14px",
+    "xl":   "20px",
+    "full": "9999px"
+  },
+  "shadows": {
+    "sm": "0 1px 3px rgba(0,0,0,0.5)",
+    "md": "0 4px 16px rgba(0,0,0,0.6)",
+    "gold": "0 4px 24px rgba(245, 158, 11, 0.20)",
+    "year": "0 4px 24px rgba(14, 165, 233, 0.20)"
+  },
+  "components": {
+    "awardCard": {
+      "month": {
+        "bg":           "colors.goldBg",
+        "border":       "colors.goldBorder",
+        "accentColor":  "colors.gold",
+        "shadow":       "shadows.gold"
+      },
+      "year": {
+        "bg":           "colors.yearBg",
+        "border":       "colors.yearBorder",
+        "accentColor":  "colors.year",
+        "shadow":       "shadows.year"
+      },
+      "borderRadius":   "borderRadius.xl",
+      "padding":        "spacing.6"
+    }
+  }
+}

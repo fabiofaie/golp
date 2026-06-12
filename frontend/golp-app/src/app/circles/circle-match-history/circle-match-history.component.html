@@ -1,0 +1,110 @@
+<div class="page">
+  <div class="bg-deco" aria-hidden="true">✓</div>
+
+  <header class="auth-header">
+    <a [routerLink]="'/circles'" class="back-nav">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      I miei circoli
+    </a>
+    <span class="brand">GOLP</span>
+  </header>
+
+  <h1 class="auth-title">Partite.</h1>
+  <p class="auth-subtitle">Storico e conferme in sospeso</p>
+
+  @if (loading) {
+    <p style="color:var(--color-text-secondary); font-size:13px;">Caricamento…</p>
+  } @else if (errorMessage) {
+    <div class="form-error">{{ errorMessage }}</div>
+  } @else if (matches.length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon" aria-hidden="true">✓</div>
+      <p class="empty-title">Nessuna partita.</p>
+      <p class="empty-subtitle">Non sono ancora state registrate partite in questo circolo.</p>
+      <a [routerLink]="'/circles/' + circleId + '/match/new'" class="btn-primary" style="margin-top:24px;">+ Registra partita</a>
+    </div>
+  } @else {
+    @if (actionError) {
+      <div class="form-error" style="margin-bottom:12px;">{{ actionError }}</div>
+    }
+
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      @for (m of matches; track m.id) {
+        <div class="match-card" [class.match-card--confirmed]="m.status === 'confirmed'" [class.match-card--disputed]="m.status === 'disputed'">
+
+          <!-- header -->
+          <div class="match-card-header">
+            <span class="match-date">{{ m.createdAt | date:'dd/MM, HH:mm' }}</span>
+            <span class="status-badge"
+              [class.status-badge--confirmed]="m.status === 'confirmed'"
+              [class.status-badge--disputed]="m.status === 'disputed'"
+              [class.status-badge--pending]="m.status === 'pending'">
+              {{ m.status === 'confirmed' ? 'Confermata' : m.status === 'disputed' ? 'Contestata' : 'In attesa' }}
+            </span>
+          </div>
+
+          <!-- teams -->
+          <div class="teams-display">
+            <div class="team-row" [class.team-row--winner]="m.winnerTeam === 1">
+              <span class="team-label" [class.team-label--team1]="true">Team 1</span>
+              <span class="team-names">{{ teamNames(m.team1) }}</span>
+              @if (m.winnerTeam === 1) { <span class="win-tag">✓ Vince</span> }
+            </div>
+            <div class="team-row" [class.team-row--winner]="m.winnerTeam === 2">
+              <span class="team-label" [class.team-label--team2]="true">Team 2</span>
+              <span class="team-names">{{ teamNames(m.team2) }}</span>
+              @if (m.winnerTeam === 2) { <span class="win-tag">✓ Vince</span> }
+            </div>
+          </div>
+
+          <!-- confirm dots (pending only) -->
+          @if (m.status === 'pending') {
+            <div class="confirm-progress">
+              <div class="confirm-dots">
+                @for (dot of confirmDots(m); track $index) {
+                  <div class="confirm-dot"
+                    [class.confirm-dot--filled]="dot === 'filled'"
+                    [class.confirm-dot--you]="dot === 'you'">
+                  </div>
+                }
+              </div>
+              <span class="confirm-label">{{ m.confirmationsCount }} di 4 conferme</span>
+            </div>
+          }
+
+          <!-- actions -->
+          @if (m.status === 'pending' && isParticipant(m)) {
+            @if (m.hasCurrentUserConfirmed) {
+              <p style="font-size:12px; color:var(--color-text-placeholder); text-align:center; padding:8px 0;">
+                Hai già confermato · in attesa degli altri
+              </p>
+            } @else {
+              <div class="match-actions">
+                <button class="btn-dispute"
+                  [disabled]="disputing === m.id"
+                  (click)="dispute(m.id)">
+                  {{ disputing === m.id ? '…' : 'Contesta' }}
+                </button>
+                <button class="btn-confirm"
+                  [disabled]="confirming === m.id"
+                  (click)="confirm(m.id)">
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                    <path d="M2 7l4 4 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  {{ confirming === m.id ? '…' : 'Conferma' }}
+                </button>
+              </div>
+            }
+          }
+
+        </div>
+      }
+    </div>
+
+    <div style="margin-top:24px;">
+      <a [routerLink]="'/circles/' + circleId + '/match/new'" class="btn-primary">+ Registra partita</a>
+    </div>
+  }
+</div>

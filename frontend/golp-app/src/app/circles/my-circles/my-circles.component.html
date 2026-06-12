@@ -56,9 +56,14 @@
                 <span class="ranking-value">{{ circle.myRank }} <span class="ranking-total">/ {{ circle.memberCount }}</span></span>
               </div>
             </div>
-            <a [routerLink]="'/circles/' + circle.id + '/match/new'" class="btn-ghost" style="margin-top:4px;">
-              + Registra partita
-            </a>
+            <div style="display:flex; gap:8px; margin-top:4px;">
+              <a [routerLink]="'/circles/' + circle.id + '/matches'" class="btn-ghost" style="flex:1; text-align:center;">
+                Partite
+              </a>
+              <a [routerLink]="'/circles/' + circle.id + '/match/new'" class="btn-ghost" style="flex:1; text-align:center;">
+                + Registra
+              </a>
+            </div>
           </div>
         }
       </div>

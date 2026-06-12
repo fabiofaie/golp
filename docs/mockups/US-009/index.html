@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOLP — Storico Partite</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+  <div class="page">
+    <div class="bg-deco">△</div>
+
+    <!-- HEADER -->
+    <header class="auth-header">
+      <span class="brand">GOLP</span>
+      <a href="#" class="back-nav">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        I miei circoli
+      </a>
+    </header>
+
+    <!-- TITLE -->
+    <h1 class="auth-title">Partite</h1>
+    <p class="auth-subtitle">Tutte le partite del circolo</p>
+
+    <!-- CIRCLE CONTEXT -->
+    <div class="circle-context">
+      <span class="sport-dot"></span>
+      Padel Club Roma
+    </div>
+
+    <!-- TAB BAR -->
+    <div class="tab-bar" id="tabBar">
+      <button class="tab-item active" onclick="setTab(this, 'all')">Tutte</button>
+      <button class="tab-item" onclick="setTab(this, 'confirmed')">Confermate</button>
+      <button class="tab-item" onclick="setTab(this, 'pending')">In attesa</button>
+      <button class="tab-item" onclick="setTab(this, 'disputed')">Contestate</button>
+    </div>
+
+    <!-- MATCH LIST -->
+    <div class="match-list" id="matchList">
+
+      <!-- CARD 1: confirmed, delta positivo -->
+      <div class="match-card" data-status="confirmed">
+        <div class="match-card-header">
+          <span class="sport-badge sport-badge--padel">Padel</span>
+          <div style="display:flex;align-items:center;gap:var(--sp-3);">
+            <span class="status-badge status-badge--confirmed">✓ Confermata</span>
+            <span class="match-date">ieri, 19:30</span>
+          </div>
+        </div>
+        <div class="match-card-body">
+          <div class="match-content">
+            <div class="teams-display">
+              <div class="team-row team-row--team1 team-row--winner">
+                <span class="team-row-names">
+                  Marco <span class="you-tag">Tu</span> &amp; Luca
+                </span>
+                <span class="win-tag">✓ Vince</span>
+              </div>
+              <div class="team-row team-row--team2">
+                <span class="team-row-names">Sara &amp; Giorgio</span>
+              </div>
+            </div>
+            <div class="score-sets">6-4 &nbsp;·&nbsp; 7-5</div>
+          </div>
+          <div class="match-delta-col">
+            <span class="delta-value delta-value--pos">+12</span>
+            <span class="delta-unit">pt</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: confirmed, delta negativo -->
+      <div class="match-card" data-status="confirmed">
+        <div class="match-card-header">
+          <span class="sport-badge sport-badge--padel">Padel</span>
+          <div style="display:flex;align-items:center;gap:var(--sp-3);">
+            <span class="status-badge status-badge--confirmed">✓ Confermata</span>
+            <span class="match-date">2 giorni fa</span>
+          </div>
+        </div>
+        <div class="match-card-body">
+          <div class="match-content">
+            <div class="teams-display">
+              <div class="team-row team-row--team1">
+                <span class="team-row-names">Filippo &amp; Anna</span>
+                <span class="win-tag">✓ Vince</span>
+              </div>
+              <div class="team-row team-row--team2 team-row--winner" style="font-weight:inherit;">
+                <span class="team-row-names">
+                  Marco <span class="you-tag">Tu</span> &amp; Luca
+                </span>
+              </div>
+            </div>
+            <div class="score-sets">3-6 &nbsp;·&nbsp; 4-6</div>
+          </div>
+          <div class="match-delta-col">
+            <span class="delta-value delta-value--neg">−8</span>
+            <span class="delta-unit">pt</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 3: pending, da confermare -->
+      <div class="match-card" data-status="pending">
+        <div class="match-card-header">
+          <span class="sport-badge sport-badge--padel">Padel</span>
+          <div style="display:flex;align-items:center;gap:var(--sp-3);">
+            <span class="status-badge status-badge--pending">⏳ In attesa</span>
+            <span class="match-date">oggi, 14:00</span>
+          </div>
+        </div>
+        <div class="match-card-body">
+          <div class="match-content">
+            <div class="teams-display">
+              <div class="team-row team-row--team1 team-row--winner">
+                <span class="team-row-names">
+                  Marco <span class="you-tag">Tu</span> &amp; Luca
+                </span>
+                <span class="win-tag">✓ Vince</span>
+              </div>
+              <div class="team-row team-row--team2">
+                <span class="team-row-names">Cristina &amp; Davide</span>
+              </div>
+            </div>
+            <div class="score-sets">6-2 &nbsp;·&nbsp; 6-3</div>
+          </div>
+          <div class="match-delta-col">
+            <div class="delta-pending">
+              <div class="delta-dots">
+                <div class="delta-dot"></div>
+                <div class="delta-dot"></div>
+                <div class="delta-dot"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 4: confirmed, delta zero -->
+      <div class="match-card" data-status="confirmed">
+        <div class="match-card-header">
+          <span class="sport-badge sport-badge--padel">Padel</span>
+          <div style="display:flex;align-items:center;gap:var(--sp-3);">
+            <span class="status-badge status-badge--confirmed">✓ Confermata</span>
+            <span class="match-date">5 giorni fa</span>
+          </div>
+        </div>
+        <div class="match-card-body">
+          <div class="match-content">
+            <div class="teams-display">
+              <div class="team-row team-row--team1 team-row--winner">
+                <span class="team-row-names">
+                  Marco <span class="you-tag">Tu</span> &amp; Elena
+                </span>
+                <span class="win-tag">✓ Vince</span>
+              </div>
+              <div class="team-row team-row--team2">
+                <span class="team-row-names">Roberto &amp; Chiara</span>
+              </div>
+            </div>
+            <div class="score-sets">7-6 &nbsp;·&nbsp; 5-7 &nbsp;·&nbsp; 10-8</div>
+          </div>
+          <div class="match-delta-col">
+            <span class="delta-value delta-value--zero">+0</span>
+            <span class="delta-unit">pt</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 5: disputed -->
+      <div class="match-card" data-status="disputed">
+        <div class="match-card-header">
+          <span class="sport-badge sport-badge--padel">Padel</span>
+          <div style="display:flex;align-items:center;gap:var(--sp-3);">
+            <span class="status-badge status-badge--disputed">✕ Contestata</span>
+            <span class="match-date">1 settimana fa</span>
+          </div>
+        </div>
+        <div class="match-card-body">
+          <div class="match-content">
+            <div class="teams-display">
+              <div class="team-row team-row--team1">
+                <span class="team-row-names">Luca &amp; Anna</span>
+              </div>
+              <div class="team-row team-row--team2">
+                <span class="team-row-names">
+                  Marco <span class="you-tag">Tu</span> &amp; Sara
+                </span>
+              </div>
+            </div>
+            <div class="score-sets" style="color:var(--color-text-placeholder);">— partita contestata</div>
+          </div>
+          <div class="match-delta-col">
+            <div class="delta-pending">
+              <div class="delta-dots">
+                <div class="delta-dot" style="background:var(--color-disputed);opacity:0.5;"></div>
+                <div class="delta-dot" style="background:var(--color-disputed);opacity:0.5;"></div>
+                <div class="delta-dot" style="background:var(--color-disputed);opacity:0.5;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /match-list -->
+
+    <!-- EMPTY STATE (hidden by default) -->
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div class="empty-icon">🎾</div>
+      <div class="empty-title">Nessuna partita</div>
+      <div class="empty-subtitle">Non ci sono partite in questa categoria per questo circolo.</div>
+    </div>
+
+  </div><!-- /page -->
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOLP — Statistiche</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+  <div class="page">
+
+    <!-- HEADER -->
+    <header class="auth-header">
+      <span class="brand">GOLP</span>
+      <a href="#" class="back-nav">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        I miei circoli
+      </a>
+    </header>
+
+    <!-- TITLE -->
+    <h1 class="auth-title">Le mie stats</h1>
+    <p class="auth-subtitle">Su partite confermate nel circolo</p>
+
+    <!-- CIRCLE CONTEXT -->
+    <div class="circle-context">
+      <span class="sport-dot"></span>
+      Padel Club Roma
+    </div>
+
+    <!-- STATS GRID — with data -->
+    <div class="stats-grid" id="statsGrid">
+
+      <!-- MIGLIOR COMPAGNO -->
+      <div class="stat-card stat-card--partner">
+        <div class="stat-card-header">
+          <span class="stat-card-label">Miglior compagno</span>
+          <span class="stat-card-icon">🤝</span>
+        </div>
+        <div class="stat-card-body">
+          <!-- Win-rate ring: 75% -->
+          <div class="win-rate-ring" style="--pct: 270deg;">
+            <div class="win-rate-ring__track"></div>
+            <div class="win-rate-ring__inner">
+              <span class="win-rate-pct">75%</span>
+              <span class="win-rate-label">win</span>
+            </div>
+          </div>
+          <!-- Info -->
+          <div class="stat-card-info">
+            <div class="stat-player-name">Luca</div>
+            <div class="stat-detail-row">
+              <div class="stat-detail-item">
+                <div class="stat-detail-dot"></div>
+                8 partite insieme
+              </div>
+              <div class="stat-detail-item">
+                <div class="stat-detail-dot"></div>
+                6 vittorie su 8
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AVVERSARIO PIÙ OSTICO -->
+      <div class="stat-card stat-card--opponent">
+        <div class="stat-card-header">
+          <span class="stat-card-label">Avversario più ostico</span>
+          <span class="stat-card-icon">⚔️</span>
+        </div>
+        <div class="stat-card-body">
+          <!-- Win-rate ring: 20% = 72deg -->
+          <div class="win-rate-ring" style="--pct: 72deg;">
+            <div class="win-rate-ring__track"></div>
+            <div class="win-rate-ring__inner">
+              <span class="win-rate-pct">20%</span>
+              <span class="win-rate-label">win</span>
+            </div>
+          </div>
+          <!-- Info -->
+          <div class="stat-card-info">
+            <div class="stat-player-name">Filippo</div>
+            <div class="stat-detail-row">
+              <div class="stat-detail-item">
+                <div class="stat-detail-dot"></div>
+                5 scontri diretti
+              </div>
+              <div class="stat-detail-item">
+                <div class="stat-detail-dot"></div>
+                1 vittoria su 5
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DEMO TOGGLES -->
+    <div style="margin-top:var(--sp-8); display:flex; gap:var(--sp-3); flex-wrap:wrap; justify-content:center;">
+      <button onclick="showPartialEmpty()"
+        style="background:transparent; border:1px dashed var(--color-border); border-radius:var(--r-md);
+               color:var(--color-text-placeholder); font-family:var(--font-family);
+               font-size:var(--font-size-xs); padding:var(--sp-2) var(--sp-4); cursor:pointer;">
+        [Demo] Dati parziali
+      </button>
+      <button onclick="showFullEmpty()"
+        style="background:transparent; border:1px dashed var(--color-border); border-radius:var(--r-md);
+               color:var(--color-text-placeholder); font-family:var(--font-family);
+               font-size:var(--font-size-xs); padding:var(--sp-2) var(--sp-4); cursor:pointer;">
+        [Demo] Nessuna partita
+      </button>
+      <button onclick="showFull()"
+        style="background:transparent; border:1px dashed var(--color-border); border-radius:var(--r-md);
+               color:var(--color-text-placeholder); font-family:var(--font-family);
+               font-size:var(--font-size-xs); padding:var(--sp-2) var(--sp-4); cursor:pointer;">
+        [Demo] Con dati
+      </button>
+    </div>
+
+    <!-- PARTIAL EMPTY STATE (hidden by default) -->
+    <div class="stats-grid" id="statsPartial" style="display:none;">
+      <div class="stat-card stat-card--partner">
+        <div class="stat-card-header">
+          <span class="stat-card-label">Miglior compagno</span>
+          <span class="stat-card-icon">🤝</span>
+        </div>
+        <div class="stat-card-body">
+          <div class="win-rate-ring" style="--pct: 252deg;">
+            <div class="win-rate-ring__track"></div>
+            <div class="win-rate-ring__inner">
+              <span class="win-rate-pct">70%</span>
+              <span class="win-rate-label">win</span>
+            </div>
+          </div>
+          <div class="stat-card-info">
+            <div class="stat-player-name">Luca</div>
+            <div class="stat-detail-row">
+              <div class="stat-detail-item"><div class="stat-detail-dot"></div>3 partite insieme</div>
+              <div class="stat-detail-item"><div class="stat-detail-dot"></div>Soglia minima raggiunta</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="stat-card stat-card--empty">
+        <div class="stat-card-header">
+          <span class="stat-card-label" style="color:var(--color-empty);">Avversario più ostico</span>
+          <span class="stat-card-icon" style="opacity:0.35;">⚔️</span>
+        </div>
+        <div class="stat-empty-content">
+          <div class="stat-empty-title">Dati non sufficienti</div>
+          <div class="stat-empty-hint">Servono ≥3 partite contro lo stesso avversario.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GLOBAL EMPTY STATE (hidden by default) -->
+    <div class="global-empty" id="globalEmpty" style="display:none;">
+      <div class="global-empty-icon">📊</div>
+      <div class="global-empty-title">Ancora poche partite</div>
+      <div class="global-empty-subtitle">Gioca altre partite per vedere le statistiche su compagni e avversari.</div>
+    </div>
+
+  </div><!-- /page -->
+
+  <script>
+    function showPartialEmpty() {
+      document.getElementById('statsGrid').style.display = 'none';
+      document.getElementById('statsPartial').style.display = 'flex';
+      document.getElementById('globalEmpty').style.display = 'none';
+    }
+    function showFullEmpty() {
+      document.getElementById('statsGrid').style.display = 'none';
+      document.getElementById('statsPartial').style.display = 'none';
+      document.getElementById('globalEmpty').style.display = 'flex';
+    }
+    function showFull() {
+      document.getElementById('statsGrid').style.display = 'flex';
+      document.getElementById('statsPartial').style.display = 'none';
+      document.getElementById('globalEmpty').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

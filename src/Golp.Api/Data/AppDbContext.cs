@@ -11,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<CircleMembership> CircleMemberships => Set<CircleMembership>();
     public DbSet<Match> Matches => Set<Match>();
     public DbSet<MatchSet> MatchSets => Set<MatchSet>();
+    public DbSet<MatchConfirmation> MatchConfirmations => Set<MatchConfirmation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -87,6 +88,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
              .WithMany(m => m.Sets)
              .HasForeignKey(s => s.MatchId)
              .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MatchConfirmation>(e =>
+        {
+            e.HasKey(c => c.Id);
+            e.HasIndex(c => new { c.MatchId, c.UserId }).IsUnique();
+            e.HasOne(c => c.Match)
+             .WithMany()
+             .HasForeignKey(c => c.MatchId)
+             .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(c => c.User)
+             .WithMany()
+             .HasForeignKey(c => c.UserId)
+             .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

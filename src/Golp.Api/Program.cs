@@ -17,6 +17,9 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
 builder.Services.AddScoped<IEmailService, DevelopmentEmailService>();
 
+// Rating service — replaced by RatingService in US-007
+builder.Services.AddScoped<IRatingService, NoOpRatingService>();
+
 // JWT authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"]!;
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

@@ -1,0 +1,93 @@
+{
+  "extends": "US-005/style-tokens.json",
+  "colors": {
+    "bg":               "#0A0A0A",
+    "surface":          "#141414",
+    "surfaceElevated":  "#1F1F1F",
+    "border":           "#2C2C2C",
+    "accent":           "#FF5500",
+    "accentHover":      "#E64D00",
+    "accentDim":        "rgba(255, 85, 0, 0.12)",
+    "textPrimary":      "#FFFFFF",
+    "textSecondary":    "#9A9A9A",
+    "textPlaceholder":  "#484848",
+    "partnerColor":     "#22C55E",
+    "partnerBg":        "rgba(34, 197, 94, 0.08)",
+    "partnerBorder":    "rgba(34, 197, 94, 0.22)",
+    "partnerRing":      "#22C55E",
+    "partnerRingTrack": "rgba(34, 197, 94, 0.15)",
+    "opponentColor":    "#FF4444",
+    "opponentBg":       "rgba(255, 68, 68, 0.08)",
+    "opponentBorder":   "rgba(255, 68, 68, 0.22)",
+    "opponentRing":     "#FF4444",
+    "opponentRingTrack":"rgba(255, 68, 68, 0.15)",
+    "winRate":          "#22C55E",
+    "loseRate":         "#FF4444",
+    "emptyColor":       "#484848"
+  },
+  "typography": {
+    "fontFamily": "Inter, system-ui, -apple-system, sans-serif",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap",
+    "scale": {
+      "xs":   "11px",
+      "sm":   "13px",
+      "base": "15px",
+      "lg":   "18px",
+      "xl":   "24px",
+      "2xl":  "32px",
+      "pct":  "40px",
+      "hero": "120px"
+    },
+    "weights": {
+      "regular": 400,
+      "medium":  500,
+      "bold":    700,
+      "black":   900
+    },
+    "lineHeight": 1.5
+  },
+  "spacing": {
+    "1": "4px",  "2": "8px",  "3": "12px", "4": "16px",
+    "5": "20px", "6": "24px", "8": "32px", "10": "40px",
+    "12": "48px", "16": "64px"
+  },
+  "borderRadius": {
+    "sm":   "4px",
+    "md":   "8px",
+    "lg":   "14px",
+    "xl":   "20px",
+    "full": "9999px"
+  },
+  "shadows": {
+    "sm": "0 1px 3px rgba(0,0,0,0.5)",
+    "md": "0 4px 16px rgba(0,0,0,0.6)",
+    "partner":  "0 4px 20px rgba(34, 197, 94, 0.15)",
+    "opponent": "0 4px 20px rgba(255, 68, 68, 0.15)"
+  },
+  "components": {
+    "statCard": {
+      "partner": {
+        "bg":         "colors.partnerBg",
+        "border":     "colors.partnerBorder",
+        "accentColor":"colors.partnerColor",
+        "shadow":     "shadows.partner",
+        "ring":       "colors.partnerRing",
+        "ringTrack":  "colors.partnerRingTrack"
+      },
+      "opponent": {
+        "bg":         "colors.opponentBg",
+        "border":     "colors.opponentBorder",
+        "accentColor":"colors.opponentColor",
+        "shadow":     "shadows.opponent",
+        "ring":       "colors.opponentRing",
+        "ringTrack":  "colors.opponentRingTrack"
+      },
+      "borderRadius": "borderRadius.xl",
+      "padding":      "spacing.6"
+    },
+    "winRateRing": {
+      "size":        "96px",
+      "strokeWidth": "8px"
+    }
+  }
+}

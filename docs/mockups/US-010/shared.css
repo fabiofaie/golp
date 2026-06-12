@@ -1,0 +1,327 @@
+/* =============================================================
+   GOLP Design Tokens — US-010 Giocatore del Mese e dell'Anno
+   Source of truth: style-tokens.json
+   Extends: US-005 visual language
+   ============================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+
+:root {
+  --color-bg:               #0A0A0A;
+  --color-surface:          #141414;
+  --color-surface-elevated: #1F1F1F;
+  --color-border:           #2C2C2C;
+  --color-accent:           #FF5500;
+  --color-accent-hover:     #E64D00;
+  --color-accent-dim:       rgba(255, 85, 0, 0.12);
+  --color-text-primary:     #FFFFFF;
+  --color-text-secondary:   #9A9A9A;
+  --color-text-placeholder: #484848;
+  --color-gold:             #F59E0B;
+  --color-gold-bg:          rgba(245, 158, 11, 0.08);
+  --color-gold-border:      rgba(245, 158, 11, 0.22);
+  --color-gold-glow:        rgba(245, 158, 11, 0.15);
+  --color-year:             #0EA5E9;
+  --color-year-bg:          rgba(14, 165, 233, 0.08);
+  --color-year-border:      rgba(14, 165, 233, 0.22);
+  --color-year-glow:        rgba(14, 165, 233, 0.15);
+  --color-gain:             #22C55E;
+  --color-empty:            #484848;
+  --color-empty-border:     #1F1F1F;
+
+  --font-family:      'Inter', system-ui, -apple-system, sans-serif;
+  --font-size-xs:     11px;
+  --font-size-sm:     13px;
+  --font-size-base:   15px;
+  --font-size-lg:     18px;
+  --font-size-xl:     24px;
+  --font-size-2xl:    32px;
+  --font-size-award:  46px;
+  --font-size-deco:   96px;
+  --font-size-hero:   120px;
+  --font-weight-reg:  400;
+  --font-weight-med:  500;
+  --font-weight-bold: 700;
+  --font-weight-blk:  900;
+  --line-height:      1.5;
+
+  --sp-1:  4px;  --sp-2:  8px;  --sp-3:  12px; --sp-4:  16px;
+  --sp-5:  20px; --sp-6:  24px; --sp-8:  32px; --sp-10: 40px;
+  --sp-12: 48px; --sp-16: 64px;
+
+  --r-sm:   4px;  --r-md:  8px;  --r-lg: 14px; --r-xl: 20px; --r-full: 9999px;
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.5);
+  --shadow-md:   0 4px 16px rgba(0,0,0,0.6);
+  --shadow-gold: 0 4px 24px rgba(245, 158, 11, 0.20);
+  --shadow-year: 0 4px 24px rgba(14, 165, 233, 0.20);
+}
+
+/* ---- Reset ---- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  min-height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =============================================
+   LAYOUT
+   ============================================= */
+
+.page {
+  min-height: 100vh;
+  max-width: 390px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-6) var(--sp-6) var(--sp-12);
+}
+
+/* =============================================
+   HEADER
+   ============================================= */
+
+.auth-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-8);
+}
+
+.brand {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-blk);
+  letter-spacing: -0.5px;
+  color: var(--color-accent);
+}
+
+.back-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.back-nav:hover { color: var(--color-text-primary); }
+
+.auth-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-blk);
+  letter-spacing: -0.8px;
+  line-height: 1.1;
+  margin-bottom: var(--sp-2);
+}
+
+.auth-subtitle {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--sp-6);
+}
+
+/* =============================================
+   CIRCLE CONTEXT BADGE
+   ============================================= */
+
+.circle-context {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-full);
+  padding: var(--sp-2) var(--sp-4);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-med);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--sp-6);
+  width: fit-content;
+}
+
+.circle-context .sport-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  flex-shrink: 0;
+}
+
+/* =============================================
+   AWARD CARDS
+   ============================================= */
+
+.awards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.award-card {
+  position: relative;
+  border-radius: var(--r-xl);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: var(--sp-6);
+  overflow: hidden;
+}
+
+.award-card--month {
+  border-color: var(--color-gold-border);
+  background: var(--color-gold-bg);
+  box-shadow: var(--shadow-gold);
+}
+
+.award-card--year {
+  border-color: var(--color-year-border);
+  background: var(--color-year-bg);
+  box-shadow: var(--shadow-year);
+}
+
+.award-card--empty {
+  border-color: var(--color-empty-border);
+  background: var(--color-surface);
+  box-shadow: none;
+}
+
+/* Decorative large number in background */
+.award-deco {
+  position: absolute;
+  bottom: -16px;
+  right: -8px;
+  font-size: var(--font-size-deco);
+  font-weight: var(--font-weight-blk);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: -6px;
+}
+.award-card--month .award-deco  { color: var(--color-gold);  opacity: 0.08; }
+.award-card--year  .award-deco  { color: var(--color-year);  opacity: 0.08; }
+.award-card--empty .award-deco  { color: var(--color-empty); opacity: 0.04; }
+
+/* Card label row */
+.award-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-5);
+}
+
+.award-label {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.award-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.award-type {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.award-card--month .award-type  { color: var(--color-gold); }
+.award-card--year  .award-type  { color: var(--color-year); }
+.award-card--empty .award-type  { color: var(--color-empty); }
+
+.award-period-tag {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-med);
+  color: var(--color-text-placeholder);
+  background: var(--color-surface-elevated);
+  border-radius: var(--r-full);
+  padding: 2px var(--sp-3);
+  border: 1px solid var(--color-border);
+}
+
+/* Winner content */
+.award-winner-name {
+  font-size: var(--font-size-award);
+  font-weight: var(--font-weight-blk);
+  letter-spacing: -1.5px;
+  line-height: 1;
+  color: var(--color-text-primary);
+  margin-bottom: var(--sp-4);
+  max-width: calc(100% - 24px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.award-stats-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.award-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.award-stat-value {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-blk);
+  letter-spacing: -0.5px;
+  line-height: 1;
+  color: var(--color-gain);
+}
+
+.award-stat-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-placeholder);
+  font-weight: var(--font-weight-med);
+}
+
+.award-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--color-border);
+}
+
+/* Empty state inside card */
+.award-empty-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.award-empty-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-placeholder);
+}
+
+.award-empty-hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-placeholder);
+  line-height: 1.5;
+  max-width: 220px;
+}
+
+/* =============================================
+   RESPONSIVE FRAME
+   ============================================= */
+
+@media (min-width: 600px) {
+  body { background: #050505; }
+  .page {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--r-lg);
+    min-height: calc(100vh - 80px);
+  }
+}

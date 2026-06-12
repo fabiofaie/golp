@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Golp.Api.Data;
 using Golp.Api.Data.Entities;
+using Golp.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Golp.Api.Endpoints;
@@ -11,8 +12,13 @@ public static class MatchEndpoints
     {
         var matches = app.MapGroup("/circles/{circleId:guid}/matches").RequireAuthorization();
         matches.MapPost("/", CreateMatchAsync);
+        matches.MapGet("/", GetMatchesAsync);
+        matches.MapPost("/{matchId:guid}/confirm", ConfirmMatchAsync);
+        matches.MapPost("/{matchId:guid}/dispute", DisputeMatchAsync);
         return app;
     }
+
+    // ─── POST / ───────────────────────────────────────────────────────────────
 
     private static async Task<IResult> CreateMatchAsync(
         Guid circleId,
@@ -100,8 +106,17 @@ public static class MatchEndpoints
             Team2Score = s.Team2,
         }).ToList();
 
+        // TASK-2: inseritore = conferma implicita 1/4
+        var creatorConfirmation = new MatchConfirmation
+        {
+            MatchId     = match.Id,
+            UserId      = userId,
+            ConfirmedAt = DateTimeOffset.UtcNow,
+        };
+
         db.Matches.Add(match);
         db.MatchSets.AddRange(sets);
+        db.MatchConfirmations.Add(creatorConfirmation);
         await db.SaveChangesAsync();
 
         return Results.Created($"/circles/{circleId}/matches/{match.Id}", new
@@ -112,6 +127,157 @@ public static class MatchEndpoints
             winnerTeam = match.WinnerTeam,
             createdAt  = match.CreatedAt,
         });
+    }
+
+    // ─── GET / ────────────────────────────────────────────────────────────────
+
+    private static async Task<IResult> GetMatchesAsync(
+        Guid circleId,
+        ClaimsPrincipal user,
+        AppDbContext db)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
+            return Results.Unauthorized();
+
+        var circleExists = await db.Circles.AnyAsync(c => c.Id == circleId);
+        if (!circleExists)
+            return Results.NotFound(new { error = "Circolo non trovato" });
+
+        var matches = await db.Matches
+            .Where(m => m.CircleId == circleId)
+            .OrderByDescending(m => m.CreatedAt)
+            .ToListAsync();
+
+        if (matches.Count == 0)
+            return Results.Ok(Array.Empty<object>());
+
+        // Collect all player IDs to resolve names in one query
+        var playerIds = matches
+            .SelectMany(m => new[] { m.Team1Player1Id, m.Team1Player2Id, m.Team2Player1Id, m.Team2Player2Id })
+            .Distinct()
+            .ToHashSet();
+
+        var userNames = await db.Users
+            .Where(u => playerIds.Contains(u.Id))
+            .Select(u => new { u.Id, u.Name })
+            .ToDictionaryAsync(u => u.Id, u => u.Name);
+
+        var matchIds = matches.Select(m => m.Id).ToList();
+
+        var confirmationCounts = await db.MatchConfirmations
+            .Where(c => matchIds.Contains(c.MatchId))
+            .GroupBy(c => c.MatchId)
+            .Select(g => new { MatchId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.MatchId, x => x.Count);
+
+        var userConfirmedSet = await db.MatchConfirmations
+            .Where(c => matchIds.Contains(c.MatchId) && c.UserId == userId)
+            .Select(c => c.MatchId)
+            .ToHashSetAsync();
+
+        var result = matches.Select(m => new
+        {
+            id                       = m.Id,
+            status                   = m.Status,
+            winnerTeam               = m.WinnerTeam,
+            createdAt                = m.CreatedAt,
+            myDelta                  = (int?)null,  // populated by US-007
+            confirmationsCount       = confirmationCounts.GetValueOrDefault(m.Id, 0),
+            hasCurrentUserConfirmed  = userConfirmedSet.Contains(m.Id),
+            team1 = new[]
+            {
+                new { userId = m.Team1Player1Id, name = userNames.GetValueOrDefault(m.Team1Player1Id, "") },
+                new { userId = m.Team1Player2Id, name = userNames.GetValueOrDefault(m.Team1Player2Id, "") },
+            },
+            team2 = new[]
+            {
+                new { userId = m.Team2Player1Id, name = userNames.GetValueOrDefault(m.Team2Player1Id, "") },
+                new { userId = m.Team2Player2Id, name = userNames.GetValueOrDefault(m.Team2Player2Id, "") },
+            },
+        });
+
+        return Results.Ok(result);
+    }
+
+    // ─── POST /{matchId}/confirm ──────────────────────────────────────────────
+
+    private static async Task<IResult> ConfirmMatchAsync(
+        Guid circleId,
+        Guid matchId,
+        ClaimsPrincipal user,
+        AppDbContext db,
+        IRatingService ratingService)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
+            return Results.Unauthorized();
+
+        var match = await db.Matches.FindAsync(matchId);
+        if (match == null || match.CircleId != circleId)
+            return Results.NotFound(new { error = "Partita non trovata" });
+
+        if (match.Status is "confirmed" or "disputed")
+            return Results.Conflict(new { error = $"La partita è già {match.Status}" });
+
+        var playerIds = new[] { match.Team1Player1Id, match.Team1Player2Id, match.Team2Player1Id, match.Team2Player2Id };
+        if (!playerIds.Contains(userId))
+            return Results.Json(new { error = "Non sei un partecipante di questa partita" }, statusCode: 403);
+
+        var alreadyConfirmed = await db.MatchConfirmations
+            .AnyAsync(c => c.MatchId == matchId && c.UserId == userId);
+
+        if (!alreadyConfirmed)
+        {
+            db.MatchConfirmations.Add(new MatchConfirmation
+            {
+                MatchId     = matchId,
+                UserId      = userId,
+                ConfirmedAt = DateTimeOffset.UtcNow,
+            });
+        }
+
+        var existingCount = await db.MatchConfirmations.CountAsync(c => c.MatchId == matchId);
+        var totalCount = existingCount + (alreadyConfirmed ? 0 : 1);
+
+        if (totalCount == 4 && !alreadyConfirmed)
+        {
+            match.Status = "confirmed";
+            await ratingService.CalculateAndApplyAsync(matchId, db);
+        }
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new { status = match.Status, confirmationsCount = totalCount });
+    }
+
+    // ─── POST /{matchId}/dispute ──────────────────────────────────────────────
+
+    private static async Task<IResult> DisputeMatchAsync(
+        Guid circleId,
+        Guid matchId,
+        ClaimsPrincipal user,
+        AppDbContext db)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
+            return Results.Unauthorized();
+
+        var match = await db.Matches.FindAsync(matchId);
+        if (match == null || match.CircleId != circleId)
+            return Results.NotFound(new { error = "Partita non trovata" });
+
+        if (match.Status is "confirmed" or "disputed")
+            return Results.Conflict(new { error = $"La partita è già {match.Status}" });
+
+        var playerIds = new[] { match.Team1Player1Id, match.Team1Player2Id, match.Team2Player1Id, match.Team2Player2Id };
+        if (!playerIds.Contains(userId))
+            return Results.Json(new { error = "Non sei un partecipante di questa partita" }, statusCode: 403);
+
+        match.Status = "disputed";
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new { status = match.Status });
     }
 }
 

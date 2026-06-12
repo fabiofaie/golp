@@ -44,5 +44,10 @@ export const routes: Routes = [
     loadComponent: () => import('./circles/record-match/record-match.component').then(m => m.RecordMatchComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'circles/:circleId/matches',
+    loadComponent: () => import('./circles/circle-match-history/circle-match-history.component').then(m => m.CircleMatchHistoryComponent),
+    canActivate: [authGuard]
+  },
   { path: '**', redirectTo: '/dashboard' }
 ];

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOLP — Premi</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+  <div class="page">
+
+    <!-- HEADER -->
+    <header class="auth-header">
+      <span class="brand">GOLP</span>
+      <a href="#" class="back-nav">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        I miei circoli
+      </a>
+    </header>
+
+    <!-- TITLE -->
+    <h1 class="auth-title">Premi</h1>
+    <p class="auth-subtitle">Chi ha guadagnato di più questo mese e quest'anno</p>
+
+    <!-- CIRCLE CONTEXT -->
+    <div class="circle-context">
+      <span class="sport-dot"></span>
+      Padel Club Roma
+    </div>
+
+    <!-- AWARDS GRID -->
+    <div class="awards-grid" id="awardsGrid">
+
+      <!-- GIOCATORE DEL MESE — con vincitore -->
+      <div class="award-card award-card--month">
+        <div class="award-deco">★</div>
+        <div class="award-label-row">
+          <div class="award-label">
+            <span class="award-icon">🏅</span>
+            <span class="award-type">Giocatore del mese</span>
+          </div>
+          <span class="award-period-tag">Giu 2026</span>
+        </div>
+        <div class="award-winner-name">Marco</div>
+        <div class="award-stats-row">
+          <div class="award-stat">
+            <div class="award-stat-value">+42</div>
+            <div class="award-stat-label">pt guadagnati</div>
+          </div>
+          <div class="award-divider"></div>
+          <div class="award-stat">
+            <div class="award-stat-value" style="color:var(--color-text-secondary);font-size:var(--font-size-lg);">8</div>
+            <div class="award-stat-label">partite giocate</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GIOCATORE DELL'ANNO — con vincitore -->
+      <div class="award-card award-card--year">
+        <div class="award-deco">◆</div>
+        <div class="award-label-row">
+          <div class="award-label">
+            <span class="award-icon">🏆</span>
+            <span class="award-type">Giocatore dell'anno</span>
+          </div>
+          <span class="award-period-tag">2026</span>
+        </div>
+        <div class="award-winner-name">Luca</div>
+        <div class="award-stats-row">
+          <div class="award-stat">
+            <div class="award-stat-value" style="color:var(--color-year);">+128</div>
+            <div class="award-stat-label">pt guadagnati</div>
+          </div>
+          <div class="award-divider"></div>
+          <div class="award-stat">
+            <div class="award-stat-value" style="color:var(--color-text-secondary);font-size:var(--font-size-lg);">31</div>
+            <div class="award-stat-label">partite giocate</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DEMO TOGGLE -->
+    <div style="margin-top:var(--sp-8); display:flex; gap:var(--sp-3); flex-wrap:wrap; justify-content:center;">
+      <button onclick="toggleEmpty()"
+        style="background:transparent; border:1px dashed var(--color-border); border-radius:var(--r-md);
+               color:var(--color-text-placeholder); font-family:var(--font-family);
+               font-size:var(--font-size-xs); padding:var(--sp-2) var(--sp-4); cursor:pointer;">
+        [Demo] Nessun premiato
+      </button>
+      <button onclick="toggleWinner()"
+        style="background:transparent; border:1px dashed var(--color-border); border-radius:var(--r-md);
+               color:var(--color-text-placeholder); font-family:var(--font-family);
+               font-size:var(--font-size-xs); padding:var(--sp-2) var(--sp-4); cursor:pointer;">
+        [Demo] Con vincitori
+      </button>
+    </div>
+
+    <!-- EMPTY AWARDS (hidden by default) -->
+    <div class="awards-grid" id="awardsEmpty" style="display:none;">
+      <div class="award-card award-card--empty">
+        <div class="award-deco">★</div>
+        <div class="award-label-row">
+          <div class="award-label">
+            <span class="award-icon" style="opacity:0.4;">🏅</span>
+            <span class="award-type" style="color:var(--color-empty);">Giocatore del mese</span>
+          </div>
+          <span class="award-period-tag">Giu 2026</span>
+        </div>
+        <div class="award-empty-content">
+          <div class="award-empty-title">Nessun premiato ancora</div>
+          <div class="award-empty-hint">Servono partite confermate in questo mese per assegnare il premio.</div>
+        </div>
+      </div>
+      <div class="award-card award-card--empty">
+        <div class="award-deco">◆</div>
+        <div class="award-label-row">
+          <div class="award-label">
+            <span class="award-icon" style="opacity:0.4;">🏆</span>
+            <span class="award-type" style="color:var(--color-empty);">Giocatore dell'anno</span>
+          </div>
+          <span class="award-period-tag">2026</span>
+        </div>
+        <div class="award-empty-content">
+          <div class="award-empty-title">Nessun premiato ancora</div>
+          <div class="award-empty-hint">Servono partite confermate nel 2026 per assegnare il premio.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page -->
+
+  <script>
+    function toggleEmpty() {
+      document.getElementById('awardsGrid').style.display = 'none';
+      document.getElementById('awardsEmpty').style.display = 'flex';
+    }
+    function toggleWinner() {
+      document.getElementById('awardsGrid').style.display = 'flex';
+      document.getElementById('awardsEmpty').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
