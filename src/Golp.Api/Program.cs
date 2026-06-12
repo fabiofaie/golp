@@ -19,8 +19,8 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
 builder.Services.AddScoped<IEmailService, DevelopmentEmailService>();
 
-// Rating service — replaced by RatingService in US-007
-builder.Services.AddScoped<IRatingService, NoOpRatingService>();
+// Rating service (US-007) — ELO alla conferma partita
+builder.Services.AddScoped<IRatingService, RatingService>();
 
 // Push notifications (US-006) — Firebase init solo se credenziali configurate;
 // senza credenziali l'invio fallisce silenziosamente (gestito in PushNotificationService)

@@ -223,7 +223,8 @@ _Il valore core: trasformare partite confermate in una classifica oggettiva, agg
 
 #### US-007: Calcolo rating ELO alla conferma partita
 
-**Epic:** EP-003 | **Priority:** HIGH | **Story Points:** 5 | **Status:** IN_PROGRESS
+**Epic:** EP-003 | **Priority:** HIGH | **Story Points:** 5 | **Status:** REVIEW
+**Review note (2026-06-12):** `RatingService` in `src/Golp.Api/Services/` (formula da PRD §Algoritmo: amplifier 0.7 sul margine, K=32/48 per-player, clamp score_ratio [0.5,1.0]), 4 campi delta `int?` su `Match` + migration `AddMatchEloDeltas`, DI in `Program.cs` (rimosso `NoOpRatingService`). Già invocato da `ConfirmMatchAsync` (US-005) nella stessa transazione. Test: 9 unit + 3 integration in `src/Golp.Tests/`, suite backend 94/94 verde. Reviewer APPROVE. ⚠️ Nota: la formula nel piano US-007 era dedotta e divergeva dal PRD; implementata quella del PRD. > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-007`.
 **Blocked by:** US-005
 
 **Story**
