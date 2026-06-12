@@ -1,21 +1,26 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Golp.Api.Data;
+using Golp.Api.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Golp.Tests.Integration;
 
 public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
 {
+    private readonly MatchTestFactory _factory;
     private readonly HttpClient _client;
 
     public MatchIntegrationTests(MatchTestFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
     }
 
@@ -211,6 +216,31 @@ public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 
+    // US-006 — push ai 3 partecipanti da confermare, escluso l'inseritore.
+    // Il fake lancia eccezione dopo aver registrato la chiamata: verifica anche
+    // che la creazione partita resti 201 quando la push fallisce (fire-and-forget).
+    [Fact]
+    public async Task CreateMatch_SendsPushToThreeRecipients_ExcludingCreator()
+    {
+        var (circleId, ids, tokens) = await SetupAsync();
+        SetAuth(tokens[0]);
+
+        var resp = await PostMatchAsync(circleId, ids[0], ids[1], ids[2], ids[3],
+            new[] { new { team1 = 6, team2 = 4 } });
+
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        var json = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        var matchId = Guid.Parse(json.GetProperty("id").GetString()!);
+
+        var call = await _factory.PushRecorder.WaitForCallAsync(matchId, TimeSpan.FromSeconds(5));
+
+        Assert.Equal(circleId, call.CircleId);
+        // ids[0] è l'inseritore: escluso
+        Assert.Equal(3, call.RecipientUserIds.Length);
+        Assert.DoesNotContain(ids[0], call.RecipientUserIds);
+        Assert.Equivalent(new[] { ids[1], ids[2], ids[3] }, call.RecipientUserIds);
+    }
+
     // ─── helpers ──────────────────────────────────────────────────────────────
 
     private async Task<(Guid CircleId, Guid[] Ids, string[] Tokens)> SetupAsync(bool useSets = true)
@@ -285,6 +315,8 @@ public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
 
 public class MatchTestFactory : WebApplicationFactory<Program>
 {
+    public RecordingPushNotificationService PushRecorder { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
@@ -302,8 +334,41 @@ public class MatchTestFactory : WebApplicationFactory<Program>
             services.AddDbContext<AppDbContext>((sp, options) =>
                 options.UseInMemoryDatabase(dbName)
                        .UseInternalServiceProvider(sp));
+
+            services.RemoveAll(typeof(IPushNotificationService));
+            services.AddSingleton<IPushNotificationService>(PushRecorder);
         });
 
         builder.UseEnvironment("Testing");
+    }
+}
+
+/// <summary>
+/// Fake che registra le chiamate push e poi lancia: simula FCM down senza
+/// impattare la creazione partita (che è fire-and-forget rispetto alla push).
+/// </summary>
+public class RecordingPushNotificationService : IPushNotificationService
+{
+    public record PushCall(Guid MatchId, Guid CircleId, Guid[] RecipientUserIds);
+
+    private readonly ConcurrentQueue<PushCall> _calls = new();
+
+    public Task SendConfirmationRequestAsync(Guid matchId, Guid circleId, Guid[] recipientUserIds)
+    {
+        _calls.Enqueue(new PushCall(matchId, circleId, recipientUserIds));
+        throw new InvalidOperationException("FCM unreachable (simulato)");
+    }
+
+    public async Task<PushCall> WaitForCallAsync(Guid matchId, TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            var call = _calls.FirstOrDefault(c => c.MatchId == matchId);
+            if (call != null)
+                return call;
+            await Task.Delay(25);
+        }
+        throw new TimeoutException($"Nessuna push registrata per match {matchId} entro {timeout.TotalSeconds}s");
     }
 }

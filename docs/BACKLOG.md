@@ -6,7 +6,7 @@
 
 - Epic totali: 4
 - Storie totali: 11
-- Storie TODO: 0 | PLANNED: 6 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 4
+- Storie TODO: 0 | PLANNED: 6 | IN_PROGRESS: 0 | REVIEW: 0 | DONE: 5
 
 ---
 
@@ -155,7 +155,8 @@ Un utente inserisce una partita di padel con 4 membri del circolo e punteggio se
 
 #### US-005: Conferma collettiva del risultato (4/4)
 
-**Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 5 | **Status:** REVIEW
+**Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-12):** Review umana OK.
 **Review note (2026-06-12 v2):** Aggiunto `GET /circles/{circleId}/matches/{matchId}` (include sets). Aggiunto `MatchConfirmComponent` su rotta `/circles/:circleId/matches/:matchId` con score hero, progress dots, CTA prominente, feedback animato post-conferma (✓ pop + stato) e stato "contestata". Bottone "Conferma" nella lista naviga a questo componente invece di chiamare API diretto. Build verde (backend + frontend). **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-005`.
 **Reopened (2026-06-12):** Review umana: al click "Conferma" nella lista partite, navigare a un componente dedicato che mostri anche i risultati (set) e enfatizzi l'azione di conferma con feedback visivo.
 **Blocked by:** US-004
@@ -188,7 +189,8 @@ I 3 giocatori che non hanno inserito la partita la vedono in pending, la conferm
 
 #### US-006: Notifica push di richiesta conferma
 
-**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** PLANNED
+**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** REVIEW
+**Review note (2026-06-12):** Backend: `FcmToken` entity + migration `AddFcmTokens`, `PushNotificationService`/`IFcmSender` (FirebaseAdmin) in `src/Golp.Api/Services/`, `PushEndpoints.cs` (`POST/DELETE /api/push/token`, `GET /api/push/vapid-public-key`), push fire-and-forget in `MatchEndpoints.CreateMatch`. Frontend: PWA (`@angular/pwa` + ngsw), `@angular/fire`, `push/push-notification.service.ts`, hook in `AuthService` (login/register → register, logout → unregister), `public/firebase-messaging-sw.js` (deep-link tap → `/circles/{circleId}/matches/{matchId}`). Test: 82 BE + 9 FE nuovi + 6 e2e verdi (2 fail FE pre-esistenti fuori scope). Reviewer APPROVE (2 iterazioni). ⚠️ Push reale richiede setup Firebase Console: vedi `docs/firebase-setup.md` (config in `environment.ts`, `firebase-messaging-sw.js` e user-secrets). > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-006`.
 **Blocked by:** US-005
 
 **Story**
@@ -221,7 +223,7 @@ _Il valore core: trasformare partite confermate in una classifica oggettiva, agg
 
 #### US-007: Calcolo rating ELO alla conferma partita
 
-**Epic:** EP-003 | **Priority:** HIGH | **Story Points:** 5 | **Status:** PLANNED
+**Epic:** EP-003 | **Priority:** HIGH | **Story Points:** 5 | **Status:** IN_PROGRESS
 **Blocked by:** US-005
 
 **Story**

@@ -2,3 +2,7 @@
 /src/Golp.Api/obj/
 /src/Golp.Tests/bin/
 /src/Golp.Tests/obj/
+
+# Firebase credentials — mai committare
+serviceAccountKey.json
+firebase-adminsdk*.json

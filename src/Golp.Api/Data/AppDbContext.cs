@@ -12,6 +12,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Match> Matches => Set<Match>();
     public DbSet<MatchSet> MatchSets => Set<MatchSet>();
     public DbSet<MatchConfirmation> MatchConfirmations => Set<MatchConfirmation>();
+    public DbSet<FcmToken> FcmTokens => Set<FcmToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -102,6 +103,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
              .WithMany()
              .HasForeignKey(c => c.UserId)
              .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<FcmToken>(e =>
+        {
+            e.HasKey(t => t.Id);
+            e.Property(t => t.Token).HasMaxLength(512).IsRequired();
+            e.Property(t => t.DeviceId).HasMaxLength(100).IsRequired();
+            e.HasIndex(t => new { t.UserId, t.Token }).IsUnique();
+            e.HasOne(t => t.User)
+             .WithMany()
+             .HasForeignKey(t => t.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

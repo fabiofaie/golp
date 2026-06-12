@@ -1,0 +1,75 @@
+import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
+import { AuthService } from './auth.service';
+import { PushNotificationService } from '../push/push-notification.service';
+
+describe('AuthService — integrazione push (US-006)', () => {
+  let service: AuthService;
+  let httpMock: HttpTestingController;
+  let pushMock: jasmine.SpyObj<PushNotificationService>;
+
+  beforeEach(() => {
+    pushMock = jasmine.createSpyObj('PushNotificationService', ['register', 'unregister']);
+    pushMock.register.and.resolveTo();
+    pushMock.unregister.and.resolveTo();
+
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: PushNotificationService, useValue: pushMock },
+      ],
+    });
+    service = TestBed.inject(AuthService);
+    httpMock = TestBed.inject(HttpTestingController);
+    localStorage.removeItem('golp_token');
+  });
+
+  afterEach(() => {
+    localStorage.removeItem('golp_token');
+    httpMock.verify();
+  });
+
+  // JWT fittizio con exp futuro, basta che sia decodificabile
+  const fakeJwt = [
+    btoa(JSON.stringify({ alg: 'HS256' })),
+    btoa(JSON.stringify({ sub: 'user-1', exp: Math.floor(Date.now() / 1000) + 3600 })),
+    'sig',
+  ].join('.');
+
+  it('login con successo → push register chiamato', () => {
+    service.login({ email: 'a@b.com', password: 'pw' }).subscribe();
+
+    httpMock.expectOne('/auth/login').flush({ token: fakeJwt });
+
+    expect(pushMock.register).toHaveBeenCalled();
+  });
+
+  it('register con successo → push register chiamato', () => {
+    service.register({ name: 'A', email: 'a@b.com', password: 'pw' }).subscribe();
+
+    httpMock.expectOne('/auth/register').flush({ token: fakeJwt });
+
+    expect(pushMock.register).toHaveBeenCalled();
+  });
+
+  it('login fallito → push register NON chiamato', () => {
+    service.login({ email: 'a@b.com', password: 'wrong' }).subscribe({ error: () => {} });
+
+    httpMock.expectOne('/auth/login').flush(
+      { error: 'invalid' }, { status: 401, statusText: 'Unauthorized' });
+
+    expect(pushMock.register).not.toHaveBeenCalled();
+  });
+
+  it('logout → push unregister chiamato e token rimosso', () => {
+    localStorage.setItem('golp_token', fakeJwt);
+
+    service.logout();
+
+    expect(pushMock.unregister).toHaveBeenCalled();
+    expect(localStorage.getItem('golp_token')).toBeNull();
+    expect(service.isAuthenticated()).toBeFalse();
+  });
+});

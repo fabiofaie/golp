@@ -4,6 +4,7 @@ using Golp.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Golp.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260612153644_AddFcmTokens")]
+    partial class AddFcmTokens
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -145,18 +148,6 @@ namespace Golp.Api.Migrations
 
                     b.Property<Guid>("CreatedById")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int?>("DeltaTeam1Player1")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("DeltaTeam1Player2")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("DeltaTeam2Player1")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("DeltaTeam2Player2")
-                        .HasColumnType("int");
 
                     b.Property<string>("Status")
                         .IsRequired()

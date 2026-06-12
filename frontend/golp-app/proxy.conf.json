@@ -16,5 +16,11 @@
     "secure": false,
     "changeOrigin": true,
     "logLevel": "warn"
+  },
+  "/api": {
+    "target": "http://localhost:5120",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "warn"
   }
 }

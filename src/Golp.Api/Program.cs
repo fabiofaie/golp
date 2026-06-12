@@ -1,7 +1,9 @@
 using System.Text;
+using FirebaseAdmin;
 using Golp.Api.Data;
 using Golp.Api.Endpoints;
 using Golp.Api.Services;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -19,6 +21,26 @@ builder.Services.AddScoped<IEmailService, DevelopmentEmailService>();
 
 // Rating service — replaced by RatingService in US-007
 builder.Services.AddScoped<IRatingService, NoOpRatingService>();
+
+// Push notifications (US-006) — Firebase init solo se credenziali configurate;
+// senza credenziali l'invio fallisce silenziosamente (gestito in PushNotificationService)
+var firebaseJson = builder.Configuration["Firebase:ServiceAccountJson"];
+var firebaseKeyPath = builder.Configuration["Firebase:ServiceAccountKeyPath"];
+if (FirebaseApp.DefaultInstance == null)
+{
+    if (!string.IsNullOrEmpty(firebaseJson))
+        FirebaseApp.Create(new AppOptions
+        {
+            Credential = CredentialFactory.FromJson<ServiceAccountCredential>(firebaseJson).ToGoogleCredential()
+        });
+    else if (!string.IsNullOrEmpty(firebaseKeyPath) && File.Exists(firebaseKeyPath))
+        FirebaseApp.Create(new AppOptions
+        {
+            Credential = CredentialFactory.FromFile<ServiceAccountCredential>(firebaseKeyPath).ToGoogleCredential()
+        });
+}
+builder.Services.AddSingleton<IFcmSender, FirebaseFcmSender>();
+builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
 
 // JWT authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"]!;
@@ -59,6 +81,7 @@ app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapCircleEndpoints();
 app.MapMatchEndpoints();
+app.MapPushEndpoints();
 
 app.Run();
 

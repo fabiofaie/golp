@@ -25,7 +25,9 @@ public static class MatchEndpoints
         Guid circleId,
         CreateMatchRequest req,
         ClaimsPrincipal user,
-        AppDbContext db)
+        AppDbContext db,
+        IServiceScopeFactory scopeFactory,
+        ILoggerFactory loggerFactory)
     {
         var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
@@ -119,6 +121,27 @@ public static class MatchEndpoints
         db.MatchSets.AddRange(sets);
         db.MatchConfirmations.Add(creatorConfirmation);
         await db.SaveChangesAsync();
+
+        // US-006: push ai 3 da confermare (escluso l'inseritore), fire-and-forget.
+        // Scope DI nuovo: quello della request viene disposed alla risposta.
+        var recipientIds = allPlayers.Where(id => id != userId).ToArray();
+        var matchId = match.Id;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                using var scope = scopeFactory.CreateScope();
+                var pushService = scope.ServiceProvider.GetRequiredService<IPushNotificationService>();
+                await pushService.SendConfirmationRequestAsync(matchId, circleId, recipientIds);
+            }
+            catch (Exception ex)
+            {
+                // fire-and-forget: nessuna eccezione deve emergere come unobserved task,
+                // ma un errore di risoluzione DI non deve restare invisibile
+                loggerFactory.CreateLogger(nameof(MatchEndpoints))
+                    .LogWarning(ex, "Push dispatch failed for match {MatchId}", matchId);
+            }
+        });
 
         return Results.Created($"/circles/{circleId}/matches/{match.Id}", new
         {

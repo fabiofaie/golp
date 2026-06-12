@@ -13,6 +13,12 @@ public class Match
     public Guid Team2Player2Id { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
+    // Delta ELO per giocatore (US-007). Null = non ancora confermata o disputed.
+    public int? DeltaTeam1Player1 { get; set; }
+    public int? DeltaTeam1Player2 { get; set; }
+    public int? DeltaTeam2Player1 { get; set; }
+    public int? DeltaTeam2Player2 { get; set; }
+
     public Circle Circle { get; set; } = null!;
     public User CreatedBy { get; set; } = null!;
     public ICollection<MatchSet> Sets { get; set; } = [];
