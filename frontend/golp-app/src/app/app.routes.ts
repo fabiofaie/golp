@@ -59,5 +59,10 @@ export const routes: Routes = [
     loadComponent: () => import('./circles/match-confirm/match-confirm.component').then(m => m.MatchConfirmComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'circles/:circleId/awards',
+    loadComponent: () => import('./circles/circle-awards/circle-awards.component').then(m => m.CircleAwardsComponent),
+    canActivate: [authGuard]
+  },
   { path: '**', redirectTo: '/dashboard' }
 ];

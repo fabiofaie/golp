@@ -1,0 +1,72 @@
+<div class="page">
+  <div class="bg-deco" aria-hidden="true">PR</div>
+
+  <header class="auth-header">
+    <a [routerLink]="['/circles', 'me']" class="back-nav">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      I miei circoli
+    </a>
+    <span class="brand">GOLP</span>
+  </header>
+
+  <main style="flex:1; display:flex; flex-direction:column;">
+    <h1 class="auth-title">Premi.</h1>
+    <p class="auth-subtitle">I migliori giocatori del circolo per periodo.</p>
+
+    @if (loading) {
+      <p style="color:var(--color-text-secondary); font-size:13px; margin-top:24px;">Caricamento…</p>
+    } @else if (errorMessage) {
+      <div class="form-error">{{ errorMessage }}</div>
+    } @else if (awards) {
+      <div class="awards-list">
+
+        <!-- Giocatore del mese -->
+        <div class="award-card">
+          <div class="award-card-header">
+            <span class="award-trophy" aria-hidden="true">🏆</span>
+            <div>
+              <p class="award-label">Giocatore del mese</p>
+              <p class="award-period">{{ formatPeriod(awards.currentMonth.period) }}</p>
+            </div>
+          </div>
+          @if (awards.currentMonth.winner; as w) {
+            <div class="award-winner">
+              <p class="winner-name">{{ w.name }}</p>
+              <div class="winner-stats">
+                <span class="winner-gain">+{{ w.netGain }} pt guadagnati</span>
+                <span class="winner-matches">{{ w.matchesPlayed }} {{ w.matchesPlayed === 1 ? 'partita' : 'partite' }}</span>
+              </div>
+            </div>
+          } @else {
+            <p class="award-empty">Nessun premiato ancora</p>
+          }
+        </div>
+
+        <!-- Giocatore dell'anno -->
+        <div class="award-card">
+          <div class="award-card-header">
+            <span class="award-trophy" aria-hidden="true">🏅</span>
+            <div>
+              <p class="award-label">Giocatore dell'anno</p>
+              <p class="award-period">{{ awards.currentYear.period }}</p>
+            </div>
+          </div>
+          @if (awards.currentYear.winner; as w) {
+            <div class="award-winner">
+              <p class="winner-name">{{ w.name }}</p>
+              <div class="winner-stats">
+                <span class="winner-gain">+{{ w.netGain }} pt guadagnati</span>
+                <span class="winner-matches">{{ w.matchesPlayed }} {{ w.matchesPlayed === 1 ? 'partita' : 'partite' }}</span>
+              </div>
+            </div>
+          } @else {
+            <p class="award-empty">Nessun premiato ancora</p>
+          }
+        </div>
+
+      </div>
+    }
+  </main>
+</div>

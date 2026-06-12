@@ -13,6 +13,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<MatchSet> MatchSets => Set<MatchSet>();
     public DbSet<MatchConfirmation> MatchConfirmations => Set<MatchConfirmation>();
     public DbSet<FcmToken> FcmTokens => Set<FcmToken>();
+    public DbSet<CircleAward> CircleAwards => Set<CircleAward>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -115,6 +116,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
              .WithMany()
              .HasForeignKey(t => t.UserId)
              .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CircleAward>(e =>
+        {
+            e.HasKey(a => a.Id);
+            e.Property(a => a.PeriodType).HasMaxLength(10).IsRequired();
+            e.HasIndex(a => new { a.CircleId, a.PeriodType, a.PeriodYear, a.PeriodMonth }).IsUnique();
         });
     }
 }

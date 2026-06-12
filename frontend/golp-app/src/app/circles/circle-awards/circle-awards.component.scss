@@ -1,0 +1,77 @@
+.awards-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  margin-top: var(--sp-6);
+  flex: 1;
+}
+
+.award-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-5);
+}
+
+.award-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.award-trophy {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.award-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.award-period {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.award-winner {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--sp-3);
+}
+
+.winner-name {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--sp-2);
+}
+
+.winner-stats {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: center;
+}
+
+.winner-gain {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-success);
+}
+
+.winner-matches {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.award-empty {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--sp-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-style: italic;
+}

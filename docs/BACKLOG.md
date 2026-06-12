@@ -6,7 +6,7 @@
 
 - Epic totali: 4
 - Storie totali: 11
-- Storie TODO: 0 | PLANNED: 3 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 7
+- Storie TODO: 0 | PLANNED: 2 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 8
 
 ---
 
@@ -327,7 +327,9 @@ _Gamification leggera e insight personali: giocatore del mese/anno e statistiche
 
 #### US-010: Giocatore del mese e dell'anno
 
-**Epic:** EP-004 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** PLANNED
+**Epic:** EP-004 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-06-12):** Review umana OK.
+**Review note (2026-06-12):** Backend: `CircleAward` entity + migration `AddCircleAwards`, `AwardsEndpoints.cs` (`GET /circles/{id}/awards` on-the-fly per mese/anno corrente, aggregazione in-memory con tie-break deterministico). Frontend: `CircleAwardsComponent` (ts/html/scss), interfacce `AwardWinner/AwardPeriodResult/CircleAwardsResponse` + `getAwards()` in `circle.service.ts`, route `/circles/:circleId/awards` + link "Premi" su ogni circle card. Test: 116 BE verdi (8 nuovi integration in `AwardsEndpointTests.cs`) + 4 unit Angular + 3 E2E Playwright. Reviewer APPROVE. ⚠️ 2 test FE pre-esistenti fallenti fuori scope.
 **Blocked by:** US-007
 
 **Story**

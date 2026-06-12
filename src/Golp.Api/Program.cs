@@ -82,6 +82,7 @@ app.MapAuthEndpoints();
 app.MapCircleEndpoints();
 app.MapMatchEndpoints();
 app.MapPushEndpoints();
+app.MapAwardsEndpoints();
 
 app.Run();
 

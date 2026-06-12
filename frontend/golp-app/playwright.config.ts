@@ -4,7 +4,7 @@ const CI = !!process.env['CI'];
 
 export default defineConfig({
   testDir: './e2e',
-  testMatch: ['auth.spec.ts', 'circle-leaderboard.spec.ts'],
+  testMatch: ['auth.spec.ts', 'circle-leaderboard.spec.ts', 'circle-match-history.spec.ts', 'circle-awards.spec.ts'],
   fullyParallel: false,
   forbidOnly: CI,
   retries: CI ? 1 : 0,
