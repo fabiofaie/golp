@@ -1,0 +1,75 @@
+{
+  "source": "docs/mockups/dashboard/shared.css",
+  "colors": {
+    "bg":               "#0A0A0A",
+    "surface":          "#141414",
+    "surface-elevated": "#1F1F1F",
+    "border":           "#2C2C2C",
+    "accent":           "#FF5500",
+    "accent-hover":     "#E64D00",
+    "accent-dim":       "rgba(255,85,0,0.12)",
+    "text-primary":     "#FFFFFF",
+    "text-secondary":   "#9A9A9A",
+    "text-placeholder": "#484848",
+    "error":            "#FF4444",
+    "success":          "#22C55E",
+    "pending":          "#F59E0B",
+    "team1":            "#FF5500",
+    "team2":            "#0EA5E9",
+    "dot-empty":        "#2C2C2C",
+    "dot-filled":       "#22C55E",
+    "dot-you":          "#FF5500"
+  },
+  "typography": {
+    "family":   "Inter",
+    "sizes": {
+      "xs":     "11px",
+      "sm":     "13px",
+      "base":   "15px",
+      "lg":     "18px",
+      "xl":     "24px",
+      "2xl":    "32px",
+      "rating": "64px"
+    },
+    "weights": {
+      "regular": 400,
+      "medium":  500,
+      "bold":    700,
+      "black":   900
+    }
+  },
+  "spacing": {
+    "1":  "4px",  "2":  "8px",  "3":  "12px", "4":  "16px",
+    "5":  "20px", "6":  "24px", "8":  "32px",  "10": "40px",
+    "12": "48px", "16": "64px"
+  },
+  "radii": {
+    "sm": "4px", "md": "8px", "lg": "14px", "full": "9999px"
+  },
+  "components": {
+    "hero-card": {
+      "background":    "surface",
+      "border":        "1px solid border",
+      "accent-stripe": "2px solid accent (opacity 0.6)",
+      "rating-size":   "64px black",
+      "rank-size":     "32px black"
+    },
+    "match-card-pending-me": {
+      "border":     "rgba(255,85,0,0.30)",
+      "background": "gradient surface → rgba(255,85,0,0.04)"
+    },
+    "delta-badge-pos": {
+      "color":      "success",
+      "background": "success-bg",
+      "border":     "rgba(34,197,94,0.20)"
+    },
+    "delta-badge-neg": {
+      "color":      "error",
+      "background": "error-bg",
+      "border":     "rgba(255,68,68,0.20)"
+    },
+    "confirm-dot-you": {
+      "color": "accent (#FF5500)"
+    }
+  }
+}

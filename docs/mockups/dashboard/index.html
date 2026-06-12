@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>GOLP — Dashboard</title>
+  <link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+
+<div class="page" id="page">
+
+  <!-- ===== HEADER ===== -->
+  <header class="app-header">
+    <span class="brand">GOLP</span>
+    <div class="header-user">
+      <span class="username">Marco</span>
+      <button class="btn-logout">Esci</button>
+    </div>
+  </header>
+
+  <!-- ===== SCROLLABLE CONTENT ===== -->
+  <div class="scroll-content">
+
+    <!-- ---- Circle selector ---- -->
+    <button class="circle-selector" onclick="toggleCircle(this)">
+      <span class="sport-badge sport-badge--padel">Padel</span>
+      <span class="circle-selector-name" id="circle-name">Padel Club Roma</span>
+      <span class="circle-selector-chevron">▾</span>
+    </button>
+
+    <!-- ---- Hero card ---- -->
+    <div class="hero-card">
+      <div class="hero-greeting">Il tuo rating in questo circolo</div>
+      <div class="hero-stats">
+        <div class="hero-rating-block">
+          <div class="hero-rating-label">Rating</div>
+          <div class="hero-rating-value" id="hero-rating">1 142</div>
+          <div class="hero-rating-delta hero-rating-delta--pos" id="hero-delta">▲ +18 ultima partita</div>
+        </div>
+        <div class="hero-rank-block">
+          <div class="hero-rank-label">Posizione</div>
+          <div class="hero-rank-value" id="hero-rank">#3</div>
+          <div class="hero-rank-total" id="hero-total">di 14</div>
+        </div>
+      </div>
+      <div class="hero-matches-row">
+        <div class="hero-stat-item">
+          <div class="hero-stat-label">Partite</div>
+          <div class="hero-stat-value" id="hero-played">23</div>
+        </div>
+        <div class="hero-stat-item">
+          <div class="hero-stat-label">Vittorie</div>
+          <div class="hero-stat-value hero-stat-value--win" id="hero-wins">15</div>
+        </div>
+        <div class="hero-stat-item">
+          <div class="hero-stat-label">Sconfitte</div>
+          <div class="hero-stat-value hero-stat-value--loss" id="hero-losses">8</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---- Partite da confermare ---- -->
+    <section id="section-confirm">
+      <div class="section-header">
+        <span class="section-title">Da confermare</span>
+        <span class="section-badge" id="confirm-count">2</span>
+      </div>
+
+      <div class="section-list" id="confirm-list">
+
+        <!-- Card 1: devo ancora confermare io -->
+        <div class="match-card match-card--pending-me">
+          <div class="match-card-header">
+            <span class="match-date">Oggi, 11:30</span>
+            <span class="status-badge status-badge--pending">In attesa</span>
+          </div>
+
+          <div class="teams-display">
+            <div class="team-row team-row--t1">
+              <span class="team-names">
+                <strong>Marco F.</strong> &amp; Luca B.
+                <span class="you-tag">tu</span>
+              </span>
+            </div>
+            <div class="team-row team-row--t2">
+              <span class="team-names">Andrea P. &amp; Gianni R.</span>
+            </div>
+          </div>
+
+          <div class="score-display">
+            <div class="score-set">
+              <span class="score-t1">6</span>
+              <span class="score-sep">-</span>
+              <span class="score-t2">4</span>
+            </div>
+            <div class="score-set-divider"></div>
+            <div class="score-set">
+              <span class="score-t1">6</span>
+              <span class="score-sep">-</span>
+              <span class="score-t2">3</span>
+            </div>
+          </div>
+
+          <div class="confirm-progress">
+            <div class="confirm-dots">
+              <div class="confirm-dot confirm-dot--you"></div>
+              <div class="confirm-dot confirm-dot--filled"></div>
+              <div class="confirm-dot"></div>
+              <div class="confirm-dot"></div>
+            </div>
+            <span class="confirm-label">1/4 confermato — tocca a te</span>
+          </div>
+
+          <div class="match-actions">
+            <a href="#" class="btn-confirm">✓ Conferma risultato</a>
+          </div>
+        </div>
+
+        <!-- Card 2: ho già confermato, aspettando gli altri -->
+        <div class="match-card">
+          <div class="match-card-header">
+            <span class="match-date">Ieri, 19:00</span>
+            <span class="status-badge status-badge--pending">In attesa</span>
+          </div>
+
+          <div class="teams-display">
+            <div class="team-row team-row--t1">
+              <span class="team-names">
+                <strong>Marco F.</strong> &amp; Gianni R.
+                <span class="you-tag">tu</span>
+              </span>
+            </div>
+            <div class="team-row team-row--t2">
+              <span class="team-names">Luca B. &amp; Paolo C.</span>
+            </div>
+          </div>
+
+          <div class="score-display">
+            <div class="score-set">
+              <span class="score-t1">4</span>
+              <span class="score-sep">-</span>
+              <span class="score-t2">6</span>
+            </div>
+            <div class="score-set-divider"></div>
+            <div class="score-set">
+              <span class="score-t1">3</span>
+              <span class="score-sep">-</span>
+              <span class="score-t2">6</span>
+            </div>
+          </div>
+
+          <div class="confirm-progress">
+            <div class="confirm-dots">
+              <div class="confirm-dot confirm-dot--you"></div>
+              <div class="confirm-dot confirm-dot--filled"></div>
+              <div class="confirm-dot"></div>
+              <div class="confirm-dot"></div>
+            </div>
+            <span class="confirm-label">2/4 confermati — aspettando gli altri</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ---- Stato vuoto "nessuna conferma in attesa" (nascosto di default) ---- -->
+    <section id="section-confirm-empty" style="display:none;">
+      <div class="section-header">
+        <span class="section-title">Da confermare</span>
+      </div>
+      <div class="empty-confirm">
+        <span class="empty-confirm-icon">✓</span>
+        <span>Nessuna partita in attesa di conferma.</span>
+      </div>
+    </section>
+
+    <!-- ---- Partite recenti ---- -->
+    <section>
+      <div class="section-header">
+        <span class="section-title">Partite recenti</span>
+        <a href="#" class="section-link">Vedi tutte →</a>
+      </div>
+
+      <div class="section-list">
+
+        <!-- Partita confermata: vittoria -->
+        <div class="match-card match-card--confirmed">
+          <div class="match-card-header">
+            <span class="match-date">11 giu 2026</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="delta-badge delta-badge--pos">+18 pt</span>
+              <span class="status-badge status-badge--confirmed">Confermata</span>
+            </div>
+          </div>
+
+          <div class="teams-display">
+            <div class="team-row team-row--winner">
+              <span class="team-names">
+                <strong>Marco F.</strong> &amp; Luca B.
+                <span class="you-tag">tu</span>
+              </span>
+              <span class="win-tag">VINCE</span>
+            </div>
+            <div class="team-row">
+              <span class="team-names">Andrea P. &amp; Paolo C.</span>
+            </div>
+          </div>
+
+          <div class="score-display">
+            <div class="score-set">
+              <span class="score-t1">6</span>
+              <span class="score-sep">-</span>
+              <span class="score-t2">3</span>
+            </div>
+            <div class="score-set-divider"></div>
+            <div class="score-set">
+              <span class="score-t1">6</span>
+              <span class="score-sep">-</span>
+              <span class="score-t2">4</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Partita confermata: sconfitta -->
+        <div class="match-card match-card--confirmed">
+          <div class="match-card-header">
+            <span class="match-date">9 giu 2026</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="delta-badge delta-badge--neg">−11 pt</span>
+              <span class="status-badge status-badge--confirmed">Confermata</span>
+            </div>
+          </div>
+
+          <div class="teams-display">
+            <div class="team-row">
+              <span class="team-names">
+                <strong>Marco F.</strong> &amp; Gianni R.
+                <span class="you-tag">tu</span>
+              </span>
+            </div>
+            <div class="team-row team-row--winner">
+              <span class="team-names">Luca B. &amp; Andrea P.</span>
+              <span class="win-tag">VINCE</span>
+            </div>
+          </div>
+
+          <div class="score-display">
+            <div class="score-set">
+              <span class="score-t1">3</span>
+              <span class="score-sep">-</span>
+              <span class="score-t2">6</span>
+            </div>
+            <div class="score-set-divider"></div>
+            <div class="score-set">
+              <span class="score-t1">5</span>
+              <span class="score-sep">-</span>
+              <span class="score-t2">7</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Partita contestata -->
+        <div class="match-card match-card--disputed">
+          <div class="match-card-header">
+            <span class="match-date">7 giu 2026</span>
+            <span class="status-badge status-badge--disputed">Contestata</span>
+          </div>
+
+          <div class="teams-display">
+            <div class="team-row team-row--t1">
+              <span class="team-names">
+                <strong>Marco F.</strong> &amp; Paolo C.
+                <span class="you-tag">tu</span>
+              </span>
+            </div>
+            <div class="team-row team-row--t2">
+              <span class="team-names">Gianni R. &amp; Andrea P.</span>
+            </div>
+          </div>
+
+          <div class="score-display">
+            <div class="score-set">
+              <span class="score-t1">6</span>
+              <span class="score-sep">-</span>
+              <span class="score-t2">2</span>
+            </div>
+            <div class="score-set-divider"></div>
+            <div class="score-set">
+              <span class="score-t1">6</span>
+              <span class="score-sep">-</span>
+              <span class="score-t2">1</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ---- Quick actions ---- -->
+    <section>
+      <div class="section-header">
+        <span class="section-title">Azioni rapide</span>
+      </div>
+      <div class="quick-actions">
+        <a href="#" class="quick-action-card">
+          <div class="quick-action-icon">🏓</div>
+          <div class="quick-action-label">Registra partita</div>
+          <div class="quick-action-sub">Inserisci un nuovo risultato</div>
+        </a>
+        <a href="#" class="quick-action-card">
+          <div class="quick-action-icon">🏆</div>
+          <div class="quick-action-label">Classifica</div>
+          <div class="quick-action-sub">Vedi tutti i rating</div>
+        </a>
+        <a href="#" class="quick-action-card">
+          <div class="quick-action-icon">👥</div>
+          <div class="quick-action-label">Circoli</div>
+          <div class="quick-action-sub">I miei circoli</div>
+        </a>
+        <a href="#" class="quick-action-card">
+          <div class="quick-action-icon">📊</div>
+          <div class="quick-action-label">Statistiche</div>
+          <div class="quick-action-sub">Compagni e avversari</div>
+        </a>
+      </div>
+    </section>
+
+  </div><!-- /scroll-content -->
+</div><!-- /page -->
+
+<!-- Demo toggle -->
+<button class="demo-toggle" onclick="toggleDemoState()">
+  ↔ Stato: con conferme in attesa
+</button>
+
+<script src="app.js"></script>
+</body>
+</html>
