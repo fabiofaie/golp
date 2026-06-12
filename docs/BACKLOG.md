@@ -1,12 +1,12 @@
 # Backlog — GOLP
 
-**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-06-11
+**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-06-13
 
 ## Riepilogo
 
 - Epic totali: 4
-- Storie totali: 11
-- Storie TODO: 0 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 2 | DONE: 8
+- Storie totali: 12
+- Storie TODO: 0 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 10
 
 ---
 
@@ -321,6 +321,40 @@ Aperta una partita confermata, ogni giocatore vede il proprio `+12 pt` o `−8 p
 
 ---
 
+#### US-012: Rating ELO pesato su set per sport a set
+
+**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** PLANNED
+**Blocked by:** US-007
+
+**Story**
+Come Marco, voglio che il mio rating rifletta non solo i game totali ma anche i set vinti, così che una vittoria netta 6-2 6-2 pesi di più rispetto a una tirata 4-6 6-4 7-6.
+
+**Demonstrates**
+Dopo una partita confermata di padel, il delta ELO assegnato tiene conto sia dei set vinti sia dei game totali: vincere 2-0 con margine ampio produce un delta maggiore rispetto a vincere 2-1 al super tiebreak.
+
+**Acceptance Criteria**
+
+- [ ] Per sport con `sets: true`, `score_ratio = α × set_ratio + (1-α) × game_ratio` (con `α = 0.4` default)
+- [ ] `set_ratio = sets_vinti / (sets_vinti + sets_persi)` — un set è vinto dal team che ha segnato più punti/game in quel set
+- [ ] `game_ratio` invariato: `games_vinti_totali / (games_vinti_totali + games_persi_totali)` (somma su tutti i set)
+- [ ] Il super tiebreak (3° set a 10 punti) conta come set ordinario — sia in `set_ratio` che in `game_ratio`
+- [ ] Per sport con `sets: false` (basket2v2, burraco) la formula rimane invariata — solo `game_ratio`
+- [ ] Il parametro `α` (`set_weight`) è definito in `SportsConfig` per sport; 0.4 dove `sets: true`, ignorato dove `sets: false`
+- [ ] Le partite già confermate prima di questa modifica non vengono ricalcolate
+
+**Out of scope**
+
+- Modifica al frontend (il form già invia i set separati per ciascuno)
+- Variazione dei parametri `amplifier`, `K` o rating iniziale esistenti
+- Visualizzazione del calcolo all'utente (rimane opaco per PRD)
+- Ricalcolo retroattivo dei rating storici
+
+**Open questions**
+
+- (nessuna — scelte definite in analisi)
+
+---
+
 ## EP-004 — Premi e Statistiche
 
 _Gamification leggera e insight personali: giocatore del mese/anno e statistiche su compagni e avversari. (da PRD §RF-5, §RF-6)_
@@ -390,4 +424,4 @@ La schermata profilo mostra "miglior compagno" (win-rate più alto insieme) e "a
 
 ---
 
-> **PROSSIMO PASSO:** scegli una user story dalla lista sopra (priorità HIGH per prima) ed esegui `/eq-plan US-001` per la pianificazione tecnica. Per un riepilogo dello stato corrente, esegui `/eq-next`.
+> **PROSSIMO PASSO:** esegui `/eq-plan US-012` per pianificare il miglioramento ELO, oppure `/eq-next` per il riepilogo dello stato corrente.
