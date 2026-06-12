@@ -13,6 +13,7 @@ public static class MatchEndpoints
         var matches = app.MapGroup("/circles/{circleId:guid}/matches").RequireAuthorization();
         matches.MapPost("/", CreateMatchAsync);
         matches.MapGet("/", GetMatchesAsync);
+        matches.MapGet("/{matchId:guid}", GetMatchDetailAsync);
         matches.MapPost("/{matchId:guid}/confirm", ConfirmMatchAsync);
         matches.MapPost("/{matchId:guid}/dispute", DisputeMatchAsync);
         return app;
@@ -198,6 +199,60 @@ public static class MatchEndpoints
         });
 
         return Results.Ok(result);
+    }
+
+    // ─── GET /{matchId} ──────────────────────────────────────────────────────
+
+    private static async Task<IResult> GetMatchDetailAsync(
+        Guid circleId,
+        Guid matchId,
+        ClaimsPrincipal user,
+        AppDbContext db)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
+            return Results.Unauthorized();
+
+        var match = await db.Matches.FindAsync(matchId);
+        if (match == null || match.CircleId != circleId)
+            return Results.NotFound(new { error = "Partita non trovata" });
+
+        var playerIds = new[] { match.Team1Player1Id, match.Team1Player2Id, match.Team2Player1Id, match.Team2Player2Id };
+        var userNames = await db.Users
+            .Where(u => playerIds.Contains(u.Id))
+            .Select(u => new { u.Id, u.Name })
+            .ToDictionaryAsync(u => u.Id, u => u.Name);
+
+        var sets = await db.MatchSets
+            .Where(s => s.MatchId == matchId)
+            .OrderBy(s => s.SetNumber)
+            .Select(s => new { s.Team1Score, s.Team2Score })
+            .ToListAsync();
+
+        var confirmationsCount = await db.MatchConfirmations.CountAsync(c => c.MatchId == matchId);
+        var hasCurrentUserConfirmed = await db.MatchConfirmations.AnyAsync(c => c.MatchId == matchId && c.UserId == userId);
+
+        return Results.Ok(new
+        {
+            id                      = match.Id,
+            status                  = match.Status,
+            winnerTeam              = match.WinnerTeam,
+            createdAt               = match.CreatedAt,
+            confirmationsCount,
+            hasCurrentUserConfirmed,
+            isParticipant           = playerIds.Contains(userId),
+            sets,
+            team1 = new[]
+            {
+                new { userId = match.Team1Player1Id, name = userNames.GetValueOrDefault(match.Team1Player1Id, "") },
+                new { userId = match.Team1Player2Id, name = userNames.GetValueOrDefault(match.Team1Player2Id, "") },
+            },
+            team2 = new[]
+            {
+                new { userId = match.Team2Player1Id, name = userNames.GetValueOrDefault(match.Team2Player1Id, "") },
+                new { userId = match.Team2Player2Id, name = userNames.GetValueOrDefault(match.Team2Player2Id, "") },
+            },
+        });
     }
 
     // ─── POST /{matchId}/confirm ──────────────────────────────────────────────

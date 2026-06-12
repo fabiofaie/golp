@@ -38,6 +38,16 @@ export interface MatchSummary {
   team2: PlayerInfo[];
 }
 
+export interface MatchSetScore {
+  team1Score: number;
+  team2Score: number;
+}
+
+export interface MatchDetail extends MatchSummary {
+  isParticipant: boolean;
+  sets: MatchSetScore[];
+}
+
 export interface ConfirmDisputeResponse {
   status: string;
   confirmationsCount?: number;
@@ -53,6 +63,10 @@ export class MatchService {
 
   getMatches(circleId: string): Observable<MatchSummary[]> {
     return this.http.get<MatchSummary[]>(`/circles/${circleId}/matches`);
+  }
+
+  getMatchDetail(circleId: string, matchId: string): Observable<MatchDetail> {
+    return this.http.get<MatchDetail>(`/circles/${circleId}/matches/${matchId}`);
   }
 
   confirm(circleId: string, matchId: string): Observable<ConfirmDisputeResponse> {

@@ -1,0 +1,155 @@
+<div class="page">
+  <div class="bg-deco" aria-hidden="true">✓</div>
+
+  <header class="auth-header">
+    <a [routerLink]="['/circles', circleId, 'matches']" class="back-nav">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Partite
+    </a>
+    <span class="brand">GOLP</span>
+  </header>
+
+  <!-- loading -->
+  @if (state === 'loading') {
+    <p style="color:var(--color-text-secondary); font-size:13px; margin-top:32px;">Caricamento…</p>
+  }
+
+  <!-- error -->
+  @if (state === 'error') {
+    <div class="form-error" style="margin-top:32px;">{{ errorMessage }}</div>
+  }
+
+  <!-- confirmed feedback (dopo azione) -->
+  @if (state === 'confirmed' && match) {
+    <div class="confirm-feedback confirm-feedback--success">
+      <div class="feedback-icon feedback-icon--success">✓</div>
+      @if (match.status === 'confirmed') {
+        <div class="feedback-title">Partita confermata!</div>
+        <div class="feedback-subtitle">Tutti e 4 hanno confermato — la partita è ora ufficiale.</div>
+      } @else {
+        <div class="feedback-title">Conferma registrata</div>
+        <div class="feedback-subtitle">{{ match.confirmationsCount }} di 4 giocatori hanno confermato.</div>
+      }
+      <div class="confirm-dots" style="margin: 24px auto; justify-content:center;">
+        @for (dot of dots(); track $index) {
+          <div class="confirm-dot"
+            [class.confirm-dot--filled]="dot === 'filled'"
+            [class.confirm-dot--you]="dot === 'you'">
+          </div>
+        }
+      </div>
+      <button class="btn-primary" style="margin-top:8px;" (click)="backToMatches()">
+        Torna alle partite
+      </button>
+    </div>
+  }
+
+  <!-- disputed feedback -->
+  @if (state === 'disputed') {
+    <div class="confirm-feedback confirm-feedback--danger">
+      <div class="feedback-icon feedback-icon--danger">!</div>
+      <div class="feedback-title">Partita contestata</div>
+      <div class="feedback-subtitle">La partita è stata segnalata come contestata ed è esclusa dalla classifica.</div>
+      <button class="btn-ghost" style="margin-top:32px;" (click)="backToMatches()">
+        Torna alle partite
+      </button>
+    </div>
+  }
+
+  <!-- match detail + actions -->
+  @if ((state === 'ready' || state === 'confirming') && match) {
+    <h1 class="auth-title" style="margin-top:8px;">Conferma risultato.</h1>
+    <p class="auth-subtitle">Verifica il punteggio e conferma.</p>
+
+    @if (errorMessage) {
+      <div class="form-error" style="margin-bottom:16px;">{{ errorMessage }}</div>
+    }
+
+    <!-- match card -->
+    <div class="match-card" style="margin-bottom:24px;">
+
+      <!-- score hero -->
+      <div class="score-hero">{{ scoreLabel() }}</div>
+
+      <!-- teams -->
+      <div class="teams-display" style="margin-top:16px;">
+        <div class="team-row" [class.team-row--winner]="match.winnerTeam === 1">
+          <span class="team-label team-label--team1">Team 1</span>
+          <span class="team-names">{{ teamNames(match.team1) }}</span>
+          @if (match.winnerTeam === 1) { <span class="win-tag">✓ Vince</span> }
+        </div>
+        <div class="team-row" [class.team-row--winner]="match.winnerTeam === 2">
+          <span class="team-label team-label--team2">Team 2</span>
+          <span class="team-names">{{ teamNames(match.team2) }}</span>
+          @if (match.winnerTeam === 2) { <span class="win-tag">✓ Vince</span> }
+        </div>
+      </div>
+
+      <!-- confirm progress -->
+      @if (match.status === 'pending') {
+        <div class="confirm-progress" style="margin-top:20px;">
+          <div class="confirm-dots">
+            @for (dot of dots(); track $index) {
+              <div class="confirm-dot"
+                [class.confirm-dot--filled]="dot === 'filled'"
+                [class.confirm-dot--you]="dot === 'you'">
+              </div>
+            }
+          </div>
+          <span class="confirm-label">{{ match.confirmationsCount }} di 4 conferme</span>
+        </div>
+      }
+
+      <!-- already confirmed note -->
+      @if (match.status === 'pending' && match.hasCurrentUserConfirmed) {
+        <p style="font-size:12px; color:var(--color-text-placeholder); text-align:center; padding:12px 0; border-top:1px solid var(--color-border); margin-top:16px;">
+          Hai già confermato questa partita
+        </p>
+      }
+
+    </div><!-- /match-card -->
+
+    <!-- CTA section -->
+    @if (match.status === 'pending' && match.isParticipant && !match.hasCurrentUserConfirmed) {
+      <p style="font-size:13px; color:var(--color-text-secondary); text-align:center; margin-bottom:20px;">
+        Il punteggio corrisponde a quanto giocato?
+      </p>
+
+      <div class="confirm-cta">
+        <button class="btn-confirm-hero"
+          [class.btn-confirm-hero--loading]="state === 'confirming'"
+          [disabled]="state === 'confirming'"
+          (click)="confirm()">
+          @if (state === 'confirming') {
+            <span class="btn-spinner"></span>
+          } @else {
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M4 10l5 5 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          }
+          {{ state === 'confirming' ? 'Conferma in corso…' : 'Sì, confermo il risultato' }}
+        </button>
+
+        <button class="btn-dispute"
+          [disabled]="state === 'confirming'"
+          (click)="dispute()"
+          style="width:100%; justify-content:center;">
+          Contesta il risultato
+        </button>
+      </div>
+    }
+
+    @if (match.status === 'confirmed') {
+      <div style="text-align:center; padding:16px 0;">
+        <span class="status-badge status-badge--confirmed">Confermata da tutti</span>
+      </div>
+    }
+    @if (match.status === 'disputed') {
+      <div style="text-align:center; padding:16px 0;">
+        <span class="status-badge status-badge--disputed">Contestata</span>
+      </div>
+    }
+  }
+</div>

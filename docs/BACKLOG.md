@@ -156,7 +156,8 @@ Un utente inserisce una partita di padel con 4 membri del circolo e punteggio se
 #### US-005: Conferma collettiva del risultato (4/4)
 
 **Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 5 | **Status:** REVIEW
-**Review note (2026-06-12):** Backend in `src/Golp.Api/Endpoints/MatchEndpoints.cs` (confirm + dispute endpoints), `Data/Entities/MatchConfirmation.cs`, migration `AddMatchConfirmations`. Frontend in `frontend/golp-app/src/app/circles/circle-match-history/`. Test: 16 integration (ConfirmMatchTests + DisputeMatchTests) + 9 unit (component spec). Suite 71/71 verde. Reviewer APPROVE — no critical aperti. **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-005`.
+**Review note (2026-06-12 v2):** Aggiunto `GET /circles/{circleId}/matches/{matchId}` (include sets). Aggiunto `MatchConfirmComponent` su rotta `/circles/:circleId/matches/:matchId` con score hero, progress dots, CTA prominente, feedback animato post-conferma (✓ pop + stato) e stato "contestata". Bottone "Conferma" nella lista naviga a questo componente invece di chiamare API diretto. Build verde (backend + frontend). **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-005`.
+**Reopened (2026-06-12):** Review umana: al click "Conferma" nella lista partite, navigare a un componente dedicato che mostri anche i risultati (set) e enfatizzi l'azione di conferma con feedback visivo.
 **Blocked by:** US-004
 
 **Story**
