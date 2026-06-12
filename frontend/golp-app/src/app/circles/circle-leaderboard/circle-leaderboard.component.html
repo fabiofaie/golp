@@ -1,0 +1,121 @@
+<div class="page">
+  <div class="bg-deco" aria-hidden="true">1</div>
+
+  <header class="auth-header">
+    <span class="brand">GOLP</span>
+    <a [routerLink]="'/circles'" class="back-nav">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      I miei circoli
+    </a>
+  </header>
+
+  <h1 class="auth-title">Classifica</h1>
+  <p class="auth-subtitle">Ranking per rating ELO nel circolo</p>
+
+  @if (loading) {
+    <p class="loading-text">Caricamento…</p>
+  } @else if (errorMessage) {
+    <div class="form-error">{{ errorMessage }}</div>
+  } @else if (classified.length === 0 && unclassified.length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon" aria-hidden="true">🏆</div>
+      <p class="empty-title">Classifica vuota</p>
+      <p class="empty-subtitle">Nessuna partita ancora confermata in questo circolo. Iniziate a giocare!</p>
+    </div>
+  } @else {
+
+    <!-- PODIUM — mostra solo se ci sono almeno 1 classified -->
+    @if (classified.length > 0) {
+      <div class="podium">
+        <!-- 2nd place -->
+        <div class="podium-slot podium-slot--2" [class.podium-slot--current]="podium2nd && isCurrentUser(podium2nd.userId)">
+          @if (podium2nd) {
+            @if (isCurrentUser(podium2nd.userId)) {
+              <span class="podium-you">Tu</span>
+            }
+            <div class="podium-medal">🥈</div>
+            <div class="podium-name">{{ podium2nd.name }}</div>
+            <div class="podium-rating">{{ podium2nd.rating }}</div>
+          }
+        </div>
+        <!-- 1st place -->
+        <div class="podium-slot podium-slot--1" [class.podium-slot--current]="podium1st && isCurrentUser(podium1st.userId)">
+          @if (podium1st) {
+            @if (isCurrentUser(podium1st.userId)) {
+              <span class="podium-you">Tu</span>
+            }
+            <div class="podium-medal">🥇</div>
+            <div class="podium-name">{{ podium1st.name }}</div>
+            <div class="podium-rating">{{ podium1st.rating }}</div>
+          }
+        </div>
+        <!-- 3rd place -->
+        <div class="podium-slot podium-slot--3" [class.podium-slot--current]="podium3rd && isCurrentUser(podium3rd.userId)">
+          @if (podium3rd) {
+            @if (isCurrentUser(podium3rd.userId)) {
+              <span class="podium-you">Tu</span>
+            }
+            <div class="podium-medal">🥉</div>
+            <div class="podium-name">{{ podium3rd.name }}</div>
+            <div class="podium-rating">{{ podium3rd.rating }}</div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- FULL LEADERBOARD -->
+    @if (classified.length > 0) {
+      <div class="section-label">Classifica completa</div>
+      <div class="leaderboard-list">
+        @for (entry of classified; track trackById($index, entry)) {
+          <div class="leaderboard-row" [class.leaderboard-row--current]="isCurrentUser(entry.userId)">
+            <div class="rank-badge"
+              [class.rank-badge--1]="entry.rank === 1"
+              [class.rank-badge--2]="entry.rank === 2"
+              [class.rank-badge--3]="entry.rank === 3"
+              [class.rank-badge--n]="entry.rank > 3">
+              {{ entry.rank }}
+            </div>
+            <div class="player-info">
+              <div class="player-name">
+                {{ entry.name }}
+                @if (isCurrentUser(entry.userId)) {
+                  <span class="you-tag">Tu</span>
+                }
+              </div>
+              <div class="player-matches">{{ entry.confirmedMatches }} {{ entry.confirmedMatches === 1 ? 'partita' : 'partite' }}</div>
+            </div>
+            <div class="player-rating">{{ entry.rating }}</div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- UNCLASSIFIED -->
+    @if (unclassified.length > 0) {
+      <div class="unclassified-section">
+        <div class="unclassified-header">
+          <span class="unclassified-title">Non classificati</span>
+          <span class="unclassified-count">{{ unclassified.length }}</span>
+          <span class="unclassified-hint">Nessuna partita confirmed</span>
+        </div>
+        <div class="unclassified-list">
+          @for (player of unclassified; track player.userId) {
+            <div class="unclassified-row" [class.unclassified-row--current]="isCurrentUser(player.userId)">
+              <div class="unclassified-dash">—</div>
+              <div class="unclassified-name">
+                {{ player.name }}
+                @if (isCurrentUser(player.userId)) {
+                  <span class="you-tag">Tu</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+  }
+</div>

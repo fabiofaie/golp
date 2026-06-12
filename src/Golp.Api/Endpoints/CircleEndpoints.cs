@@ -18,6 +18,7 @@ public static class CircleEndpoints
         circles.MapGet("/me", GetMyCirclesAsync);
         circles.MapPost("/{id:guid}/join", JoinCircleAsync);
         circles.MapGet("/{id:guid}/members", GetCircleMembersAsync);
+        circles.MapGet("/{id:guid}/leaderboard", GetCircleLeaderboardAsync);
 
         return app;
     }
@@ -216,6 +217,59 @@ public static class CircleEndpoints
             rating = m.Rating,
             rank   = i + 1,
         }));
+    }
+
+    // GET /circles/{id}/leaderboard
+    // classified = members with ≥1 confirmed match, ordered by rating DESC, confirmedMatches DESC
+    // unclassified = members with 0 confirmed matches
+    private static async Task<IResult> GetCircleLeaderboardAsync(
+        Guid id,
+        ClaimsPrincipal user,
+        AppDbContext db)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out _))
+            return Results.Unauthorized();
+
+        var circleExists = await db.Circles.AnyAsync(c => c.Id == id);
+        if (!circleExists)
+            return Results.NotFound(new { error = "Circolo non trovato" });
+
+        var confirmedMatches = await db.Matches
+            .Where(m => m.CircleId == id && m.Status == "confirmed")
+            .Select(m => new { m.Team1Player1Id, m.Team1Player2Id, m.Team2Player1Id, m.Team2Player2Id })
+            .ToListAsync();
+
+        var confirmedCounts = confirmedMatches
+            .SelectMany(m => new[] { m.Team1Player1Id, m.Team1Player2Id, m.Team2Player1Id, m.Team2Player2Id })
+            .GroupBy(uid => uid)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var members = await db.CircleMemberships
+            .Where(m => m.CircleId == id)
+            .Select(m => new { m.UserId, Name = m.User.Name, m.Rating })
+            .ToListAsync();
+
+        var classified = members
+            .Where(m => confirmedCounts.ContainsKey(m.UserId))
+            .OrderByDescending(m => m.Rating)
+            .ThenByDescending(m => confirmedCounts[m.UserId])
+            .Select((m, i) => new
+            {
+                userId           = m.UserId,
+                name             = m.Name,
+                rating           = m.Rating,
+                rank             = i + 1,
+                confirmedMatches = confirmedCounts[m.UserId],
+            })
+            .ToList();
+
+        var unclassified = members
+            .Where(m => !confirmedCounts.ContainsKey(m.UserId))
+            .Select(m => new { userId = m.UserId, name = m.Name })
+            .ToList();
+
+        return Results.Ok(new { classified, unclassified });
     }
 }
 

@@ -176,12 +176,14 @@ html, body {
   grid-template-columns: 1fr 1fr 1fr;
   gap: var(--sp-2);
   margin-bottom: var(--sp-6);
+  align-items: end;
 }
 
 .podium-slot {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--sp-2);
   padding: var(--sp-4) var(--sp-2);
   border-radius: var(--r-lg);
@@ -195,18 +197,19 @@ html, body {
   border-color: var(--color-gold-border);
   background: var(--color-gold-bg);
   order: 2;
+  min-height: 152px;
 }
 .podium-slot--2 {
   border-color: var(--color-silver-border);
   background: var(--color-silver-bg);
   order: 1;
-  padding-top: var(--sp-8);
+  min-height: 112px;
 }
 .podium-slot--3 {
   border-color: var(--color-bronze-border);
   background: var(--color-bronze-bg);
   order: 3;
-  padding-top: var(--sp-8);
+  min-height: 84px;
 }
 
 .podium-medal {

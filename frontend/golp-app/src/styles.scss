@@ -17,6 +17,21 @@
   --color-success:          #22C55E;
   --color-success-bg:       rgba(34, 197, 94, 0.10);
 
+  /* Leaderboard medal/podium colors (US-008, from style-tokens.json) */
+  --color-gold:             #F59E0B;
+  --color-gold-bg:          rgba(245, 158, 11, 0.10);
+  --color-gold-border:      rgba(245, 158, 11, 0.28);
+  --color-silver:           #9CA3AF;
+  --color-silver-bg:        rgba(156, 163, 175, 0.10);
+  --color-silver-border:    rgba(156, 163, 175, 0.25);
+  --color-bronze:           #D97706;
+  --color-bronze-bg:        rgba(217, 119, 6, 0.10);
+  --color-bronze-border:    rgba(217, 119, 6, 0.25);
+  --color-current-user-bg:  rgba(255, 85, 0, 0.06);
+  --color-current-border:   rgba(255, 85, 0, 0.30);
+  --color-rating:           #FF5500;
+  --color-unclassified-bg:  #0D0D0D;
+
   /* Sport-specific colors (US-002, from style-tokens.json) */
   --color-sport-padel:          #FF5500;
   --color-sport-beachtennis:    #0EA5E9;

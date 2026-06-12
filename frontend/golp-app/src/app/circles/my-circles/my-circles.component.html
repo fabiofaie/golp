@@ -57,6 +57,9 @@
               </div>
             </div>
             <div style="display:flex; gap:8px; margin-top:4px;">
+              <a [routerLink]="['/circles', circle.id, 'leaderboard']" class="btn-ghost" style="flex:1; text-align:center;">
+                Classifica
+              </a>
               <a [routerLink]="'/circles/' + circle.id + '/matches'" class="btn-ghost" style="flex:1; text-align:center;">
                 Partite
               </a>

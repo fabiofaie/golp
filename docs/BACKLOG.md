@@ -6,7 +6,7 @@
 
 - Epic totali: 4
 - Storie totali: 11
-- Storie TODO: 0 | PLANNED: 6 | IN_PROGRESS: 0 | REVIEW: 0 | DONE: 5
+- Storie TODO: 0 | PLANNED: 3 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 7
 
 ---
 
@@ -258,7 +258,9 @@ Alla quarta conferma di una partita, i rating dei 4 giocatori cambiano secondo l
 
 #### US-008: Classifica circolo in tempo reale
 
-**Epic:** EP-003 | **Priority:** HIGH | **Story Points:** 3 | **Status:** PLANNED
+**Epic:** EP-003 | **Priority:** HIGH | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-06-12):** Review umana OK.
+**Review note (2026-06-12):** Backend: `GetCircleLeaderboardAsync` in `CircleEndpoints.cs` (GET /circles/{id}/leaderboard, classified/unclassified split, rating DESC + confirmedMatches DESC). Frontend: `CircleLeaderboardComponent` standalone con podio top-3, lista classifica, sezione non classificati, highlight current user. Interfacce + `getLeaderboard()` in `circle.service.ts`. Route `/circles/:circleId/leaderboard` + link "Classifica" in MyCircles. Test: 101 BE verdi (7 nuovi integration) + 9 unit Angular + 4 E2E Playwright. Reviewer APPROVE. ⚠️ 2 test pre-esistenti in `circle-match-history.component.spec.ts` fuori scope.
 **Blocked by:** US-007
 
 **Story**

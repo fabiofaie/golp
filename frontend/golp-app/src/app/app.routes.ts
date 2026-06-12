@@ -45,6 +45,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'circles/:circleId/leaderboard',
+    loadComponent: () => import('./circles/circle-leaderboard/circle-leaderboard.component').then(m => m.CircleLeaderboardComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'circles/:circleId/matches',
     loadComponent: () => import('./circles/circle-match-history/circle-match-history.component').then(m => m.CircleMatchHistoryComponent),
     canActivate: [authGuard]

@@ -51,6 +51,24 @@ export interface JoinResult {
   myRating: number;
 }
 
+export interface LeaderboardEntry {
+  userId: string;
+  name: string;
+  rating: number;
+  rank: number;
+  confirmedMatches: number;
+}
+
+export interface LeaderboardUnclassified {
+  userId: string;
+  name: string;
+}
+
+export interface LeaderboardResponse {
+  classified: LeaderboardEntry[];
+  unclassified: LeaderboardUnclassified[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class CircleService {
   private readonly http = inject(HttpClient);
@@ -77,5 +95,9 @@ export class CircleService {
 
   createCircle(name: string, sport: string): Observable<CircleCreated> {
     return this.http.post<CircleCreated>('/circles', { name, sport });
+  }
+
+  getLeaderboard(circleId: string): Observable<LeaderboardResponse> {
+    return this.http.get<LeaderboardResponse>(`/circles/${circleId}/leaderboard`);
   }
 }
