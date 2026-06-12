@@ -292,7 +292,9 @@ Tutti i giocatori iscritti al circolo che non hanno nessuna classifica pur avend
 
 #### US-009: Esito partita con delta punti (+N / −N)
 
-**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 2 | **Status:** PLANNED
+**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 2 | **Status:** DONE
+**Approved (2026-06-12):** Review umana OK.
+**Review note (2026-06-12):** Backend: `GetMatchesAsync` in `MatchEndpoints.cs` calcola `myDelta` dalle 4 posizioni player (null per pending/disputed/non-partecipante). Frontend: badge `+N pt` / `−N pt` in `circle-match-history.component.html` con CSS variables in `styles.scss` da style-tokens.json. Test: 108 BE verdi (7 nuovi integration in `MatchListEndpointTests.cs`) + 6 unit Angular + 3 E2E Playwright. Reviewer APPROVE. ⚠️ 2 test FE pre-esistenti fallenti fuori scope (AppComponent + confirm-click). > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-009`.
 **Blocked by:** US-007
 
 **Story**

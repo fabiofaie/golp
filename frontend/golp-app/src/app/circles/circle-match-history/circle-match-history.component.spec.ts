@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Subject } from 'rxjs';
 import { CircleMatchHistoryComponent } from './circle-match-history.component';
 import { MatchService, MatchSummary } from '../match.service';
 import { AuthService } from '../../auth/auth.service';
@@ -147,5 +147,78 @@ describe('CircleMatchHistoryComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('(Tu)');
+  });
+
+  // US-009 — delta badge
+
+  it('shows "+12 pt" green badge for positive delta on confirmed match', () => {
+    const m = makeMatch({ status: 'confirmed', myDelta: 12, confirmationsCount: 4, hasCurrentUserConfirmed: true });
+    matchSvc.getMatches.and.returnValue(of([m]));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+    const badge: HTMLElement = fixture.nativeElement.querySelector('.delta-badge');
+
+    expect(badge).toBeTruthy();
+    expect(badge.classList.contains('delta-badge--positive')).toBeTrue();
+    expect(badge.textContent?.trim()).toBe('+12 pt');
+  });
+
+  it('shows "-8 pt" red badge for negative delta on confirmed match', () => {
+    const m = makeMatch({ status: 'confirmed', myDelta: -8, confirmationsCount: 4, hasCurrentUserConfirmed: true });
+    matchSvc.getMatches.and.returnValue(of([m]));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+    const badge: HTMLElement = fixture.nativeElement.querySelector('.delta-badge');
+
+    expect(badge).toBeTruthy();
+    expect(badge.classList.contains('delta-badge--negative')).toBeTrue();
+    expect(badge.textContent?.trim()).toBe('-8 pt');
+  });
+
+  it('shows "+0 pt" neutral badge for zero delta', () => {
+    const m = makeMatch({ status: 'confirmed', myDelta: 0, confirmationsCount: 4, hasCurrentUserConfirmed: true });
+    matchSvc.getMatches.and.returnValue(of([m]));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+    const badge: HTMLElement = fixture.nativeElement.querySelector('.delta-badge');
+
+    expect(badge).toBeTruthy();
+    expect(badge.classList.contains('delta-badge--zero')).toBeTrue();
+    expect(badge.textContent?.trim()).toBe('+0 pt');
+  });
+
+  it('shows no delta badge when myDelta is null', () => {
+    const m = makeMatch({ status: 'confirmed', myDelta: null, confirmationsCount: 4, hasCurrentUserConfirmed: true });
+    matchSvc.getMatches.and.returnValue(of([m]));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.delta-badge')).toBeNull();
+  });
+
+  it('shows "In attesa" badge for pending match (no delta badge)', () => {
+    const m = makeMatch({ status: 'pending', myDelta: null });
+    matchSvc.getMatches.and.returnValue(of([m]));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    expect(el.textContent).toContain('In attesa');
+    expect(el.querySelector('.delta-badge')).toBeNull();
+  });
+
+  it('shows loading state while matches are loading', () => {
+    const pending$ = new Subject<MatchSummary[]>();
+    matchSvc.getMatches.and.returnValue(pending$.asObservable());
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges(); // triggers ngOnInit → getMatches → pending, loading stays true
+
+    expect(fixture.nativeElement.textContent).toContain('Caricamento');
+    pending$.complete();
   });
 });

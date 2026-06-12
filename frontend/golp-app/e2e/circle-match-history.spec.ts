@@ -46,6 +46,98 @@ async function confirmMatch(token: string, circleId: string, matchId: string): P
   await ctx.dispose();
 }
 
+test.describe('CircleMatchHistory — US-009', () => {
+  test('navigating to match list shows match cards with status badges', async ({ page }) => {
+    const t1 = uniqueEmail('m1'); const t1token = await registerUser(t1, 'M1');
+    const t2 = uniqueEmail('m2'); const t2token = await registerUser(t2, 'M2');
+    const t3 = uniqueEmail('m3'); const t3token = await registerUser(t3, 'M3');
+    const t4 = uniqueEmail('m4'); const t4token = await registerUser(t4, 'M4');
+
+    const circleId = await createCircleAndGetId(t1token);
+    await joinCircle(t2token, circleId);
+    await joinCircle(t3token, circleId);
+    await joinCircle(t4token, circleId);
+
+    const [id1, id2, id3, id4] = await Promise.all([
+      decodeUserId(t1token), decodeUserId(t2token),
+      decodeUserId(t3token), decodeUserId(t4token),
+    ]);
+    await createMatch(t1token, circleId, [id1, id2], [id3, id4]);
+
+    await page.goto('/login');
+    await page.fill('#email', t1);
+    await page.fill('#password', 'testpass123');
+    await page.click('button[type="submit"]');
+    await expect(page).toHaveURL(/dashboard/);
+
+    await page.goto(`/circles/${circleId}/matches`);
+    await expect(page.locator('.match-card').first()).toBeVisible();
+    await expect(page.locator('.status-badge').first()).toBeVisible();
+  });
+
+  test('confirmed match shows delta badge with +N pt or −N pt', async ({ page }) => {
+    const t1 = uniqueEmail('d1'); const t1token = await registerUser(t1, 'D1');
+    const t2 = uniqueEmail('d2'); const t2token = await registerUser(t2, 'D2');
+    const t3 = uniqueEmail('d3'); const t3token = await registerUser(t3, 'D3');
+    const t4 = uniqueEmail('d4'); const t4token = await registerUser(t4, 'D4');
+
+    const circleId = await createCircleAndGetId(t1token);
+    await joinCircle(t2token, circleId);
+    await joinCircle(t3token, circleId);
+    await joinCircle(t4token, circleId);
+
+    const [id1, id2, id3, id4] = await Promise.all([
+      decodeUserId(t1token), decodeUserId(t2token),
+      decodeUserId(t3token), decodeUserId(t4token),
+    ]);
+
+    const matchId = await createMatch(t1token, circleId, [id1, id2], [id3, id4]);
+    await confirmMatch(t2token, circleId, matchId);
+    await confirmMatch(t3token, circleId, matchId);
+    await confirmMatch(t4token, circleId, matchId);
+
+    // login as t1 (team1 winner → positive delta)
+    await page.goto('/login');
+    await page.fill('#email', t1);
+    await page.fill('#password', 'testpass123');
+    await page.click('button[type="submit"]');
+
+    await page.goto(`/circles/${circleId}/matches`);
+    const badge = page.locator('.delta-badge').first();
+    await expect(badge).toBeVisible();
+    const text = await badge.textContent();
+    // Badge deve contenere "+ pt" o "- pt" (senza esporre la formula)
+    expect(text).toMatch(/[+\-]\d+ pt/);
+  });
+
+  test('pending match shows no delta badge', async ({ page }) => {
+    const t1 = uniqueEmail('p1'); const t1token = await registerUser(t1, 'P1');
+    const t2 = uniqueEmail('p2'); const t2token = await registerUser(t2, 'P2');
+    const t3 = uniqueEmail('p3'); const t3token = await registerUser(t3, 'P3');
+    const t4 = uniqueEmail('p4'); const t4token = await registerUser(t4, 'P4');
+
+    const circleId = await createCircleAndGetId(t1token);
+    await joinCircle(t2token, circleId);
+    await joinCircle(t3token, circleId);
+    await joinCircle(t4token, circleId);
+
+    const [id1, id2, id3, id4] = await Promise.all([
+      decodeUserId(t1token), decodeUserId(t2token),
+      decodeUserId(t3token), decodeUserId(t4token),
+    ]);
+    await createMatch(t1token, circleId, [id1, id2], [id3, id4]);
+
+    await page.goto('/login');
+    await page.fill('#email', t1);
+    await page.fill('#password', 'testpass123');
+    await page.click('button[type="submit"]');
+
+    await page.goto(`/circles/${circleId}/matches`);
+    // partita pending: nessun .delta-badge
+    await expect(page.locator('.delta-badge')).toHaveCount(0);
+  });
+});
+
 test.describe('CircleMatchHistory — US-005', () => {
   test('pending match shows Conferma and Contesta buttons for current user', async ({ page }) => {
     const t1 = uniqueEmail('t1'); const t1token = await registerUser(t1, 'T1P1');

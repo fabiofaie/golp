@@ -37,12 +37,23 @@
           <!-- header -->
           <div class="match-card-header">
             <span class="match-date">{{ m.createdAt | date:'dd/MM, HH:mm' }}</span>
-            <span class="status-badge"
-              [class.status-badge--confirmed]="m.status === 'confirmed'"
-              [class.status-badge--disputed]="m.status === 'disputed'"
-              [class.status-badge--pending]="m.status === 'pending'">
-              {{ m.status === 'confirmed' ? 'Confermata' : m.status === 'disputed' ? 'Contestata' : 'In attesa' }}
-            </span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              @if (m.status !== 'confirmed') {
+                <span class="status-badge"
+                  [class.status-badge--disputed]="m.status === 'disputed'"
+                  [class.status-badge--pending]="m.status === 'pending'">
+                  {{ m.status === 'disputed' ? 'Contestata' : 'In attesa' }}
+                </span>
+              }
+              @if (m.status === 'confirmed' && m.myDelta !== null) {
+                <span class="delta-badge"
+                  [class.delta-badge--positive]="m.myDelta > 0"
+                  [class.delta-badge--negative]="m.myDelta < 0"
+                  [class.delta-badge--zero]="m.myDelta === 0">
+                  {{ m.myDelta! >= 0 ? '+' : '' }}{{ m.myDelta }} pt
+                </span>
+              }
+            </div>
           </div>
 
           <!-- teams -->

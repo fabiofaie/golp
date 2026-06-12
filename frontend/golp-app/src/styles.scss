@@ -1015,6 +1015,33 @@ html, body {
   line-height: 1.6;
 }
 
+/* US-009 — delta badge (from style-tokens.json) */
+
+:root {
+  --color-delta-positive:        #22C55E;
+  --color-delta-positive-bg:     rgba(34, 197, 94, 0.08);
+  --color-delta-positive-border: rgba(34, 197, 94, 0.22);
+  --color-delta-negative:        #FF4444;
+  --color-delta-negative-bg:     rgba(255, 68, 68, 0.08);
+  --color-delta-negative-border: rgba(255, 68, 68, 0.22);
+  --color-delta-zero:            #9A9A9A;
+  --color-delta-zero-bg:         rgba(154, 154, 154, 0.08);
+  --color-delta-zero-border:     rgba(154, 154, 154, 0.20);
+}
+
+.delta-badge {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  padding: 2px var(--sp-2);
+  border-radius: var(--r-full);
+  border: 1px solid transparent;
+  white-space: nowrap;
+
+  &.delta-badge--positive { color: var(--color-delta-positive); background: var(--color-delta-positive-bg); border-color: var(--color-delta-positive-border); }
+  &.delta-badge--negative { color: var(--color-delta-negative); background: var(--color-delta-negative-bg); border-color: var(--color-delta-negative-border); }
+  &.delta-badge--zero     { color: var(--color-delta-zero);     background: var(--color-delta-zero-bg);     border-color: var(--color-delta-zero-border); }
+}
+
 .btn-dispute {
   display: flex;
   align-items: center;

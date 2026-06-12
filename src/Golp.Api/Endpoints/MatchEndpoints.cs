@@ -200,25 +200,36 @@ public static class MatchEndpoints
             .Select(c => c.MatchId)
             .ToHashSetAsync();
 
-        var result = matches.Select(m => new
+        var result = matches.Select(m =>
         {
-            id                       = m.Id,
-            status                   = m.Status,
-            winnerTeam               = m.WinnerTeam,
-            createdAt                = m.CreatedAt,
-            myDelta                  = (int?)null,  // populated by US-007
-            confirmationsCount       = confirmationCounts.GetValueOrDefault(m.Id, 0),
-            hasCurrentUserConfirmed  = userConfirmedSet.Contains(m.Id),
-            team1 = new[]
+            int? myDelta = null;
+            if (m.Status == "confirmed")
             {
-                new { userId = m.Team1Player1Id, name = userNames.GetValueOrDefault(m.Team1Player1Id, "") },
-                new { userId = m.Team1Player2Id, name = userNames.GetValueOrDefault(m.Team1Player2Id, "") },
-            },
-            team2 = new[]
+                if      (m.Team1Player1Id == userId) myDelta = m.DeltaTeam1Player1;
+                else if (m.Team1Player2Id == userId) myDelta = m.DeltaTeam1Player2;
+                else if (m.Team2Player1Id == userId) myDelta = m.DeltaTeam2Player1;
+                else if (m.Team2Player2Id == userId) myDelta = m.DeltaTeam2Player2;
+            }
+            return new
             {
-                new { userId = m.Team2Player1Id, name = userNames.GetValueOrDefault(m.Team2Player1Id, "") },
-                new { userId = m.Team2Player2Id, name = userNames.GetValueOrDefault(m.Team2Player2Id, "") },
-            },
+                id                       = m.Id,
+                status                   = m.Status,
+                winnerTeam               = m.WinnerTeam,
+                createdAt                = m.CreatedAt,
+                myDelta,
+                confirmationsCount       = confirmationCounts.GetValueOrDefault(m.Id, 0),
+                hasCurrentUserConfirmed = userConfirmedSet.Contains(m.Id),
+                team1 = new[]
+                {
+                    new { userId = m.Team1Player1Id, name = userNames.GetValueOrDefault(m.Team1Player1Id, "") },
+                    new { userId = m.Team1Player2Id, name = userNames.GetValueOrDefault(m.Team1Player2Id, "") },
+                },
+                team2 = new[]
+                {
+                    new { userId = m.Team2Player1Id, name = userNames.GetValueOrDefault(m.Team2Player1Id, "") },
+                    new { userId = m.Team2Player2Id, name = userNames.GetValueOrDefault(m.Team2Player2Id, "") },
+                },
+            };
         });
 
         return Results.Ok(result);
