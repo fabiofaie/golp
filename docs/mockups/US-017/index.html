@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Come funziona il rating — GOLP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<div class="page">
+  <!-- Brand deco: ΔR instead of 1000 on this page -->
+  <div class="bg-deco" aria-hidden="true">ΔR</div>
+
+  <header class="auth-header">
+    <span class="brand">GOLP</span>
+    <a href="#" class="back-nav">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Classifica
+    </a>
+  </header>
+
+  <h1 class="auth-title">Come funziona il rating</h1>
+  <p class="auth-subtitle">Il sistema ELO adattato per il gioco di squadra.</p>
+
+  <!-- ── SPIEGAZIONE ── -->
+  <div class="section-label">Le basi</div>
+
+  <div class="stat-cards">
+    <div class="stat-card stat-card--accent">
+      <div class="stat-card__value">1000</div>
+      <div class="stat-card__label">Rating di partenza per tutti i giocatori</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__value">±10–40</div>
+      <div class="stat-card__label">Punti tipici guadagnati o persi per partita</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__value">15</div>
+      <div class="stat-card__label">Partite per "stabilizzarsi" — prima i cambi sono più rapidi</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__value">×1.5</div>
+      <div class="stat-card__label">Moltiplicatore nelle prime 15 partite — sali e scendi più in fretta</div>
+    </div>
+  </div>
+
+  <div class="explanation-block">
+    <div class="explanation-block__title">
+      <span class="icon">🏆</span>
+      Battere i forti vale di più
+    </div>
+    <div class="explanation-block__text">
+      Se batti avversari con un rating <strong>più alto del tuo</strong>, guadagni più punti. Se batti avversari più deboli, guadagni meno. Il sistema si aspetta che i forti vincano.
+    </div>
+  </div>
+
+  <div class="explanation-block">
+    <div class="explanation-block__title">
+      <span class="icon">👥</span>
+      Il rating è di squadra
+    </div>
+    <div class="explanation-block__text">
+      Il calcolo usa la <strong>media del rating</strong> dei due giocatori di ogni squadra. Entrambi i compagni guadagnano (o perdono) la stessa quantità di punti.
+    </div>
+  </div>
+
+  <div class="explanation-block">
+    <div class="explanation-block__title">
+      <span class="icon">📊</span>
+      Il margine conta
+    </div>
+    <div class="explanation-block__text">
+      Vincere 10-2 vale <strong>leggermente di più</strong> che vincere 10-8. Il divario nei punteggi influenza il risultato finale, ma non in modo esagerato (amplificatore 0.7).
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ── SIMULATORE ── -->
+  <div class="section-label">Simulatore partita</div>
+
+  <form class="sim-form" id="simForm" novalidate>
+
+    <!-- Rating squadra mia -->
+    <div class="sim-team sim-team--mine">
+      <div class="sim-team__label">La mia squadra</div>
+      <div class="sim-team__fields">
+        <div class="field">
+          <label for="myRating">Il mio rating</label>
+          <input type="number" id="myRating" placeholder="1050" min="0" max="3000" value="1050">
+        </div>
+        <div class="field">
+          <label for="partnerRating">Compagno</label>
+          <input type="number" id="partnerRating" placeholder="980" min="0" max="3000" value="980">
+        </div>
+      </div>
+    </div>
+
+    <!-- Rating avversari -->
+    <div class="sim-team">
+      <div class="sim-team__label">Avversari</div>
+      <div class="sim-team__fields">
+        <div class="field">
+          <label for="opp1Rating">Avversario 1</label>
+          <input type="number" id="opp1Rating" placeholder="1100" min="0" max="3000" value="1100">
+        </div>
+        <div class="field">
+          <label for="opp2Rating">Avversario 2</label>
+          <input type="number" id="opp2Rating" placeholder="1090" min="0" max="3000" value="1090">
+        </div>
+      </div>
+    </div>
+
+    <!-- Modalità risultato -->
+    <div>
+      <div class="section-label" style="margin-bottom: 12px;">Risultato</div>
+      <div class="pill-switcher" role="group" aria-label="Modalità risultato">
+        <button type="button" class="pill-switcher__btn active" id="btnUnico" onclick="setMode('unico')">Risultato unico</button>
+        <button type="button" class="pill-switcher__btn" id="btnSet" onclick="setMode('set')">Per set</button>
+      </div>
+
+      <!-- Risultato unico -->
+      <div id="modeUnico" class="score-section">
+        <div class="score-headers">
+          <span class="sh-my">Mia sqd</span>
+          <span class="sh-sep"></span>
+          <span class="sh-opp">Avvers.</span>
+          <span class="sh-del"></span>
+        </div>
+        <div class="score-row">
+          <div class="score-row__inputs">
+            <input type="number" class="score-input" id="myScore" placeholder="10" min="0" value="10">
+            <span class="score-row__sep">–</span>
+            <input type="number" class="score-input" id="oppScore" placeholder="6" min="0" value="6">
+          </div>
+        </div>
+      </div>
+
+      <!-- Per set -->
+      <div id="modeSet" class="score-section" style="display:none;">
+        <div class="score-headers">
+          <span class="sh-my">Mia sqd</span>
+          <span class="sh-sep"></span>
+          <span class="sh-opp">Avvers.</span>
+          <span class="sh-del"></span>
+        </div>
+        <div id="setsContainer">
+          <div class="score-row">
+            <div class="score-row__inputs">
+              <input type="number" class="score-input set-my" placeholder="6" min="0" value="6">
+              <span class="score-row__sep">–</span>
+              <input type="number" class="score-input set-opp" placeholder="4" min="0" value="4">
+            </div>
+            <button type="button" class="score-row__remove" onclick="removeSet(this)" aria-label="Rimuovi set">×</button>
+          </div>
+          <div class="score-row">
+            <div class="score-row__inputs">
+              <input type="number" class="score-input set-my" placeholder="7" min="0" value="7">
+              <span class="score-row__sep">–</span>
+              <input type="number" class="score-input set-opp" placeholder="5" min="0" value="5">
+            </div>
+            <button type="button" class="score-row__remove" onclick="removeSet(this)" aria-label="Rimuovi set">×</button>
+          </div>
+        </div>
+        <button type="button" class="add-set-btn" onclick="addSet()">+ Aggiungi set</button>
+      </div>
+    </div>
+
+    <!-- Tipo giocatore -->
+    <div>
+      <div class="section-label" style="margin-bottom: 10px;">Tipo di giocatore</div>
+      <div class="player-type-toggle" role="group">
+        <button type="button" class="player-type-btn active" id="btnEsperto" onclick="setPlayerType('esperto')">
+          <span class="ptb-title">Esperto</span>
+          <span class="ptb-desc">più di 15 partite</span>
+        </button>
+        <button type="button" class="player-type-btn" id="btnNuovo" onclick="setPlayerType('nuovo')">
+          <span class="ptb-title">Alle prime armi</span>
+          <span class="ptb-desc">meno di 15 partite</span>
+        </button>
+      </div>
+      <div class="player-type-note" id="playerTypeNote">
+        Il tuo rating è già stabile — i punti vinti e persi variano moderatamente.
+      </div>
+    </div>
+
+    <div class="info-note" style="margin-top: 0;">
+      Il calcolo usa la media dei rating di squadra e il margine di punteggio reale.
+    </div>
+
+    <button type="submit" class="btn-primary">Calcola variazione rating</button>
+  </form>
+
+  <!-- ── RISULTATO (hidden until submit) ── -->
+  <div id="resultPanel" class="result-panel" style="display:none; margin-top: 24px;">
+    <div class="result-panel__header">Variazione rating stimata</div>
+
+    <div class="result-row--divider">La mia squadra — vittoria</div>
+
+    <div class="result-row">
+      <div class="result-row__info">
+        <div class="result-row__name">Tu</div>
+        <div class="result-row__rating" id="myRatingDisplay">Rating: 1050</div>
+      </div>
+      <div class="result-row__delta result-row__delta--pos" id="deltaMe">+18</div>
+    </div>
+
+    <div class="result-row">
+      <div class="result-row__info">
+        <div class="result-row__name">Compagno</div>
+        <div class="result-row__rating" id="partnerRatingDisplay">Rating: 980</div>
+      </div>
+      <div class="result-row__delta result-row__delta--pos" id="deltaPartner">+18</div>
+    </div>
+
+    <div class="result-row--divider">Avversari — sconfitta</div>
+
+    <div class="result-row">
+      <div class="result-row__info">
+        <div class="result-row__name">Avversario 1</div>
+        <div class="result-row__rating" id="opp1RatingDisplay">Rating: 1100</div>
+      </div>
+      <div class="result-row__delta result-row__delta--neg" id="deltaOpp1">−14</div>
+    </div>
+
+    <div class="result-row">
+      <div class="result-row__info">
+        <div class="result-row__name">Avversario 2</div>
+        <div class="result-row__rating" id="opp2RatingDisplay">Rating: 1090</div>
+      </div>
+      <div class="result-row__delta result-row__delta--neg" id="deltaOpp2">−14</div>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

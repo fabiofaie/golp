@@ -73,5 +73,13 @@ export const routes: Routes = [
     path: 'join',
     loadComponent: () => import('./circles/join-circle/join-circle.component').then(m => m.JoinCircleComponent)
   },
+  {
+    path: 'elo-info',
+    loadComponent: () => import('./elo-info/elo-info.component').then(m => m.EloInfoComponent)
+  },
+  {
+    path: 'simulate-match',
+    loadComponent: () => import('./elo-info/elo-info.component').then(m => m.EloInfoComponent)
+  },
   { path: '**', redirectTo: '/dashboard' }
 ];

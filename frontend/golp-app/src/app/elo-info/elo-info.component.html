@@ -1,0 +1,237 @@
+<div class="page">
+  <div class="bg-deco" aria-hidden="true">ΔR</div>
+
+  <header class="auth-header">
+    <span class="brand">GOLP</span>
+    <button type="button" (click)="goBack()" class="back-nav" style="background:none;border:none;cursor:pointer;padding:0;">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Indietro
+    </button>
+  </header>
+
+  <h1 class="auth-title">Come funziona il rating</h1>
+  <p class="auth-subtitle">Il sistema ELO adattato per il gioco di squadra.</p>
+
+  <!-- ── SPIEGAZIONE ── -->
+  <div class="section-label">Le basi</div>
+
+  <div class="stat-cards">
+    <div class="stat-card stat-card--accent">
+      <div class="stat-card__value">1000</div>
+      <div class="stat-card__label">Rating di partenza per tutti i giocatori</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__value">±10–40</div>
+      <div class="stat-card__label">Punti tipici guadagnati o persi per partita</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__value">15</div>
+      <div class="stat-card__label">Partite per stabilizzarsi — prima i cambi sono più rapidi</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card__value">×1.5</div>
+      <div class="stat-card__label">Moltiplicatore nelle prime 15 partite</div>
+    </div>
+  </div>
+
+  <div class="explanation-block">
+    <div class="explanation-block__title">
+      <span class="icon">🏆</span>
+      Battere i forti vale di più
+    </div>
+    <div class="explanation-block__text">
+      Se batti avversari con un rating <strong>più alto del tuo</strong>, guadagni più punti. Se batti avversari più deboli, guadagni meno.
+    </div>
+  </div>
+
+  <div class="explanation-block">
+    <div class="explanation-block__title">
+      <span class="icon">👥</span>
+      Il rating è di squadra
+    </div>
+    <div class="explanation-block__text">
+      Il calcolo usa la <strong>media del rating</strong> dei due giocatori di ogni squadra. Entrambi i compagni guadagnano (o perdono) la stessa quantità di punti.
+    </div>
+  </div>
+
+  <div class="explanation-block">
+    <div class="explanation-block__title">
+      <span class="icon">📊</span>
+      Il margine conta
+    </div>
+    <div class="explanation-block__text">
+      Vincere con un divario maggiore vale <strong>leggermente di più</strong>. L'effetto è smorzato per evitare che una sola partita stravolga il ranking.
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ── SIMULATORE ── -->
+  <div class="section-label">Simulatore partita</div>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="sim-form">
+
+    <!-- Rating squadra mia -->
+    <div class="sim-team sim-team--mine">
+      <div class="sim-team__label">La mia squadra</div>
+      <div class="sim-team__fields">
+        <div class="field">
+          <label for="myRating">Il mio rating</label>
+          <input id="myRating" type="number" formControlName="myRating" placeholder="es. 1050"
+            [class.error]="form.get('myRating')?.invalid && form.get('myRating')?.touched">
+        </div>
+        <div class="field">
+          <label for="partnerRating">Compagno</label>
+          <input id="partnerRating" type="number" formControlName="partnerRating" placeholder="es. 980"
+            [class.error]="form.get('partnerRating')?.invalid && form.get('partnerRating')?.touched">
+        </div>
+      </div>
+    </div>
+
+    <!-- Rating avversari -->
+    <div class="sim-team">
+      <div class="sim-team__label">Avversari</div>
+      <div class="sim-team__fields">
+        <div class="field">
+          <label for="opp1Rating">Avversario 1</label>
+          <input id="opp1Rating" type="number" formControlName="opp1Rating" placeholder="es. 1100"
+            [class.error]="form.get('opp1Rating')?.invalid && form.get('opp1Rating')?.touched">
+        </div>
+        <div class="field">
+          <label for="opp2Rating">Avversario 2</label>
+          <input id="opp2Rating" type="number" formControlName="opp2Rating" placeholder="es. 1090"
+            [class.error]="form.get('opp2Rating')?.invalid && form.get('opp2Rating')?.touched">
+        </div>
+      </div>
+    </div>
+
+    <!-- Modalità risultato -->
+    <div>
+      <div class="section-label" style="margin-bottom: 12px;">Risultato</div>
+      <div class="pill-switcher" role="group">
+        <button type="button" class="pill-switcher__btn" [class.active]="resultMode === 'unico'" (click)="setMode('unico')">Risultato unico</button>
+        <button type="button" class="pill-switcher__btn" [class.active]="resultMode === 'set'" (click)="setMode('set')">Per set</button>
+      </div>
+
+      @if (resultMode === 'unico') {
+        <div class="score-section">
+          <div class="score-headers">
+            <span class="sh-my">Mia sqd</span>
+            <span class="sh-sep"></span>
+            <span class="sh-opp">Avvers.</span>
+          </div>
+          <div class="score-row">
+            <div class="score-row__inputs">
+              <input type="number" class="score-input" formControlName="myScore" placeholder="10" min="0">
+              <span class="score-row__sep">–</span>
+              <input type="number" class="score-input" formControlName="oppScore" placeholder="6" min="0">
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (resultMode === 'set') {
+        <div class="score-section" formArrayName="sets">
+          <div class="score-headers">
+            <span class="sh-my">Mia sqd</span>
+            <span class="sh-sep"></span>
+            <span class="sh-opp">Avvers.</span>
+          </div>
+          @for (s of sets.controls; track $index; let i = $index) {
+            <div class="score-row" [formGroupName]="i">
+              <div class="score-row__inputs">
+                <input type="number" class="score-input" formControlName="myScore" placeholder="6" min="0">
+                <span class="score-row__sep">–</span>
+                <input type="number" class="score-input" formControlName="oppScore" placeholder="4" min="0">
+              </div>
+              @if (sets.length > 1) {
+                <button type="button" class="score-row__remove" (click)="removeSet(i)" aria-label="Rimuovi set">×</button>
+              }
+            </div>
+          }
+          <button type="button" class="add-set-btn" (click)="addSet()">+ Aggiungi set</button>
+        </div>
+      }
+    </div>
+
+    <!-- Tipo giocatore -->
+    <div>
+      <div class="section-label" style="margin-bottom: 10px;">Tipo di giocatore</div>
+      <div class="player-type-toggle">
+        <button type="button" class="player-type-btn" [class.active]="playerType === 'esperto'" (click)="setPlayerType('esperto')">
+          <span class="ptb-title">Esperto</span>
+          <span class="ptb-desc">più di 15 partite</span>
+        </button>
+        <button type="button" class="player-type-btn" [class.active]="playerType === 'nuovo'" (click)="setPlayerType('nuovo')">
+          <span class="ptb-title">Alle prime armi</span>
+          <span class="ptb-desc">meno di 15 partite</span>
+        </button>
+      </div>
+      <div class="player-type-note" [class.player-type-note--fast]="playerType === 'nuovo'">
+        {{ playerTypeNote() }}
+      </div>
+    </div>
+
+    @if (errorMsg()) {
+      <div class="form-error">{{ errorMsg() }}</div>
+    }
+
+    <button type="submit" class="btn-primary" [disabled]="form.invalid || loading()">
+      {{ loading() ? 'Calcolo…' : 'Calcola variazione rating' }}
+    </button>
+  </form>
+
+  <!-- ── RISULTATO ── -->
+  @if (result(); as res) {
+    <div class="result-panel">
+      <div class="result-panel__header">Variazione rating stimata</div>
+
+      <div class="result-row--divider">La mia squadra — {{ res.deltaTeam1Player1 >= 0 ? 'vittoria' : 'sconfitta' }}</div>
+
+      <div class="result-row">
+        <div class="result-row__info">
+          <div class="result-row__name">Tu</div>
+          <div class="result-row__rating">Rating: {{ form.value.myRating }}</div>
+        </div>
+        <div class="result-row__delta" [class.result-row__delta--pos]="isPositive(res.deltaTeam1Player1)" [class.result-row__delta--neg]="!isPositive(res.deltaTeam1Player1)">
+          {{ formatDelta(res.deltaTeam1Player1) }}
+        </div>
+      </div>
+
+      <div class="result-row">
+        <div class="result-row__info">
+          <div class="result-row__name">Compagno</div>
+          <div class="result-row__rating">Rating: {{ form.value.partnerRating }}</div>
+        </div>
+        <div class="result-row__delta" [class.result-row__delta--pos]="isPositive(res.deltaTeam1Player2)" [class.result-row__delta--neg]="!isPositive(res.deltaTeam1Player2)">
+          {{ formatDelta(res.deltaTeam1Player2) }}
+        </div>
+      </div>
+
+      <div class="result-row--divider">Avversari — {{ res.deltaTeam2Player1 >= 0 ? 'vittoria' : 'sconfitta' }}</div>
+
+      <div class="result-row">
+        <div class="result-row__info">
+          <div class="result-row__name">Avversario 1</div>
+          <div class="result-row__rating">Rating: {{ form.value.opp1Rating }}</div>
+        </div>
+        <div class="result-row__delta" [class.result-row__delta--pos]="isPositive(res.deltaTeam2Player1)" [class.result-row__delta--neg]="!isPositive(res.deltaTeam2Player1)">
+          {{ formatDelta(res.deltaTeam2Player1) }}
+        </div>
+      </div>
+
+      <div class="result-row">
+        <div class="result-row__info">
+          <div class="result-row__name">Avversario 2</div>
+          <div class="result-row__rating">Rating: {{ form.value.opp2Rating }}</div>
+        </div>
+        <div class="result-row__delta" [class.result-row__delta--pos]="isPositive(res.deltaTeam2Player2)" [class.result-row__delta--neg]="!isPositive(res.deltaTeam2Player2)">
+          {{ formatDelta(res.deltaTeam2Player2) }}
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

@@ -22,5 +22,5 @@
     "secure": false,
     "changeOrigin": true,
     "logLevel": "warn"
-  }
+  },
 }

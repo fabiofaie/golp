@@ -1,5 +1,10 @@
 /* Leaderboard — tokens from style-tokens.json (US-008) */
 
+.elo-info-link {
+  justify-content: center;
+  margin-top: var(--sp-6);
+}
+
 .loading-text {
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);

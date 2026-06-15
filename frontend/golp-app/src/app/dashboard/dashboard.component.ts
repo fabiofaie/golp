@@ -19,6 +19,7 @@ import { Router } from '@angular/router';
         <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
           <a routerLink="/circles" class="btn-ghost">I miei circoli</a>
           <a routerLink="/circles/new" class="btn-ghost">+ Nuovo circolo</a>
+          <a routerLink="/elo-info" class="btn-ghost">Simula una partita</a>
         </div>
       </main>
     </div>

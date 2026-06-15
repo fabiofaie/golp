@@ -15,10 +15,47 @@ namespace Golp.Api.Services;
 /// </summary>
 public class RatingService : IRatingService
 {
-    private const double Amplifier = 0.7;
-    private const int KDefault = 32;
-    private const int KColdStart = 48;
-    private const int ColdStartMatches = 15;
+    public const double Amplifier = 0.7;
+    public const int KDefault = 32;
+    public const int KColdStart = 48;
+    public const int ColdStartMatches = 15;
+
+    /// <summary>
+    /// Calcola i delta ELO per i 4 giocatori dato il risultato di una partita.
+    /// Logica pura, senza accesso al DB — riusabile dal simulatore.
+    /// </summary>
+    /// <param name="team1Avg">Rating medio squadra 1</param>
+    /// <param name="team2Avg">Rating medio squadra 2</param>
+    /// <param name="kValues">K per ogni giocatore: [t1p1, t1p2, t2p1, t2p2]</param>
+    /// <param name="team1Won">true se ha vinto squadra 1</param>
+    /// <param name="scoreRatio">score_ratio già clampato in [0.5, 1.0] per il team vincente</param>
+    /// <returns>delta per [t1p1, t1p2, t2p1, t2p2] — positivo se vincitore, negativo se perdente</returns>
+    public static int[] ComputeDeltas(
+        double team1Avg, double team2Avg,
+        int[] kValues,
+        bool team1Won,
+        double scoreRatio)
+    {
+        double winnerAvg = team1Won ? team1Avg : team2Avg;
+        double loserAvg  = team1Won ? team2Avg : team1Avg;
+
+        double expectedWin    = 1.0 / (1.0 + Math.Pow(10.0, (loserAvg - winnerAvg) / 400.0));
+        double effectiveResult = 0.5 + (scoreRatio - 0.5) * Amplifier;
+        double margin          = effectiveResult - expectedWin;
+
+        int DeltaFor(int k, bool isWinner)
+        {
+            var delta = (int)Math.Round(k * margin);
+            return isWinner ? delta : -delta;
+        }
+
+        return [
+            DeltaFor(kValues[0], team1Won),
+            DeltaFor(kValues[1], team1Won),
+            DeltaFor(kValues[2], !team1Won),
+            DeltaFor(kValues[3], !team1Won),
+        ];
+    }
 
     public async Task CalculateAndApplyAsync(Guid matchId, AppDbContext db)
     {
@@ -58,14 +95,10 @@ public class RatingService : IRatingService
         double team2Rating = (memberships[match.Team2Player1Id].Rating
                             + memberships[match.Team2Player2Id].Rating) / 2.0;
 
-        bool team1Won = match.WinnerTeam == 1;
-        double winnerRating = team1Won ? team1Rating : team2Rating;
-        double loserRating  = team1Won ? team2Rating : team1Rating;
-        int winnerUnits     = team1Won ? totalTeam1 : totalTeam2;
+        bool team1Won   = match.WinnerTeam == 1;
+        int winnerUnits = team1Won ? totalTeam1 : totalTeam2;
 
-        double expectedWin = 1.0 / (1.0 + Math.Pow(10.0, (loserRating - winnerRating) / 400.0));
-
-        var sport = SportsConfig.GetBySport(circle?.Sport ?? "");
+        var sport     = SportsConfig.GetBySport(circle?.Sport ?? "");
         bool useBlended = (circle?.Sets == true) && (sport?.SetWeight > 0);
 
         double scoreRatio;
@@ -74,7 +107,7 @@ public class RatingService : IRatingService
             int setsWonByWinner = match.Sets.Count(s =>
                 team1Won ? s.Team1Score > s.Team2Score : s.Team2Score > s.Team1Score);
             int totalSets = match.Sets.Count(s => s.Team1Score != s.Team2Score);
-            double setRatio = totalSets > 0 ? (double)setsWonByWinner / totalSets : 0.5;
+            double setRatio  = totalSets > 0 ? (double)setsWonByWinner / totalSets : 0.5;
             double gameRatio = (double)winnerUnits / (totalTeam1 + totalTeam2);
             scoreRatio = Math.Clamp(sport!.SetWeight * setRatio + (1 - sport.SetWeight) * gameRatio, 0.5, 1.0);
         }
@@ -84,8 +117,6 @@ public class RatingService : IRatingService
             // il vincitore ha meno game totali dei perdenti (es. 6-4, 0-6, 7-6).
             scoreRatio = Math.Clamp((double)winnerUnits / (totalTeam1 + totalTeam2), 0.5, 1.0);
         }
-        double effectiveResult = 0.5 + (scoreRatio - 0.5) * Amplifier;
-        double margin = effectiveResult - expectedWin;
 
         var kByPlayer = new Dictionary<Guid, int>();
         foreach (var playerId in playerIds)
@@ -99,16 +130,20 @@ public class RatingService : IRatingService
             kByPlayer[playerId] = confirmedCount < ColdStartMatches ? KColdStart : KDefault;
         }
 
-        int DeltaFor(Guid playerId, bool isWinner)
+        var kValues = new[]
         {
-            var delta = (int)Math.Round(kByPlayer[playerId] * margin);
-            return isWinner ? delta : -delta;
-        }
+            kByPlayer[match.Team1Player1Id],
+            kByPlayer[match.Team1Player2Id],
+            kByPlayer[match.Team2Player1Id],
+            kByPlayer[match.Team2Player2Id],
+        };
 
-        match.DeltaTeam1Player1 = DeltaFor(match.Team1Player1Id, team1Won);
-        match.DeltaTeam1Player2 = DeltaFor(match.Team1Player2Id, team1Won);
-        match.DeltaTeam2Player1 = DeltaFor(match.Team2Player1Id, !team1Won);
-        match.DeltaTeam2Player2 = DeltaFor(match.Team2Player2Id, !team1Won);
+        var deltas = ComputeDeltas(team1Rating, team2Rating, kValues, team1Won, scoreRatio);
+
+        match.DeltaTeam1Player1 = deltas[0];
+        match.DeltaTeam1Player2 = deltas[1];
+        match.DeltaTeam2Player1 = deltas[2];
+        match.DeltaTeam2Player2 = deltas[3];
 
         memberships[match.Team1Player1Id].Rating += match.DeltaTeam1Player1.Value;
         memberships[match.Team1Player2Id].Rating += match.DeltaTeam1Player2.Value;

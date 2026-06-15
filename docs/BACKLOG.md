@@ -4,9 +4,9 @@
 
 ## Riepilogo
 
-- Epic totali: 4
-- Storie totali: 15
-- Storie TODO: 0 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 14
+- Epic totali: 5
+- Storie totali: 17
+- Storie TODO: 1 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 2 | DONE: 14
 
 ---
 
@@ -527,4 +527,72 @@ L'utente apre `/join?token=<token>`, viene reindirizzato alla registrazione (o a
 
 ---
 
-> **PROSSIMO PASSO:** esegui `/eq-plan US-014` per pianificare il flusso di invito, oppure `/eq-next` per il riepilogo dello stato corrente.
+---
+
+## EP-005 — Configurazione e Amministrazione
+*Funzionalità per gestire la piattaforma senza dover rilasciare nuove versioni: sport, parametri ELO, configurazioni operative.*
+
+#### US-016: Sport configurabili da database
+
+**Epic:** EP-005 | **Priority:** HIGH | **Story Points:** 5 | **Status:** TODO
+**Blocked by:** -
+
+**Story**
+Come amministratore della piattaforma, voglio gestire l'elenco degli sport supportati tramite database, così che possa aggiungere o modificare sport senza rilasciare una nuova versione della PWA.
+
+**Demonstrates**
+Un amministratore aggiunge un nuovo sport (`padel 4v4`) direttamente sul DB. Senza alcun deploy, l'endpoint `/sports` lo restituisce già e i giocatori possono selezionarlo durante la registrazione di una partita.
+
+**Acceptance Criteria**
+- [ ] Esiste una tabella `Sports` nel DB con colonne: `Id`, `Key`, `DisplayName`, `PointUnit`, `Sets`, `TeamSize`, `IsActive`
+- [ ] L'endpoint `GET /sports` legge da DB (non da `SportsConfig` statico) e restituisce solo sport con `IsActive = true`
+- [ ] `SportsConfig` statico viene rimosso o deprecato: nessun endpoint lo usa più direttamente
+- [ ] Una migration EF popola la tabella con gli sport attualmente definiti in `SportsConfig` (dati iniziali idempotenti)
+- [ ] Il frontend riceve e visualizza correttamente la lista sport proveniente da DB, senza modifiche al contratto API esistente
+- [ ] La validazione sport nelle partite (`MatchEndpoints`) usa i valori da DB, non dalla classe statica
+
+**Out of scope**
+- UI di amministrazione per gestire sport (CRUD via interfaccia grafica)
+- Autenticazione/autorizzazione per la modifica della tabella Sports (gestita solo via accesso diretto al DB)
+- Parametri ELO (K, amplifier) in database
+
+**Open questions**
+- La colonna `Key` deve essere stabile (usata come FK nelle partite esistenti) o è solo display? Verificare se il dominio usa già una stringa-chiave o un ID numerico per riferirsi agli sport nei match registrati.
+
+---
+
+#### US-017: Pagina spiegazione algoritmo ELO e simulatore partita
+
+**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** REVIEW
+**Review note (2026-06-15):** Backend: `RatingService.ComputeDeltas` (public static), `SimulateEndpoints.cs` (`POST /simulate-match` pubblico), `Program.cs`. Frontend: `elo-info/` (service + component + route), link in leaderboard e dashboard. Test: `SimulateEndpointTests.cs` (10 test). Reviewer APPROVE. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-017`.
+**Blocked by:** -
+
+**Story**
+Come giocatore, voglio leggere una spiegazione semplice di come viene calcolato il mio rating e simulare il risultato di una partita ipotetica con i punteggi che scelgo io, così che possa capire l'impatto delle mie vittorie e sconfitte senza dover aspettare una partita reale.
+
+**Demonstrates**
+Fabio è in classifica con 1050 punti. Clicca "Come funziona il rating?" dalla pagina classifica. Legge la spiegazione in linguaggio semplice. Inserisce: sé stesso 1050, compagno 980, avversari 1100 e 1090, risultato vittoria. La pagina mostra "+18 punti" per lui e "+15 per il compagno". Torna alla classifica.
+
+**Acceptance Criteria**
+- [ ] Esiste una route `/elo-info` (o simile) con una pagina standalone raggiungibile senza login
+- [ ] La pagina contiene una sezione testuale che spiega l'algoritmo ELO in linguaggio non tecnico (cosa è il rating iniziale, come sale/scende, ruolo del K dinamico per i primi 15 match)
+- [ ] La pagina contiene un form simulatore con 4 campi rating (proprio, compagno, avversario 1, avversario 2) e un selettore "modalità risultato"
+- [ ] La modalità risultato permette di scegliere tra "Risultato unico" (due campi: punti mia squadra / punti avversari) e "Per set" (coppie di punteggio aggiungibili dinamicamente con + Aggiungi set)
+- [ ] Dopo submit il simulatore mostra la variazione di rating prevista per il team vincente e per il team perdente, calcolata lato client con la stessa formula ELO usata dal backend (score_ratio dal punteggio reale inserito, non fisso)
+- [ ] I campi rating hanno validazione: valori numerici interi tra 0 e 3000
+- [ ] I campi punteggio partita hanno validazione: valori interi ≥ 0, almeno un set/risultato inserito, il totale dei punti deve essere > 0
+- [ ] Dalla pagina classifica è presente un link visibile "Come funziona il rating?" che porta a `/elo-info`
+- [ ] Dalla dashboard è presente un link/card "Simula una partita" che porta a `/elo-info`
+
+**Out of scope**
+- Storico simulazioni salvate
+- Simulazione multi-round o tornei
+- Personalizzazione parametri ELO (K, amplifier) da UI
+- Login obbligatorio per accedere alla pagina
+
+**Open questions**
+- -
+
+---
+
+> **PROSSIMO PASSO:** esegui `/eq-plan US-017` per pianificare la pagina simulatore ELO, oppure `/eq-next` per il riepilogo dello stato corrente.

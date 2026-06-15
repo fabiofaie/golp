@@ -6,3 +6,7 @@
 # Firebase credentials — mai committare
 serviceAccountKey.json
 firebase-adminsdk*.json
+
+# Env-specific settings con credenziali — mai committare
+# appsettings.Testing.json
+# appsettings.Production.json
