@@ -20,10 +20,24 @@ public class RatingServiceIntegrationTests
     }
 
     private static async Task<(Guid MatchId, Guid CircleId, Guid[] PlayerIds)> SeedConfirmedMatchAsync(
-        AppDbContext db, string status = "confirmed")
+        AppDbContext db, string status = "confirmed", bool createCircleWithSets = false)
     {
         var circleId = Guid.NewGuid();
         var playerIds = Enumerable.Range(0, 4).Select(_ => Guid.NewGuid()).ToArray();
+
+        if (createCircleWithSets)
+        {
+            db.Circles.Add(new Circle
+            {
+                Id        = circleId,
+                OwnerId   = playerIds[0],
+                Name      = "Test Circle",
+                Sport     = "padel",
+                PointUnit = "games",
+                Sets      = true,
+                TeamSize  = 2,
+            });
+        }
 
         foreach (var pid in playerIds)
             db.CircleMemberships.Add(new CircleMembership { CircleId = circleId, UserId = pid, Rating = 1000 });
@@ -122,5 +136,31 @@ public class RatingServiceIntegrationTests
         Assert.All(ratings, r => Assert.Equal(1000, r));
         var match = await db.Matches.AsNoTracking().SingleAsync(m => m.Id == matchId);
         Assert.Null(match.DeltaTeam1Player1);
+    }
+
+    // US-012 — circolo con Sets=true: verifica formula blended end-to-end
+    // sets [(6,2),(6,3)]: set_ratio=1.0, game_ratio=12/17≈0.706
+    // blended=0.4×1.0+0.6×0.706≈0.824, effective≈0.727, margin≈0.227, K=48 → round(10.87)=11
+    [Fact]
+    public async Task SetSport_ConfirmedMatch_BlendedDeltaCorrect()
+    {
+        using var db = CreateDb();
+        var (matchId, circleId, playerIds) = await SeedConfirmedMatchAsync(db, createCircleWithSets: true);
+
+        await new RatingService().CalculateAndApplyAsync(matchId, db);
+        await db.SaveChangesAsync();
+
+        var match = await db.Matches.AsNoTracking().SingleAsync(m => m.Id == matchId);
+        var memberships = await db.CircleMemberships.AsNoTracking()
+            .Where(m => m.CircleId == circleId)
+            .ToDictionaryAsync(m => m.UserId);
+
+        Assert.Equal(11, match.DeltaTeam1Player1);
+        Assert.Equal(11, match.DeltaTeam1Player2);
+        Assert.Equal(-11, match.DeltaTeam2Player1);
+        Assert.Equal(-11, match.DeltaTeam2Player2);
+        Assert.Equal(1011, memberships[playerIds[0]].Rating);
+        Assert.Equal(989, memberships[playerIds[2]].Rating);
+        Assert.Equal(0, match.DeltaTeam1Player1!.Value + match.DeltaTeam2Player1!.Value);
     }
 }

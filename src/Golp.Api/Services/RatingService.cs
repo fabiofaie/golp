@@ -24,11 +24,12 @@ public class RatingService : IRatingService
     {
         var match = await db.Matches
             .Include(m => m.Sets)
-            .Include(m => m.Circle)
             .SingleOrDefaultAsync(m => m.Id == matchId);
 
         if (match == null || match.Status != "confirmed")
             return;
+
+        var circle = await db.Circles.FindAsync(match.CircleId);
 
         // Idempotenza: delta già presenti = match già processato
         if (match.DeltaTeam1Player1 != null)
@@ -64,8 +65,8 @@ public class RatingService : IRatingService
 
         double expectedWin = 1.0 / (1.0 + Math.Pow(10.0, (loserRating - winnerRating) / 400.0));
 
-        var sport = SportsConfig.GetBySport(match.Circle?.Sport ?? "");
-        bool useBlended = (match.Circle?.Sets == true) && (sport?.SetWeight > 0);
+        var sport = SportsConfig.GetBySport(circle?.Sport ?? "");
+        bool useBlended = (circle?.Sets == true) && (sport?.SetWeight > 0);
 
         double scoreRatio;
         if (useBlended)
