@@ -69,5 +69,9 @@ export const routes: Routes = [
     loadComponent: () => import('./circles/circle-stats/circle-stats.component').then(m => m.CircleStatsComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'join',
+    loadComponent: () => import('./circles/join-circle/join-circle.component').then(m => m.JoinCircleComponent)
+  },
   { path: '**', redirectTo: '/dashboard' }
 ];

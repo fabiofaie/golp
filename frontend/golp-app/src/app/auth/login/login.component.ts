@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../auth.service';
+import { CircleService } from '../../circles/circle.service';
 
 @Component({
   selector: 'app-login',
@@ -11,16 +12,27 @@ import { AuthService } from '../auth.service';
   imports: [ReactiveFormsModule, CommonModule, RouterLink],
   templateUrl: './login.component.html'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly circleSvc = inject(CircleService);
+
   form: FormGroup;
   errorMessage = '';
   loading = false;
+  inviteToken: string | null = null;
 
-  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
+  constructor() {
     this.form = this.fb.group({
       email:    ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required]]
     });
+  }
+
+  ngOnInit(): void {
+    this.inviteToken = this.route.snapshot.queryParamMap.get('inviteToken');
   }
 
   submit(): void {
@@ -32,7 +44,16 @@ export class LoginComponent {
     this.errorMessage = '';
 
     this.auth.login(this.form.value).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
+      next: () => {
+        if (this.inviteToken) {
+          this.circleSvc.joinByToken(this.inviteToken).subscribe({
+            next: () => this.router.navigate(['/circles']),
+            error: () => this.router.navigate(['/dashboard']),
+          });
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
+      },
       error: (err: HttpErrorResponse) => {
         this.loading = false;
         if (err.status === 401) {

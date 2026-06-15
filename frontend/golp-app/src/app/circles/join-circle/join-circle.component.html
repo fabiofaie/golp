@@ -1,0 +1,32 @@
+<div class="page">
+  <div class="bg-deco" aria-hidden="true">GP</div>
+
+  <header class="auth-header">
+    <span class="brand">GOLP</span>
+  </header>
+
+  <main style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+
+    @if (loading) {
+      <p style="color:var(--color-text-secondary); text-align:center;">Ingresso al circolo…</p>
+    } @else if (error) {
+      <div class="form-error" style="text-align:center; margin-bottom:24px;">{{ error }}</div>
+      <a routerLink="/dashboard" class="btn-primary" style="text-align:center;">Vai alla dashboard</a>
+    } @else if (alreadyMember) {
+      <p style="text-align:center; margin-bottom:16px;">Sei già membro di questo circolo. Reindirizzamento…</p>
+    } @else {
+      <h1 class="auth-title">Sei stato invitato!</h1>
+      <p class="auth-subtitle">Accedi o registrati per unirti al circolo.</p>
+
+      <div style="display:flex; flex-direction:column; gap:12px; margin-top:32px;">
+        <a [routerLink]="['/register']" [queryParams]="inviteTokenParam" class="btn-primary" style="text-align:center;">
+          Registrati
+        </a>
+        <a [routerLink]="['/login']" [queryParams]="inviteTokenParam" style="text-align:center; font-size:13px; color:var(--color-text-secondary); text-decoration:none; display:block;">
+          Hai già un account? Accedi →
+        </a>
+      </div>
+    }
+
+  </main>
+</div>

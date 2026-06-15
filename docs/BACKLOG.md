@@ -6,7 +6,7 @@
 
 - Epic totali: 4
 - Storie totali: 15
-- Storie TODO: 0 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 13
+- Storie TODO: 0 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 14
 
 ---
 
@@ -498,8 +498,10 @@ Dal dettaglio del circolo, il creatore preme "Invita" e ottiene una dialog con i
 
 #### US-015: Registrazione e auto-iscrizione al circolo tramite link di invito
 
-**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 5 | **Status:** IN_PROGRESS
+**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-15):** Review umana OK.
 **Blocked by:** US-014
+**Review note (2026-06-15):** Codice in `src/Golp.Api/Endpoints/CircleEndpoints.cs`, `frontend/golp-app/src/app/circles/join-circle/`, `frontend/golp-app/src/app/auth/`. Test in `src/Golp.Tests/Integration/JoinByTokenEndpointTests.cs`, `frontend/golp-app/src/app/circles/join-circle/join-circle.component.spec.ts`, `frontend/golp-app/e2e/join-invite.spec.ts`. Reviewer APPROVE. 148 BE + 60 FE tests green, 3/3 E2E join-invite pass. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-015`.
 
 **Story**
 Come utente che ha ricevuto un link di invito, voglio registrarmi al sistema e trovarmi automaticamente nel circolo a cui sono stato invitato, così che non devo cercare e richiedere manualmente l'accesso.
