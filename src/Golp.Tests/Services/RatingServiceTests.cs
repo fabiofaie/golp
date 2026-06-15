@@ -27,11 +27,26 @@ public class RatingServiceTests
         (int t1, int t2)[] sets,
         int winnerTeam = 1,
         string status = "confirmed",
-        int[]? ratings = null)
+        int[]? ratings = null,
+        bool hasSets = false)
     {
         var circleId = Guid.NewGuid();
         var playerIds = Enumerable.Range(0, 4).Select(_ => Guid.NewGuid()).ToArray();
         ratings ??= [1000, 1000, 1000, 1000];
+
+        if (hasSets)
+        {
+            db.Circles.Add(new Circle
+            {
+                Id        = circleId,
+                OwnerId   = playerIds[0],
+                Name      = "Test Circle",
+                Sport     = "padel",
+                PointUnit = "games",
+                Sets      = true,
+                TeamSize  = 2,
+            });
+        }
 
         var memberships = new Dictionary<Guid, CircleMembership>();
         for (int i = 0; i < 4; i++)
@@ -225,5 +240,67 @@ public class RatingServiceTests
         Assert.Equal(17, f.Match.DeltaTeam2Player1);
         Assert.Equal(983, f.Memberships[f.PlayerIds[0]].Rating);
         Assert.Equal(1017, f.Memberships[f.PlayerIds[2]].Rating);
+    }
+
+    // US-012 — formula blended (set + game) per sport con Sets=true
+
+    // test-us012-a — 2-0 netto (6-2, 6-2), sport con set:
+    // set_ratio=1.0, game_ratio=12/16=0.75
+    // blended=0.4×1.0+0.6×0.75=0.85
+    // effective=0.5+0.35×0.7=0.745, margin=0.245, K=48 → round(11.76)=12
+    [Fact]
+    public async Task SetSport_2_0_BlendedGivesHigherDelta()
+    {
+        using var db = CreateDb();
+        var f = await SetupAsync(db, [(6, 2), (6, 2)], hasSets: true);
+
+        await new RatingService().CalculateAndApplyAsync(f.Match.Id, db);
+
+        Assert.Equal(12, f.Match.DeltaTeam1Player1);
+        Assert.Equal(-12, f.Match.DeltaTeam2Player1);
+    }
+
+    // test-us012-b — 2-1 con super tiebreak (6-4, 2-6, 10-7), sport con set:
+    // set_ratio=2/3≈0.667, game_ratio=18/35≈0.514
+    // blended≈0.575, effective≈0.5525, margin≈0.0525, K=48 → round(2.52)=3
+    [Fact]
+    public async Task SetSport_2_1_BlendedFormula()
+    {
+        using var db = CreateDb();
+        var f = await SetupAsync(db, [(6, 4), (2, 6), (10, 7)], hasSets: true);
+
+        await new RatingService().CalculateAndApplyAsync(f.Match.Id, db);
+
+        Assert.Equal(3, f.Match.DeltaTeam1Player1);
+        Assert.Equal(-3, f.Match.DeltaTeam2Player1);
+    }
+
+    // test-us012-c — sport senza set (hasSets=false): formula game-only invariata
+    // game_ratio=12/17≈0.7059, effective≈0.6441, margin≈0.1441, K=48 → round(6.92)=7
+    [Fact]
+    public async Task NoSetSport_FallsBackToGameRatio()
+    {
+        using var db = CreateDb();
+        var f = await SetupAsync(db, [(6, 2), (6, 3)], hasSets: false);
+
+        await new RatingService().CalculateAndApplyAsync(f.Match.Id, db);
+
+        Assert.Equal(7, f.Match.DeltaTeam1Player1);
+    }
+
+    // test-us012-d — vincitore con meno game ma 2-1 set, sport con set:
+    // set_ratio=2/3≈0.667, game_ratio=13/29≈0.448
+    // blended≈0.536, effective≈0.5252, margin≈0.0252, K=48 → round(1.21)=1
+    // (era 0 con game-only: il 2-1 ora conta)
+    [Fact]
+    public async Task SetSport_WinnerFewerGamesTotalStillGetsPositiveDelta()
+    {
+        using var db = CreateDb();
+        var f = await SetupAsync(db, [(6, 4), (0, 6), (7, 6)], hasSets: true);
+
+        await new RatingService().CalculateAndApplyAsync(f.Match.Id, db);
+
+        Assert.Equal(1, f.Match.DeltaTeam1Player1);
+        Assert.Equal(-1, f.Match.DeltaTeam2Player1);
     }
 }

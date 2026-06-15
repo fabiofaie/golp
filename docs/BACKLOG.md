@@ -6,7 +6,7 @@
 
 - Epic totali: 4
 - Storie totali: 12
-- Storie TODO: 0 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 10
+- Storie TODO: 0 | PLANNED: 0 | IN_PROGRESS: 1 | REVIEW: 1 | DONE: 10
 
 ---
 
@@ -323,7 +323,7 @@ Aperta una partita confermata, ogni giocatore vede il proprio `+12 pt` o `−8 p
 
 #### US-012: Rating ELO pesato su set per sport a set
 
-**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** PLANNED
+**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** IN_PROGRESS
 **Blocked by:** US-007
 
 **Story**

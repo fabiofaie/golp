@@ -24,6 +24,7 @@ public class RatingService : IRatingService
     {
         var match = await db.Matches
             .Include(m => m.Sets)
+            .Include(m => m.Circle)
             .SingleOrDefaultAsync(m => m.Id == matchId);
 
         if (match == null || match.Status != "confirmed")
@@ -63,9 +64,25 @@ public class RatingService : IRatingService
 
         double expectedWin = 1.0 / (1.0 + Math.Pow(10.0, (loserRating - winnerRating) / 400.0));
 
-        // PRD: score_ratio sempre in [0.5, 1.0]. Negli sport a set i vincitori possono
-        // avere meno unità totali dei perdenti (es. 6-4, 0-6, 7-6): clamp difensivo.
-        double scoreRatio = Math.Clamp((double)winnerUnits / (totalTeam1 + totalTeam2), 0.5, 1.0);
+        var sport = SportsConfig.GetBySport(match.Circle?.Sport ?? "");
+        bool useBlended = (match.Circle?.Sets == true) && (sport?.SetWeight > 0);
+
+        double scoreRatio;
+        if (useBlended)
+        {
+            int setsWonByWinner = match.Sets.Count(s =>
+                team1Won ? s.Team1Score > s.Team2Score : s.Team2Score > s.Team1Score);
+            int totalSets = match.Sets.Count(s => s.Team1Score != s.Team2Score);
+            double setRatio = totalSets > 0 ? (double)setsWonByWinner / totalSets : 0.5;
+            double gameRatio = (double)winnerUnits / (totalTeam1 + totalTeam2);
+            scoreRatio = Math.Clamp(sport!.SetWeight * setRatio + (1 - sport.SetWeight) * gameRatio, 0.5, 1.0);
+        }
+        else
+        {
+            // PRD: score_ratio in [0.5, 1.0]. Clamp difensivo per sport senza set o quando
+            // il vincitore ha meno game totali dei perdenti (es. 6-4, 0-6, 7-6).
+            scoreRatio = Math.Clamp((double)winnerUnits / (totalTeam1 + totalTeam2), 0.5, 1.0);
+        }
         double effectiveResult = 0.5 + (scoreRatio - 0.5) * Amplifier;
         double margin = effectiveResult - expectedWin;
 
