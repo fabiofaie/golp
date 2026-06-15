@@ -23,7 +23,13 @@
       "Bash(Get-ChildItem \"C:\\\\Users\\\\fabio\\\\source\\\\repos\\\\golp\\\\docs\\\\mockups\\\\US-002\")",
       "Bash(Select-Object Name)",
       "PowerShell(dotnet build *)",
-      "PowerShell(dotnet test *)"
+      "PowerShell(dotnet test *)",
+      "Bash(Select-String -Path \"docs\\\\BACKLOG.md\" -Pattern \"US-\\\\d+\" -AllMatches)",
+      "Bash(Select-Object -Last 5)",
+      "PowerShell(cd frontend/golp-app; npx tsc --noEmit 2>&1 | Where-Object { $_ -notmatch \"e2e/\" } | Select-Object -Last 5)",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\fabio\\\\source\\\\repos\\\\golp\\\\frontend\\\\golp-app\"; npx tsc --noEmit 2>&1 | Where-Object { $_ -notmatch \"e2e/\" } | Select-Object -Last 5)",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\fabio\\\\source\\\\repos\\\\golp\\\\frontend\\\\golp-app\"; npx tsc --noEmit 2>&1 | Where-Object { $_ -notmatch \"e2e/\" } | Select-Object -Last 10)",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\fabio\\\\source\\\\repos\\\\golp\\\\frontend\\\\golp-app\"; $out = npx tsc --noEmit 2>&1; $out | Where-Object { $_ -notmatch \"e2e/\" })"
     ]
   }
 }

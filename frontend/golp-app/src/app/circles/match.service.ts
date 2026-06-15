@@ -76,4 +76,8 @@ export class MatchService {
   dispute(circleId: string, matchId: string): Observable<ConfirmDisputeResponse> {
     return this.http.post<ConfirmDisputeResponse>(`/circles/${circleId}/matches/${matchId}/dispute`, null);
   }
+
+  forceConfirm(circleId: string, matchId: string): Observable<ConfirmDisputeResponse> {
+    return this.http.post<ConfirmDisputeResponse>(`/circles/${circleId}/matches/${matchId}/force-confirm`, null);
+  }
 }

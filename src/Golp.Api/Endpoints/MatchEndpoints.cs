@@ -16,6 +16,7 @@ public static class MatchEndpoints
         matches.MapGet("/{matchId:guid}", GetMatchDetailAsync);
         matches.MapPost("/{matchId:guid}/confirm", ConfirmMatchAsync);
         matches.MapPost("/{matchId:guid}/dispute", DisputeMatchAsync);
+        matches.MapPost("/{matchId:guid}/force-confirm", ForceConfirmMatchAsync);
         return app;
     }
 
@@ -367,6 +368,43 @@ public static class MatchEndpoints
         await db.SaveChangesAsync();
 
         return Results.Ok(new { status = match.Status });
+    }
+
+    // ─── POST /{matchId}/force-confirm ───────────────────────────────────────────
+
+    private static async Task<IResult> ForceConfirmMatchAsync(
+        Guid circleId,
+        Guid matchId,
+        ClaimsPrincipal user,
+        AppDbContext db,
+        IRatingService ratingService)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
+            return Results.Unauthorized();
+
+        var circle = await db.Circles.FindAsync(circleId);
+        if (circle == null)
+            return Results.NotFound(new { error = "Circolo non trovato" });
+
+        if (circle.OwnerId != userId)
+            return Results.Json(new { error = "Solo il proprietario del circolo può eseguire questa azione" }, statusCode: 403);
+
+        var match = await db.Matches.FindAsync(matchId);
+        if (match == null || match.CircleId != circleId)
+            return Results.NotFound(new { error = "Partita non trovata" });
+
+        if (match.Status != "pending")
+            return Results.BadRequest(new { error = "La partita non è in stato pending" });
+
+        match.Status = "confirmed";
+        match.ForceConfirmedById = userId;
+        match.ForceConfirmedAt = DateTimeOffset.UtcNow;
+
+        await ratingService.CalculateAndApplyAsync(matchId, db);
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new { status = match.Status, forceConfirmedBy = userId });
     }
 }
 

@@ -1,12 +1,12 @@
 # Backlog — GOLP
 
-**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-06-13
+**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-06-15
 
 ## Riepilogo
 
 - Epic totali: 4
-- Storie totali: 12
-- Storie TODO: 0 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 11
+- Storie totali: 13
+- Storie TODO: 0 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 2 | DONE: 11
 
 ---
 
@@ -426,4 +426,39 @@ La schermata profilo mostra "miglior compagno" (win-rate più alto insieme) e "a
 
 ---
 
-> **PROSSIMO PASSO:** esegui `/eq-plan US-012` per pianificare il miglioramento ELO, oppure `/eq-next` per il riepilogo dello stato corrente.
+---
+
+#### US-013: Conferma forzata del risultato da parte del proprietario del circolo
+
+**Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 3 | **Status:** REVIEW
+**Review note (2026-06-15):** Backend: `ForceConfirmMatchAsync` in `MatchEndpoints.cs` (`POST .../force-confirm`), 2 campi audit su `Match` (`ForceConfirmedById`/`At`), migration `AddMatchForceConfirmAudit`, `ownerId` aggiunto a `CircleSummary` DTO. Frontend: `isOwner` derivato da `getMyCircles()` in `CircleMatchHistoryComponent`, pulsante amber "Forza conferma" condizionale, `forceConfirm()` in `MatchService`. Test: 138 BE verdi (+8 `ForceConfirmMatchTests`) + 52 Angular (51 verdi, 1 pre-esistente stale in `app.component.spec.ts`). Reviewer APPROVE. > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-013`.
+**Blocked by:** US-005
+
+**Story**
+Come proprietario del circolo, voglio poter confermare forzatamente il risultato di una partita quando uno o più dei 4 giocatori non risponde, così che le partite non restino bloccate indefinitamente in stato `pending` e il calcolo ELO possa procedere.
+
+**Demonstrates**
+Il proprietario vede nella lista partite del suo circolo quelle in stato `pending` con almeno un giocatore non confermato, può premere "Forza conferma" su una di esse, e la partita passa a `confirmed` innescando l'aggiornamento dei rating — esattamente come se tutti e 4 avessero confermato.
+
+**Acceptance Criteria**
+
+- [ ] Solo il proprietario del circolo (`owner_id`) può eseguire la conferma forzata; gli altri membri ricevono 403
+- [ ] La conferma forzata è disponibile solo su partite in stato `pending`; su `confirmed` o `disputed` restituisce 400
+- [ ] Dopo la conferma forzata la partita transita a `confirmed` e i rating ELO vengono aggiornati come da US-007
+- [ ] L'azione è registrata (campo o log) per distinguerla dalla conferma organica 4/4 — audit trail minimo
+- [ ] I giocatori coinvolti vedono la partita come `confirmed` nelle loro schermate senza ambiguità
+- [ ] Multi-tenancy rispettata: il proprietario del circolo A non può forzare partite del circolo B
+
+**Out of scope**
+
+- Notifiche push ai giocatori non-confermanti al momento della forzatura (future)
+- Timeout automatico con auto-conferma (separato, se mai)
+- Riapertura di una partita già forzata
+
+**Open questions**
+
+- La forzatura deve richiedere una nota/motivazione obbligatoria, o basta il log silenzioso?
+
+---
+
+> **PROSSIMO PASSO:** esegui `/eq-plan US-013` per pianificare la conferma forzata, oppure `/eq-next` per il riepilogo dello stato corrente.

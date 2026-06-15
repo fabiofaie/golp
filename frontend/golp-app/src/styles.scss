@@ -1076,3 +1076,22 @@ html, body {
   &:hover    { background: rgba(255, 68, 68, 0.06); border-color: rgba(255, 68, 68, 0.5); }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
+
+.btn-force-confirm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-2) var(--sp-4);
+  background: transparent;
+  color: #d97706;
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  border-radius: var(--r-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover    { background: rgba(217, 119, 6, 0.08); border-color: rgba(217, 119, 6, 0.6); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}

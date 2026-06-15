@@ -3,10 +3,13 @@ import { ActivatedRoute } from '@angular/router';
 import { of, throwError, Subject } from 'rxjs';
 import { CircleMatchHistoryComponent } from './circle-match-history.component';
 import { MatchService, MatchSummary } from '../match.service';
+import { CircleService, CircleSummary } from '../circle.service';
 import { AuthService } from '../../auth/auth.service';
 
 const CIRCLE_ID = 'circle-1';
 const CURRENT_USER = 'user-1';
+const OWNER_ID = 'user-1';       // same as current user = owner scenario
+const OTHER_USER = 'user-owner'; // different = non-owner scenario
 
 function makeMatch(overrides: Partial<MatchSummary> = {}): MatchSummary {
   return {
@@ -23,20 +26,40 @@ function makeMatch(overrides: Partial<MatchSummary> = {}): MatchSummary {
   };
 }
 
+function makeCircleSummary(ownerId: string): CircleSummary {
+  return {
+    id: CIRCLE_ID,
+    name: 'Test Circle',
+    sport: 'padel',
+    sets: false,
+    pointUnit: 'game',
+    ownerId,
+    memberCount: 4,
+    myRating: 1000,
+    myRank: 1,
+  };
+}
+
 describe('CircleMatchHistoryComponent', () => {
   let matchSvc: jasmine.SpyObj<MatchService>;
+  let circleSvc: jasmine.SpyObj<CircleService>;
   let authSvc: jasmine.SpyObj<AuthService>;
 
   beforeEach(async () => {
-    matchSvc = jasmine.createSpyObj('MatchService', ['getMatches', 'confirm', 'dispute']);
-    authSvc  = jasmine.createSpyObj('AuthService', ['getCurrentUserId']);
+    matchSvc  = jasmine.createSpyObj('MatchService', ['getMatches', 'confirm', 'dispute', 'forceConfirm']);
+    circleSvc = jasmine.createSpyObj('CircleService', ['getMyCircles']);
+    authSvc   = jasmine.createSpyObj('AuthService', ['getCurrentUserId']);
     authSvc.getCurrentUserId.and.returnValue(CURRENT_USER);
+
+    // default: current user is NOT owner
+    circleSvc.getMyCircles.and.returnValue(of([makeCircleSummary(OTHER_USER)]));
 
     await TestBed.configureTestingModule({
       imports: [CircleMatchHistoryComponent],
       providers: [
-        { provide: MatchService, useValue: matchSvc },
-        { provide: AuthService, useValue: authSvc },
+        { provide: MatchService,  useValue: matchSvc },
+        { provide: CircleService, useValue: circleSvc },
+        { provide: AuthService,   useValue: authSvc },
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: { get: () => CIRCLE_ID } } },
@@ -50,6 +73,78 @@ describe('CircleMatchHistoryComponent', () => {
     const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
     expect(fixture.componentInstance).toBeTruthy();
   });
+
+  // ─── isOwner derivation ───────────────────────────────────────────────────
+
+  it('isOwner is true when circle ownerId matches currentUserId', () => {
+    circleSvc.getMyCircles.and.returnValue(of([makeCircleSummary(OWNER_ID)]));
+    matchSvc.getMatches.and.returnValue(of([]));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.isOwner).toBeTrue();
+  });
+
+  it('isOwner is false when circle ownerId differs from currentUserId', () => {
+    circleSvc.getMyCircles.and.returnValue(of([makeCircleSummary(OTHER_USER)]));
+    matchSvc.getMatches.and.returnValue(of([]));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.isOwner).toBeFalse();
+  });
+
+  // ─── "Forza conferma" button ──────────────────────────────────────────────
+
+  it('shows "Forza conferma" button for owner on pending match', () => {
+    circleSvc.getMyCircles.and.returnValue(of([makeCircleSummary(OWNER_ID)]));
+    matchSvc.getMatches.and.returnValue(of([makeMatch()]));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    expect(el.querySelector('.btn-force-confirm')).toBeTruthy();
+  });
+
+  it('hides "Forza conferma" button for non-owner', () => {
+    circleSvc.getMyCircles.and.returnValue(of([makeCircleSummary(OTHER_USER)]));
+    matchSvc.getMatches.and.returnValue(of([makeMatch()]));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    expect(el.querySelector('.btn-force-confirm')).toBeNull();
+  });
+
+  it('hides "Forza conferma" button for owner on confirmed match', () => {
+    circleSvc.getMyCircles.and.returnValue(of([makeCircleSummary(OWNER_ID)]));
+    matchSvc.getMatches.and.returnValue(of([makeMatch({ status: 'confirmed', confirmationsCount: 4 })]));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.btn-force-confirm')).toBeNull();
+  });
+
+  it('calls forceConfirm() on service and reloads on button click', () => {
+    circleSvc.getMyCircles.and.returnValue(of([makeCircleSummary(OWNER_ID)]));
+    const m = makeMatch();
+    matchSvc.getMatches.and.returnValue(of([m]));
+    matchSvc.forceConfirm.and.returnValue(of({ status: 'confirmed' }));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('.btn-force-confirm') as HTMLButtonElement).click();
+    expect(matchSvc.forceConfirm).toHaveBeenCalledWith(CIRCLE_ID, m.id);
+    expect(matchSvc.getMatches).toHaveBeenCalledTimes(2); // init + reload
+  });
+
+  // ─── existing tests (unchanged) ───────────────────────────────────────────
 
   it('shows confirm and dispute buttons for pending match where user has not confirmed', () => {
     const m = makeMatch({ hasCurrentUserConfirmed: false });
@@ -104,17 +199,17 @@ describe('CircleMatchHistoryComponent', () => {
     expect(empty).toBe(2);
   });
 
-  it('calls confirm() on service and reloads on Conferma click', () => {
+  it('btn-confirm link navigates to match detail (RouterLink, no direct confirm() call)', () => {
     const m = makeMatch();
     matchSvc.getMatches.and.returnValue(of([m]));
-    matchSvc.confirm.and.returnValue(of({ status: 'pending', confirmationsCount: 2 }));
 
     const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
     fixture.detectChanges();
 
-    (fixture.nativeElement.querySelector('.btn-confirm') as HTMLButtonElement).click();
-    expect(matchSvc.confirm).toHaveBeenCalledWith(CIRCLE_ID, m.id);
-    expect(matchSvc.getMatches).toHaveBeenCalledTimes(2); // init + reload
+    const link: HTMLAnchorElement = fixture.nativeElement.querySelector('.btn-confirm');
+    expect(link).toBeTruthy();
+    // Confirmation happens on the detail page (match-confirm component)
+    expect(matchSvc.confirm).not.toHaveBeenCalled();
   });
 
   it('calls dispute() on service and reloads on Contesta click', () => {
@@ -216,7 +311,7 @@ describe('CircleMatchHistoryComponent', () => {
     const pending$ = new Subject<MatchSummary[]>();
     matchSvc.getMatches.and.returnValue(pending$.asObservable());
     const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
-    fixture.detectChanges(); // triggers ngOnInit → getMatches → pending, loading stays true
+    fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Caricamento');
     pending$.complete();

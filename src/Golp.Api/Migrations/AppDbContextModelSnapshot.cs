@@ -196,6 +196,12 @@ namespace Golp.Api.Migrations
                     b.Property<int?>("DeltaTeam2Player2")
                         .HasColumnType("int");
 
+                    b.Property<DateTimeOffset?>("ForceConfirmedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ForceConfirmedById")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)

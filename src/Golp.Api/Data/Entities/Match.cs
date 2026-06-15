@@ -19,6 +19,9 @@ public class Match
     public int? DeltaTeam2Player1 { get; set; }
     public int? DeltaTeam2Player2 { get; set; }
 
+    public Guid? ForceConfirmedById { get; set; }
+    public DateTimeOffset? ForceConfirmedAt { get; set; }
+
     public Circle Circle { get; set; } = null!;
     public User CreatedBy { get; set; } = null!;
     public ICollection<MatchSet> Sets { get; set; } = [];

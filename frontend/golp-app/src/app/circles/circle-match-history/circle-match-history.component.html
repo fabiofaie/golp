@@ -108,6 +108,17 @@
             }
           }
 
+          <!-- owner force-confirm -->
+          @if (m.status === 'pending' && isOwner) {
+            <div style="margin-top:8px; text-align:center;">
+              <button class="btn-force-confirm"
+                [disabled]="forceConfirming === m.id"
+                (click)="forceConfirm(m.id)">
+                {{ forceConfirming === m.id ? '…' : 'Forza conferma' }}
+              </button>
+            </div>
+          }
+
         </div>
       }
     </div>
