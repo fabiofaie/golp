@@ -74,10 +74,23 @@
               <a [routerLink]="['/circles', circle.id, 'stats']" class="btn-ghost" style="flex:1; text-align:center;">
                 Stats
               </a>
+              @if (circle.ownerId === currentUserId) {
+                <button class="btn-ghost" style="flex:1; text-align:center;" (click)="openInvite(circle)">
+                  Invita
+                </button>
+              }
             </div>
           </div>
         }
       </div>
+
+      @if (activeInviteCircle) {
+        <app-invite-dialog
+          [circleId]="activeInviteCircle.id"
+          [circleName]="activeInviteCircle.name"
+          (closed)="closeInvite()"
+        />
+      }
 
       <div style="margin-top:24px; display:flex; flex-direction:column; gap:12px;">
         <a routerLink="/circles/browse" class="btn-primary">Scopri altri circoli</a>

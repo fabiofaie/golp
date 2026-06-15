@@ -35,8 +35,8 @@ namespace Golp.Api.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("JoinCode")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("Name")
                         .IsRequired()

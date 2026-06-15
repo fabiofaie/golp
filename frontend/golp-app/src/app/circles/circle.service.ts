@@ -100,6 +100,16 @@ export interface CircleStatsResponse {
   toughestOpponent: PlayerStatSummary | null;
 }
 
+export interface InviteLinkResponse {
+  inviteToken: string;
+}
+
+export interface JoinByTokenResult {
+  circleId: string;
+  myRating: number;
+  alreadyMember: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CircleService {
   private readonly http = inject(HttpClient);
@@ -138,5 +148,13 @@ export class CircleService {
 
   getMyStats(circleId: string): Observable<CircleStatsResponse> {
     return this.http.get<CircleStatsResponse>(`/circles/${circleId}/stats/me`);
+  }
+
+  getInviteLink(circleId: string): Observable<InviteLinkResponse> {
+    return this.http.get<InviteLinkResponse>(`/circles/${circleId}/invite-link`);
+  }
+
+  joinByToken(inviteToken: string): Observable<JoinByTokenResult> {
+    return this.http.post<JoinByTokenResult>('/circles/join-by-token', { inviteToken });
   }
 }

@@ -42,7 +42,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(c => c.Name).HasMaxLength(100).IsRequired();
             e.Property(c => c.Sport).HasMaxLength(50).IsRequired();
             e.Property(c => c.PointUnit).HasMaxLength(20).IsRequired();
-            e.Property(c => c.JoinCode).HasMaxLength(20);
+            e.Property(c => c.JoinCode).HasMaxLength(32);
             e.HasIndex(c => new { c.OwnerId, c.Name }).IsUnique();
             e.HasOne(c => c.Owner)
              .WithMany()

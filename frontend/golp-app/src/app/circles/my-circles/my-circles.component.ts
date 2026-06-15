@@ -2,19 +2,24 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CircleService, CircleSummary } from '../circle.service';
+import { AuthService } from '../../auth/auth.service';
+import { InviteDialogComponent } from '../invite-dialog/invite-dialog.component';
 
 @Component({
   selector: 'app-my-circles',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, InviteDialogComponent],
   templateUrl: './my-circles.component.html',
 })
 export class MyCirclesComponent implements OnInit {
   private readonly svc = inject(CircleService);
+  private readonly authSvc = inject(AuthService);
 
   circles: CircleSummary[] = [];
   loading = true;
   errorMessage = '';
+  currentUserId = this.authSvc.getCurrentUserId() ?? '';
+  activeInviteCircle: CircleSummary | null = null;
 
   ngOnInit(): void {
     this.svc.getMyCircles().subscribe({
@@ -35,5 +40,13 @@ export class MyCirclesComponent implements OnInit {
 
   sportClass(sport: string): string {
     return `sport-badge sport-badge--${sport}`;
+  }
+
+  openInvite(c: CircleSummary): void {
+    this.activeInviteCircle = c;
+  }
+
+  closeInvite(): void {
+    this.activeInviteCircle = null;
   }
 }

@@ -5,8 +5,8 @@
 ## Riepilogo
 
 - Epic totali: 4
-- Storie totali: 13
-- Storie TODO: 0 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 2 | DONE: 11
+- Storie totali: 15
+- Storie TODO: 0 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 13
 
 ---
 
@@ -430,8 +430,9 @@ La schermata profilo mostra "miglior compagno" (win-rate più alto insieme) e "a
 
 #### US-013: Conferma forzata del risultato da parte del proprietario del circolo
 
-**Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 3 | **Status:** REVIEW
-**Review note (2026-06-15):** Backend: `ForceConfirmMatchAsync` in `MatchEndpoints.cs` (`POST .../force-confirm`), 2 campi audit su `Match` (`ForceConfirmedById`/`At`), migration `AddMatchForceConfirmAudit`, `ownerId` aggiunto a `CircleSummary` DTO. Frontend: `isOwner` derivato da `getMyCircles()` in `CircleMatchHistoryComponent`, pulsante amber "Forza conferma" condizionale, `forceConfirm()` in `MatchService`. Test: 138 BE verdi (+8 `ForceConfirmMatchTests`) + 52 Angular (51 verdi, 1 pre-esistente stale in `app.component.spec.ts`). Reviewer APPROVE. > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-013`.
+**Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-06-15):** Review umana OK.
+**Review note (2026-06-15):** Backend: `ForceConfirmMatchAsync` in `MatchEndpoints.cs` (`POST .../force-confirm`), 2 campi audit su `Match` (`ForceConfirmedById`/`At`), migration `AddMatchForceConfirmAudit`, `ownerId` aggiunto a `CircleSummary` DTO. Frontend: `isOwner` derivato da `getMyCircles()` in `CircleMatchHistoryComponent`, pulsante amber "Forza conferma" condizionale, `forceConfirm()` in `MatchService`. Test: 138 BE verdi (+8 `ForceConfirmMatchTests`) + 52 Angular (51 verdi, 1 pre-esistente stale in `app.component.spec.ts`). Reviewer APPROVE.
 **Blocked by:** US-005
 
 **Story**
@@ -461,4 +462,67 @@ Il proprietario vede nella lista partite del suo circolo quelle in stato `pendin
 
 ---
 
-> **PROSSIMO PASSO:** esegui `/eq-plan US-013` per pianificare la conferma forzata, oppure `/eq-next` per il riepilogo dello stato corrente.
+---
+
+#### US-014: Generazione e condivisione del link di invito al circolo
+
+**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-15):** Review umana OK.
+**Review note (2026-06-15):** Backend: `GetInviteLinkAsync` in `CircleEndpoints.cs` (lazy token su `Circle.JoinCode`, MaxLength 32, migrazione `ExpandJoinCodeLength`). Frontend: `InviteDialogComponent` standalone + integrazione `MyCirclesComponent` (pulsante "Invita" condizionale, dialog overlay). Service: `getInviteLink()` + `InviteLinkResponse` in `circle.service.ts`. Test: 143 BE verdi (+5 integration `InviteLinkEndpointTests`) + 56/57 Angular (+5 unit) + 3 E2E Playwright. Reviewer APPROVE.
+**Blocked by:** -
+
+**Story**
+Come creatore di un circolo, voglio generare un link di invito e condividerlo tramite email o copiarlo negli appunti, così che i giocatori che voglio possano unirsi al mio circolo.
+
+**Demonstrates**
+Dal dettaglio del circolo, il creatore preme "Invita" e ottiene una dialog con il link generato, il pulsante "Copia link" e il pulsante "Invia via email" (mailto). Il link è unico per circolo e non scade.
+
+**Acceptance Criteria**
+- [ ] Solo il creatore del circolo vede il pulsante "Invita"
+- [ ] Premendo "Invita" si apre una dialog/modal con il link di invito
+- [ ] `GET /circles/{circleId}/invite-link` restituisce `{ inviteToken: "..." }` (403 se non creatore)
+- [ ] Il token di invito è persistito sul circolo (`InviteToken` generato una volta sola, stabile)
+- [ ] Pulsante "Copia link" copia negli appunti l'URL completo (`<origin>/join?token=<token>`)
+- [ ] Pulsante "Invia via email" apre `mailto:?subject=...&body=<link>` precompilato
+- [ ] Il link funziona anche su mobile (WhatsApp, altri — è un URL standard da incollare)
+
+**Out of scope**
+- Scadenza o revoca del link (il token è permanente per ora)
+- Invito diretto via app (notifica push, SMS)
+- Gestione di più token attivi contemporaneamente
+
+**Open questions**
+- Il token va rigenerato se il creatore preme di nuovo "Invita", o è sempre lo stesso?
+
+---
+
+#### US-015: Registrazione e auto-iscrizione al circolo tramite link di invito
+
+**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 5 | **Status:** IN_PROGRESS
+**Blocked by:** US-014
+
+**Story**
+Come utente che ha ricevuto un link di invito, voglio registrarmi al sistema e trovarmi automaticamente nel circolo a cui sono stato invitato, così che non devo cercare e richiedere manualmente l'accesso.
+
+**Demonstrates**
+L'utente apre `/join?token=<token>`, viene reindirizzato alla registrazione (o al login se già ha un account), e dopo l'autenticazione è iscritto al circolo con rating iniziale 1000 e vede il circolo nella propria lista.
+
+**Acceptance Criteria**
+- [ ] La rotta `/join?token=<token>` è accessibile senza autenticazione
+- [ ] Se l'utente non è autenticato, viene reindirizzato a `/register?inviteToken=<token>` (token preservato)
+- [ ] Se l'utente è già autenticato, viene reindirizzato a `/login?inviteToken=<token>`
+- [ ] `POST /circles/join` con body `{ inviteToken }` aggiunge l'utente come membro (rating 1000) se non già membro
+- [ ] Dopo il join, l'utente viene reindirizzato alla pagina del circolo appena unito
+- [ ] Token non valido → messaggio d'errore chiaro ("Link non valido o scaduto")
+- [ ] Un utente già membro che usa lo stesso link riceve messaggio informativo, non errore
+
+**Out of scope**
+- Approvazione manuale del creatore prima dell'ingresso
+- Limite al numero di iscrizioni via link
+
+**Open questions**
+- Se il token è valido ma il circolo è stato eliminato, cosa mostrare?
+
+---
+
+> **PROSSIMO PASSO:** esegui `/eq-plan US-014` per pianificare il flusso di invito, oppure `/eq-next` per il riepilogo dello stato corrente.

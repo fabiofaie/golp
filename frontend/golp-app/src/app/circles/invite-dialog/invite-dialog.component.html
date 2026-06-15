@@ -1,0 +1,25 @@
+<div class="invite-overlay" (click)="close()">
+  <div class="invite-card" (click)="$event.stopPropagation()">
+    <button class="close-btn" (click)="close()" aria-label="Chiudi">×</button>
+    <h2>Invita al circolo</h2>
+    <p class="circle-name">{{ circleName }}</p>
+
+    @if (loading) {
+      <p class="loading">Generazione link…</p>
+    } @else if (error) {
+      <p class="error">{{ error }}</p>
+    } @else {
+      <div class="invite-url-box">
+        <span class="invite-url">{{ inviteUrl }}</span>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" (click)="copyLink()">
+          {{ copied ? 'Copiato!' : 'Copia link' }}
+        </button>
+        <button class="btn btn-secondary" (click)="sendEmail()">
+          Invia via email
+        </button>
+      </div>
+    }
+  </div>
+</div>

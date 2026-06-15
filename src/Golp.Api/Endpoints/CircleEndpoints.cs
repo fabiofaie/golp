@@ -16,9 +16,11 @@ public static class CircleEndpoints
         circles.MapGet("/", GetAllCirclesAsync);
         circles.MapPost("/", CreateCircleAsync);
         circles.MapGet("/me", GetMyCirclesAsync);
+        circles.MapPost("/join-by-token", JoinByTokenAsync);
         circles.MapPost("/{id:guid}/join", JoinCircleAsync);
         circles.MapGet("/{id:guid}/members", GetCircleMembersAsync);
         circles.MapGet("/{id:guid}/leaderboard", GetCircleLeaderboardAsync);
+        circles.MapGet("/{id:guid}/invite-link", GetInviteLinkAsync);
 
         return app;
     }
@@ -273,6 +275,64 @@ public static class CircleEndpoints
 
         return Results.Ok(new { classified, unclassified });
     }
+
+    // POST /circles/join-by-token — join tramite inviteToken (JoinCode)
+    private static async Task<IResult> JoinByTokenAsync(
+        JoinByTokenRequest req,
+        ClaimsPrincipal user,
+        AppDbContext db)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
+            return Results.Unauthorized();
+
+        var circle = await db.Circles.FirstOrDefaultAsync(c => c.JoinCode == req.InviteToken);
+        if (circle == null)
+            return Results.NotFound(new { error = "Link non valido o scaduto" });
+
+        var membership = await db.CircleMemberships
+            .FirstOrDefaultAsync(m => m.CircleId == circle.Id && m.UserId == userId);
+
+        if (membership != null)
+            return Results.Ok(new { circleId = circle.Id, myRating = membership.Rating, alreadyMember = true });
+
+        db.CircleMemberships.Add(new CircleMembership
+        {
+            CircleId = circle.Id,
+            UserId   = userId,
+            Rating   = 1000,
+        });
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new { circleId = circle.Id, myRating = 1000, alreadyMember = false });
+    }
+
+    // GET /circles/{id}/invite-link — solo owner, genera token lazy
+    private static async Task<IResult> GetInviteLinkAsync(
+        Guid id,
+        ClaimsPrincipal user,
+        AppDbContext db)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
+            return Results.Unauthorized();
+
+        var circle = await db.Circles.FindAsync(id);
+        if (circle == null)
+            return Results.NotFound(new { error = "Circolo non trovato" });
+
+        if (circle.OwnerId != userId)
+            return Results.Json(new { error = "Solo il creatore può generare il link di invito" }, statusCode: 403);
+
+        if (circle.JoinCode == null)
+        {
+            circle.JoinCode = Guid.NewGuid().ToString("N");
+            await db.SaveChangesAsync();
+        }
+
+        return Results.Ok(new { inviteToken = circle.JoinCode });
+    }
 }
 
 record CreateCircleRequest(string Name, string Sport);
+record JoinByTokenRequest(string InviteToken);
