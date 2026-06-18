@@ -30,7 +30,19 @@
       "PowerShell(Set-Location \"C:\\\\Users\\\\fabio\\\\source\\\\repos\\\\golp\\\\frontend\\\\golp-app\"; npx tsc --noEmit 2>&1 | Where-Object { $_ -notmatch \"e2e/\" } | Select-Object -Last 5)",
       "PowerShell(Set-Location \"C:\\\\Users\\\\fabio\\\\source\\\\repos\\\\golp\\\\frontend\\\\golp-app\"; npx tsc --noEmit 2>&1 | Where-Object { $_ -notmatch \"e2e/\" } | Select-Object -Last 10)",
       "PowerShell(Set-Location \"C:\\\\Users\\\\fabio\\\\source\\\\repos\\\\golp\\\\frontend\\\\golp-app\"; $out = npx tsc --noEmit 2>&1; $out | Where-Object { $_ -notmatch \"e2e/\" })",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(powershell -c \"Get-ChildItem *.png | Select Name,Length\")",
+      "Bash(where magick *)",
+      "Bash(where inkscape *)",
+      "Bash(where rsvg-convert *)",
+      "Bash(node -e \"console.log\\(require\\('sharp'\\)\\)\")",
+      "Bash(npm ls *)",
+      "Bash(where python *)",
+      "Bash(python -c \"import PIL; print\\(PIL.__version__\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(cygpath -w /tmp/icongen)",
+      "Read(//c//**)",
+      "Read(///tmp/icongen//**)"
     ]
   }
 }
