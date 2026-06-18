@@ -2,7 +2,7 @@
 // seguendo docs/firebase-setup.md. Placeholder vuoti = push disabilitate.
 export const environment = {
   production: true,
-  apiUrl: '',
+  apiUrl: 'https://golpapitest.eqproject.it',
   firebaseConfig: {
     apiKey: '',
     authDomain: '',

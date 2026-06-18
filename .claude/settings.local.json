@@ -42,7 +42,8 @@
       "Bash(node -e ' *)",
       "Bash(cygpath -w /tmp/icongen)",
       "Read(//c//**)",
-      "Read(///tmp/icongen//**)"
+      "Read(///tmp/icongen//**)",
+      "PowerShell(dotnet publish *)"
     ]
   }
 }

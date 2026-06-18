@@ -12,3 +12,5 @@ firebase-adminsdk*.json
 # appsettings.Production.json
 publish-output.zip
 golp-frontend.zip
+publish/GolpApiTest.zip
+/publish/
