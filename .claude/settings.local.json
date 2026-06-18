@@ -29,7 +29,8 @@
       "PowerShell(cd frontend/golp-app; npx tsc --noEmit 2>&1 | Where-Object { $_ -notmatch \"e2e/\" } | Select-Object -Last 5)",
       "PowerShell(Set-Location \"C:\\\\Users\\\\fabio\\\\source\\\\repos\\\\golp\\\\frontend\\\\golp-app\"; npx tsc --noEmit 2>&1 | Where-Object { $_ -notmatch \"e2e/\" } | Select-Object -Last 5)",
       "PowerShell(Set-Location \"C:\\\\Users\\\\fabio\\\\source\\\\repos\\\\golp\\\\frontend\\\\golp-app\"; npx tsc --noEmit 2>&1 | Where-Object { $_ -notmatch \"e2e/\" } | Select-Object -Last 10)",
-      "PowerShell(Set-Location \"C:\\\\Users\\\\fabio\\\\source\\\\repos\\\\golp\\\\frontend\\\\golp-app\"; $out = npx tsc --noEmit 2>&1; $out | Where-Object { $_ -notmatch \"e2e/\" })"
+      "PowerShell(Set-Location \"C:\\\\Users\\\\fabio\\\\source\\\\repos\\\\golp\\\\frontend\\\\golp-app\"; $out = npx tsc --noEmit 2>&1; $out | Where-Object { $_ -notmatch \"e2e/\" })",
+      "Bash(curl *)"
     ]
   }
 }

@@ -10,3 +10,5 @@ firebase-adminsdk*.json
 # Env-specific settings con credenziali — mai committare
 # appsettings.Testing.json
 # appsettings.Production.json
+publish-output.zip
+golp-frontend.zip

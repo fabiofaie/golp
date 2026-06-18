@@ -26,7 +26,7 @@ export class PushNotificationService {
         return;
       }
       await firstValueFrom(
-        this.http.post<void>('/api/push/token', { token, deviceId: this.getDeviceId() })
+        this.http.post<void>(`${environment.apiUrl}/api/push/token`, { token, deviceId: this.getDeviceId() })
       );
       localStorage.setItem(FCM_TOKEN_KEY, token);
     } catch (err) {
@@ -40,7 +40,7 @@ export class PushNotificationService {
     // La DELETE parte subito (subscription sincrona): se chiamata dal logout,
     // l'interceptor cattura il JWT prima che venga rimosso da localStorage.
     const backendCleanup = token
-      ? firstValueFrom(this.http.delete<void>('/api/push/token', { body: { token } }))
+      ? firstValueFrom(this.http.delete<void>(`${environment.apiUrl}/api/push/token`, { body: { token } }))
       : Promise.resolve();
     try {
       if (this.messaging) {

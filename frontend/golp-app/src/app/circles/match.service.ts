@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface SetScore {
   team1: number;
@@ -56,28 +57,29 @@ export interface ConfirmDisputeResponse {
 @Injectable({ providedIn: 'root' })
 export class MatchService {
   private readonly http = inject(HttpClient);
+  private readonly base = environment.apiUrl;
 
   createMatch(circleId: string, body: CreateMatchRequest): Observable<MatchCreated> {
-    return this.http.post<MatchCreated>(`/circles/${circleId}/matches`, body);
+    return this.http.post<MatchCreated>(`${this.base}/circles/${circleId}/matches`, body);
   }
 
   getMatches(circleId: string): Observable<MatchSummary[]> {
-    return this.http.get<MatchSummary[]>(`/circles/${circleId}/matches`);
+    return this.http.get<MatchSummary[]>(`${this.base}/circles/${circleId}/matches`);
   }
 
   getMatchDetail(circleId: string, matchId: string): Observable<MatchDetail> {
-    return this.http.get<MatchDetail>(`/circles/${circleId}/matches/${matchId}`);
+    return this.http.get<MatchDetail>(`${this.base}/circles/${circleId}/matches/${matchId}`);
   }
 
   confirm(circleId: string, matchId: string): Observable<ConfirmDisputeResponse> {
-    return this.http.post<ConfirmDisputeResponse>(`/circles/${circleId}/matches/${matchId}/confirm`, null);
+    return this.http.post<ConfirmDisputeResponse>(`${this.base}/circles/${circleId}/matches/${matchId}/confirm`, null);
   }
 
   dispute(circleId: string, matchId: string): Observable<ConfirmDisputeResponse> {
-    return this.http.post<ConfirmDisputeResponse>(`/circles/${circleId}/matches/${matchId}/dispute`, null);
+    return this.http.post<ConfirmDisputeResponse>(`${this.base}/circles/${circleId}/matches/${matchId}/dispute`, null);
   }
 
   forceConfirm(circleId: string, matchId: string): Observable<ConfirmDisputeResponse> {
-    return this.http.post<ConfirmDisputeResponse>(`/circles/${circleId}/matches/${matchId}/force-confirm`, null);
+    return this.http.post<ConfirmDisputeResponse>(`${this.base}/circles/${circleId}/matches/${matchId}/force-confirm`, null);
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface SimulateTeam {
   player1Rating: number;
@@ -31,6 +32,6 @@ export class EloInfoService {
   constructor(private http: HttpClient) {}
 
   simulate(request: SimulateMatchRequest): Observable<SimulateMatchResponse> {
-    return this.http.post<SimulateMatchResponse>('/api/simulate-match', request);
+    return this.http.post<SimulateMatchResponse>(`${environment.apiUrl}/api/simulate-match`, request);
   }
 }
