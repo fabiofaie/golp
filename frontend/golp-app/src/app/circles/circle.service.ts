@@ -111,6 +111,13 @@ export interface JoinByTokenResult {
   alreadyMember: boolean;
 }
 
+export interface AddMemberResult {
+  exists: boolean;
+  name?: string;
+  alreadyMember?: boolean;
+  created?: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CircleService {
   private readonly http = inject(HttpClient);
@@ -158,5 +165,9 @@ export class CircleService {
 
   joinByToken(inviteToken: string): Observable<JoinByTokenResult> {
     return this.http.post<JoinByTokenResult>(`${this.base}/circles/join-by-token`, { inviteToken });
+  }
+
+  checkOrAddMember(circleId: string, email: string, name?: string, confirmed = false): Observable<AddMemberResult> {
+    return this.http.post<AddMemberResult>(`${this.base}/circles/${circleId}/members`, { email, name, confirmed });
   }
 }

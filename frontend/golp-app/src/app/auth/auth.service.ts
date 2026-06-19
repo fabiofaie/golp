@@ -5,11 +5,13 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { PushNotificationService } from '../push/push-notification.service';
 
-interface AuthResponse { token: string; }
+interface AuthResponse { accessToken: string; refreshToken: string; }
+interface RefreshResponse { accessToken: string; refreshToken: string; }
 interface RegisterRequest { name: string; email: string; password: string; }
 interface LoginRequest { email: string; password: string; }
 
 const TOKEN_KEY = 'golp_token';
+const REFRESH_TOKEN_KEY = 'golp_refresh_token';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -22,7 +24,7 @@ export class AuthService {
   register(data: RegisterRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.api}/register`, data).pipe(
       tap(r => {
-        this.storeToken(r.token);
+        this.storeTokens(r.accessToken, r.refreshToken);
         void this.pushService.register();
       })
     );
@@ -31,9 +33,16 @@ export class AuthService {
   login(data: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.api}/login`, data).pipe(
       tap(r => {
-        this.storeToken(r.token);
+        this.storeTokens(r.accessToken, r.refreshToken);
         void this.pushService.register();
       })
+    );
+  }
+
+  refresh(): Observable<RefreshResponse> {
+    const refreshToken = this.getRefreshToken();
+    return this.http.post<RefreshResponse>(`${this.api}/refresh`, { refreshToken }).pipe(
+      tap(r => this.storeTokens(r.accessToken, r.refreshToken))
     );
   }
 
@@ -46,14 +55,23 @@ export class AuthService {
   }
 
   logout(): void {
+    const refreshToken = this.getRefreshToken();
+    if (refreshToken) {
+      this.http.post(`${this.api}/logout`, { refreshToken }).subscribe({ error: () => {} });
+    }
     // Prima della rimozione del JWT: la DELETE del token push parte con auth valida
     void this.pushService.unregister();
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
     this.isAuthenticated.set(false);
   }
 
   getToken(): string | null {
     return localStorage.getItem(TOKEN_KEY);
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem(REFRESH_TOKEN_KEY);
   }
 
   getCurrentUserId(): string | null {
@@ -66,8 +84,9 @@ export class AuthService {
     }
   }
 
-  private storeToken(token: string): void {
-    localStorage.setItem(TOKEN_KEY, token);
+  private storeTokens(accessToken: string, refreshToken: string): void {
+    localStorage.setItem(TOKEN_KEY, accessToken);
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
     this.isAuthenticated.set(true);
   }
 

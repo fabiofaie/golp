@@ -478,6 +478,232 @@ public class MembersAndDiscoveryTests : IClassFixture<JoinCircleTestFactory>
             new AuthenticationHeaderValue("Bearer", token);
 }
 
+public class AddMemberEndpointTests : IClassFixture<JoinCircleTestFactory>
+{
+    private readonly JoinCircleTestFactory _factory;
+    private readonly HttpClient _client;
+
+    public AddMemberEndpointTests(JoinCircleTestFactory factory)
+    {
+        _factory = factory;
+        _client = factory.CreateClient();
+    }
+
+    // TASK-3 — non-owner non può aggiungere membri
+    [Fact]
+    public async Task AddMember_NonOwner_Returns403()
+    {
+        var ownerToken = await RegisterAndGetTokenAsync();
+        SetAuth(ownerToken);
+        var circleId = await CreatePublicCircleAsync();
+
+        var otherToken = await RegisterAndGetTokenAsync();
+        SetAuth(otherToken);
+
+        var response = await _client.PostAsJsonAsync($"/circles/{circleId}/members",
+            new { email = "new@test.com", name = "New", confirmed = false });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    // TASK-3 — circolo inesistente → 404
+    [Fact]
+    public async Task AddMember_CircleNotFound_Returns404()
+    {
+        var token = await RegisterAndGetTokenAsync();
+        SetAuth(token);
+
+        var response = await _client.PostAsJsonAsync($"/circles/{Guid.NewGuid()}/members",
+            new { email = "new@test.com", name = "New", confirmed = false });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    // TASK-3 — email già registrata, non confermata → ritorna nome, nessuna membership creata
+    [Fact]
+    public async Task AddMember_ExistingEmail_NotConfirmed_ReturnsNameNoSideEffect()
+    {
+        var ownerToken = await RegisterAndGetTokenAsync();
+        SetAuth(ownerToken);
+        var circleId = await CreatePublicCircleAsync();
+
+        var existingEmail = $"existing_{Guid.NewGuid():N}@test.com";
+        await RegisterAndGetTokenAsync(existingEmail, "Existing Player");
+
+        SetAuth(ownerToken);
+        var response = await _client.PostAsJsonAsync($"/circles/{circleId}/members",
+            new { email = existingEmail, confirmed = false });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(body.GetProperty("exists").GetBoolean());
+        Assert.Equal("Existing Player", body.GetProperty("name").GetString());
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var existingUserId = await db.Users
+            .Where(u => u.Email == existingEmail)
+            .Select(u => u.Id)
+            .FirstAsync();
+        Assert.False(await db.CircleMemberships.AnyAsync(m => m.CircleId == circleId && m.UserId == existingUserId));
+    }
+
+    // TASK-5 — conferma utente esistente crea membership con rating 1000
+    [Fact]
+    public async Task AddMember_ExistingEmail_Confirmed_CreatesMembership()
+    {
+        var ownerToken = await RegisterAndGetTokenAsync();
+        SetAuth(ownerToken);
+        var circleId = await CreatePublicCircleAsync();
+
+        var existingEmail = $"existing_{Guid.NewGuid():N}@test.com";
+        await RegisterAndGetTokenAsync(existingEmail, "Existing Player");
+
+        SetAuth(ownerToken);
+        var response = await _client.PostAsJsonAsync($"/circles/{circleId}/members",
+            new { email = existingEmail, confirmed = true });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var membership = await db.CircleMemberships.FirstOrDefaultAsync(m => m.CircleId == circleId);
+        Assert.NotNull(membership);
+        Assert.Equal(1000, membership!.Rating);
+    }
+
+    // TASK-5 — seconda conferma stessa email non duplica la membership
+    [Fact]
+    public async Task AddMember_ExistingEmail_ConfirmedTwice_DoesNotDuplicate()
+    {
+        var ownerToken = await RegisterAndGetTokenAsync();
+        SetAuth(ownerToken);
+        var circleId = await CreatePublicCircleAsync();
+
+        var existingEmail = $"existing_{Guid.NewGuid():N}@test.com";
+        await RegisterAndGetTokenAsync(existingEmail, "Existing Player");
+
+        SetAuth(ownerToken);
+        await _client.PostAsJsonAsync($"/circles/{circleId}/members",
+            new { email = existingEmail, confirmed = true });
+        var second = await _client.PostAsJsonAsync($"/circles/{circleId}/members",
+            new { email = existingEmail, confirmed = true });
+
+        Assert.Equal(HttpStatusCode.OK, second.StatusCode);
+        var body = await second.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(body.GetProperty("alreadyMember").GetBoolean());
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var count = await db.CircleMemberships.CountAsync(m => m.CircleId == circleId);
+        Assert.Equal(2, count); // owner + 1 (no duplicate)
+    }
+
+    // TASK-8 — email non esistente + nome → crea utente pending, membership, token attivazione
+    [Fact]
+    public async Task AddMember_NewEmail_CreatesPendingUserMembershipAndActivationToken()
+    {
+        var ownerToken = await RegisterAndGetTokenAsync();
+        SetAuth(ownerToken);
+        var circleId = await CreatePublicCircleAsync();
+
+        var newEmail = $"newplayer_{Guid.NewGuid():N}@test.com";
+        var response = await _client.PostAsJsonAsync($"/circles/{circleId}/members",
+            new { email = newEmail, name = "New Player", confirmed = false });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == newEmail);
+        Assert.NotNull(user);
+        Assert.Equal(string.Empty, user!.PasswordHash);
+
+        var membership = await db.CircleMemberships.FirstOrDefaultAsync(m => m.UserId == user.Id && m.CircleId == circleId);
+        Assert.NotNull(membership);
+        Assert.Equal(1000, membership!.Rating);
+
+        var token = await db.PasswordResetTokens.FirstOrDefaultAsync(t => t.UserId == user.Id);
+        Assert.NotNull(token);
+    }
+
+    // TASK-6 — email non esistente, senza nome → solo lookup, nessuna creazione (il frontend chiederà poi il nome)
+    [Fact]
+    public async Task AddMember_NewEmail_WithoutName_ReturnsExistsFalseNoSideEffect()
+    {
+        var ownerToken = await RegisterAndGetTokenAsync();
+        SetAuth(ownerToken);
+        var circleId = await CreatePublicCircleAsync();
+
+        var newEmail = $"noname_{Guid.NewGuid():N}@test.com";
+        var response = await _client.PostAsJsonAsync($"/circles/{circleId}/members",
+            new { email = newEmail, confirmed = false });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.False(body.GetProperty("exists").GetBoolean());
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.False(await db.Users.AnyAsync(u => u.Email == newEmail));
+    }
+
+    // TASK-6 — formato email non valido → 400
+    [Fact]
+    public async Task AddMember_InvalidEmailFormat_Returns400()
+    {
+        var ownerToken = await RegisterAndGetTokenAsync();
+        SetAuth(ownerToken);
+        var circleId = await CreatePublicCircleAsync();
+
+        var response = await _client.PostAsJsonAsync($"/circles/{circleId}/members",
+            new { email = "not-an-email", name = "X", confirmed = false });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    // TASK-9 — utente pending (PasswordHash vuoto) non può fare login
+    [Fact]
+    public async Task AddMember_PendingUser_CannotLogin()
+    {
+        var ownerToken = await RegisterAndGetTokenAsync();
+        SetAuth(ownerToken);
+        var circleId = await CreatePublicCircleAsync();
+
+        var newEmail = $"pending_{Guid.NewGuid():N}@test.com";
+        await _client.PostAsJsonAsync($"/circles/{circleId}/members",
+            new { email = newEmail, name = "Pending Player", confirmed = false });
+
+        var loginResponse = await _client.PostAsJsonAsync("/auth/login",
+            new { email = newEmail, password = "anyPassword123" });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, loginResponse.StatusCode);
+    }
+
+    // ─── helpers ───────────────────────────────────────────────────────────
+
+    private async Task<Guid> CreatePublicCircleAsync()
+    {
+        var r = await _client.PostAsJsonAsync("/circles",
+            new { name = $"C_{Guid.NewGuid():N}", sport = "padel" });
+        var body = await r.Content.ReadFromJsonAsync<JsonElement>();
+        return Guid.Parse(body.GetProperty("id").GetString()!);
+    }
+
+    private async Task<string> RegisterAndGetTokenAsync(string? email = null, string name = "User")
+    {
+        email ??= $"user_{Guid.NewGuid():N}@test.com";
+        var r = await _client.PostAsJsonAsync("/auth/register",
+            new { name, email, password = "password123" });
+        var body = await r.Content.ReadFromJsonAsync<JsonElement>();
+        return body.GetProperty("token").GetString()!;
+    }
+
+    private void SetAuth(string token) =>
+        _client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", token);
+}
+
 public class JoinCircleTestFactory : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)

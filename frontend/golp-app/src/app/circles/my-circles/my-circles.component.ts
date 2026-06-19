@@ -4,11 +4,12 @@ import { RouterLink } from '@angular/router';
 import { CircleService, CircleSummary } from '../circle.service';
 import { AuthService } from '../../auth/auth.service';
 import { InviteDialogComponent } from '../invite-dialog/invite-dialog.component';
+import { AddMemberDialogComponent } from '../add-member-dialog/add-member-dialog.component';
 
 @Component({
   selector: 'app-my-circles',
   standalone: true,
-  imports: [CommonModule, RouterLink, InviteDialogComponent],
+  imports: [CommonModule, RouterLink, InviteDialogComponent, AddMemberDialogComponent],
   templateUrl: './my-circles.component.html',
 })
 export class MyCirclesComponent implements OnInit {
@@ -20,6 +21,7 @@ export class MyCirclesComponent implements OnInit {
   errorMessage = '';
   currentUserId = this.authSvc.getCurrentUserId() ?? '';
   activeInviteCircle: CircleSummary | null = null;
+  activeAddMemberCircle: CircleSummary | null = null;
 
   ngOnInit(): void {
     this.svc.getMyCircles().subscribe({
@@ -48,5 +50,13 @@ export class MyCirclesComponent implements OnInit {
 
   closeInvite(): void {
     this.activeInviteCircle = null;
+  }
+
+  openAddMember(c: CircleSummary): void {
+    this.activeAddMemberCircle = c;
+  }
+
+  closeAddMember(): void {
+    this.activeAddMemberCircle = null;
   }
 }

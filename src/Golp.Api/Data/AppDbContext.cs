@@ -7,6 +7,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 {
     public DbSet<User> Users => Set<User>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Circle> Circles => Set<Circle>();
     public DbSet<CircleMembership> CircleMemberships => Set<CircleMembership>();
     public DbSet<Match> Matches => Set<Match>();
@@ -32,6 +33,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(t => t.TokenHash).HasMaxLength(64).IsRequired();
             e.HasOne(t => t.User)
              .WithMany(u => u.PasswordResetTokens)
+             .HasForeignKey(t => t.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RefreshToken>(e =>
+        {
+            e.HasKey(t => t.Id);
+            e.Property(t => t.TokenHash).HasMaxLength(64).IsRequired();
+            e.Property(t => t.ReplacedByTokenHash).HasMaxLength(64);
+            e.Property(t => t.UserAgent).HasMaxLength(512);
+            e.HasIndex(t => t.TokenHash).IsUnique();
+            e.HasIndex(t => t.FamilyId);
+            e.HasOne(t => t.User)
+             .WithMany()
              .HasForeignKey(t => t.UserId)
              .OnDelete(DeleteBehavior.Cascade);
         });

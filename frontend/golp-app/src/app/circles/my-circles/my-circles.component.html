@@ -78,6 +78,9 @@
                 <button class="btn-ghost" style="flex:1; text-align:center;" (click)="openInvite(circle)">
                   Invita
                 </button>
+                <button class="btn-ghost" style="flex:1; text-align:center;" (click)="openAddMember(circle)">
+                  + Giocatore
+                </button>
               }
             </div>
           </div>
@@ -89,6 +92,14 @@
           [circleId]="activeInviteCircle.id"
           [circleName]="activeInviteCircle.name"
           (closed)="closeInvite()"
+        />
+      }
+
+      @if (activeAddMemberCircle) {
+        <app-add-member-dialog
+          [circleId]="activeAddMemberCircle.id"
+          [circleName]="activeAddMemberCircle.name"
+          (closed)="closeAddMember()"
         />
       }
 

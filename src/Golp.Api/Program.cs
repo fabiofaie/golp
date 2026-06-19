@@ -17,7 +17,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Auth services
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
-builder.Services.AddScoped<IEmailService, DevelopmentEmailService>();
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+builder.Services.AddSingleton<IEmailTemplateRenderer, EmailTemplateRenderer>();
+
+// Email: SMTP reale se configurato (Smtp:Host), altrimenti fallback su console (dev senza credenziali)
+if (!string.IsNullOrEmpty(builder.Configuration["Smtp:Host"]))
+    builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+else
+    builder.Services.AddScoped<IEmailService, DevelopmentEmailService>();
 
 // Rating service (US-007) — ELO alla conferma partita
 builder.Services.AddScoped<IRatingService, RatingService>();

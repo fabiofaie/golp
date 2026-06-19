@@ -41,7 +41,7 @@ describe('AuthService — integrazione push (US-006)', () => {
   it('login con successo → push register chiamato', () => {
     service.login({ email: 'a@b.com', password: 'pw' }).subscribe();
 
-    httpMock.expectOne('/auth/login').flush({ token: fakeJwt });
+    httpMock.expectOne('/auth/login').flush({ accessToken: fakeJwt, refreshToken: 'refresh-1' });
 
     expect(pushMock.register).toHaveBeenCalled();
   });
@@ -49,7 +49,7 @@ describe('AuthService — integrazione push (US-006)', () => {
   it('register con successo → push register chiamato', () => {
     service.register({ name: 'A', email: 'a@b.com', password: 'pw' }).subscribe();
 
-    httpMock.expectOne('/auth/register').flush({ token: fakeJwt });
+    httpMock.expectOne('/auth/register').flush({ accessToken: fakeJwt, refreshToken: 'refresh-1' });
 
     expect(pushMock.register).toHaveBeenCalled();
   });
@@ -65,11 +65,27 @@ describe('AuthService — integrazione push (US-006)', () => {
 
   it('logout → push unregister chiamato e token rimosso', () => {
     localStorage.setItem('golp_token', fakeJwt);
+    localStorage.setItem('golp_refresh_token', 'refresh-1');
 
     service.logout();
+    httpMock.expectOne('/auth/logout').flush({});
 
     expect(pushMock.unregister).toHaveBeenCalled();
     expect(localStorage.getItem('golp_token')).toBeNull();
+    expect(localStorage.getItem('golp_refresh_token')).toBeNull();
     expect(service.isAuthenticated()).toBeFalse();
+  });
+
+  it('refresh → memorizza nuova coppia di token', () => {
+    localStorage.setItem('golp_refresh_token', 'old-refresh');
+
+    service.refresh().subscribe();
+
+    const req = httpMock.expectOne('/auth/refresh');
+    expect(req.request.body).toEqual({ refreshToken: 'old-refresh' });
+    req.flush({ accessToken: fakeJwt, refreshToken: 'new-refresh' });
+
+    expect(localStorage.getItem('golp_token')).toBe(fakeJwt);
+    expect(localStorage.getItem('golp_refresh_token')).toBe('new-refresh');
   });
 });

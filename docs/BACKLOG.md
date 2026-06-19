@@ -5,8 +5,8 @@
 ## Riepilogo
 
 - Epic totali: 5
-- Storie totali: 18
-- Storie TODO: 2 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 2 | DONE: 14
+- Storie totali: 21
+- Storie TODO: 2 | PLANNED: 2 | IN_PROGRESS: 0 | REVIEW: 4 | DONE: 14
 
 ---
 
@@ -597,7 +597,8 @@ Fabio è in classifica con 1050 punti. Clicca "Come funziona il rating?" dalla p
 
 #### US-018: Aggiunta manuale di un giocatore al circolo da parte del proprietario
 
-**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 5 | **Status:** TODO
+**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 5 | **Status:** REVIEW
+**Review note (2026-06-19):** Backend in `src/Golp.Api/Endpoints/CircleEndpoints.cs` (`POST /circles/{id}/members`, owner-only, 3 branch: lookup esistente, conferma+add, crea pending), `IEmailService`/`DevelopmentEmailService.cs` (+2 metodi), fix `AuthEndpoints.LoginAsync` (BCrypt.Verify lanciava eccezione su hash vuoto invece di false). Frontend in `frontend/golp-app/src/app/circles/add-member-dialog/` (componente standalone 4-step), `circle.service.ts` (+metodo), `my-circles.component.*` (bottone owner-only "+ Giocatore"). Test: 9 integration in `CircleIntegrationTests.cs` (`AddMemberEndpointTests`), 7 unit Angular, 2 E2E Playwright (`e2e/add-member.spec.ts`). Reviewer APPROVE — no critical aperti. Suite completa: 158/167 BE (9 fail pre-esistenti in `SimulateEndpointTests`, confermato su `main` via stash), 62/69 FE (7 fail pre-esistenti AuthService/AppComponent). > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-018`.
 **Blocked by:** -
 
 **Story**
@@ -628,4 +629,97 @@ Il proprietario, dalla pagina di gestione del circolo, inserisce email e nome di
 
 ---
 
-> **PROSSIMO PASSO:** esegui `/eq-plan US-018` per pianificare l'aggiunta manuale di giocatori al circolo, oppure `/eq-next` per il riepilogo dello stato corrente.
+#### US-019: Sessione lunga tramite refresh token
+
+**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 5 | **Status:** REVIEW
+**Review note (2026-06-19):** Backend: entità `RefreshToken` + migration `AddRefreshTokens`, `IRefreshTokenService`/`RefreshTokenService.cs` (issue/rotate con reuse-detection/revoke), `AuthEndpoints.cs` (+`POST /auth/refresh`, +`POST /auth/logout`, register/login ritornano `{accessToken, refreshToken}`, hook revoca-tutto su cambio password). Config `Jwt:RefreshTokenExpiryDays` (default 90). Frontend: `AuthService` (store coppia token, `refresh()`, `logout()` via API), `auth.interceptor.ts` (retry automatico su 401). Test: 2 unit `RefreshTokenServiceTests`, 8 integration in `AuthIntegrationTests.cs`, 4 unit `auth.interceptor.spec.ts`. Reviewer APPROVE — no critical aperti. Suite completa: 167/176 BE (9 fail pre-esistenti `SimulateEndpointTests`), 65/74 FE (9 fail pre-esistenti per `environment.ts` con apiUrl hardcoded a server live, non relativo — confermato non causato da questa storia). > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-019`.
+**Blocked by:** US-001
+
+**Story**
+Come giocatore che ha installato l'app come PWA in home screen, voglio restare loggato per un periodo lungo (90 giorni di default) usando l'app anche una sola volta in quel periodo, così che non debba rifare login continuamente come accade oggi con la scadenza fissa di 60 minuti.
+
+**Demonstrates**
+Login emette un access token JWT di breve durata (es. 1h, come oggi) e un refresh token long-lived persistito in DB. Quando l'access token scade, il frontend lo rinnova automaticamente tramite il refresh token senza richiedere credenziali. Ogni rinnovo valido estende la scadenza del refresh token di altri N giorni (sliding window). Se l'utente non usa l'app per più di N giorni, il refresh token scade e serve nuovo login. Il proprietario dell'account può revocare le sessioni attive (logout singolo device o da tutti i device); un cambio password revoca tutti i refresh token esistenti.
+
+**Acceptance Criteria**
+- [ ] Login e registrazione restituiscono access token (JWT, breve durata) + refresh token (long-lived)
+- [ ] Endpoint `POST /auth/refresh` scambia un refresh token valido con un nuovo access token; il refresh token stesso viene rinnovato (scadenza estesa di N giorni dal momento dell'uso)
+- [ ] Durata refresh token configurabile via `appsettings.json` (es. `Jwt:RefreshTokenExpiryDays`), default 90
+- [ ] Refresh token scaduto, già usato/revocato, o non trovato → `401`, frontend reindirizza al login
+- [ ] Logout invalida (revoca) il refresh token della sessione corrente lato server, non solo lato client
+- [ ] Cambio password revoca tutti i refresh token attivi dell'utente (logout da tutti i device)
+- [ ] Per ogni refresh token sono tracciati `CreatedAt`, `LastUsedAt`, `UserAgent` (per stima utenti/device attivi)
+- [ ] Frontend intercetta `401` da access token scaduto, tenta refresh automatico in background, poi ripete la richiesta originale; se il refresh fallisce, reindirizza al login
+- [ ] Nessuna eccezione alle regole di isolamento multi-tenant per `circle_id` introdotta dal nuovo schema di token
+
+**Out of scope**
+- Scadenza assoluta indipendente dall'uso (no limite massimo "comunque rilogin dopo X tempo")
+- Dashboard utente per visualizzare/gestire le proprie sessioni/device attivi (solo revoca implicita su logout/cambio password)
+- Sistema di analytics completo (funnel, eventi): il tracciamento serve solo a stimare utenti/dispositivi attivi
+
+**Open questions**
+- Rilevazione riuso di un refresh token già consumato (rotazione con detection furto): da includere in questa storia o rimandata a una storia successiva di hardening?
+
+---
+
+#### US-020: Email su template riutilizzabili + notifiche email per richiesta conferma e contestazione partita
+
+**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** IN_PROGRESS
+**Blocked by:** -
+
+**Story**
+Come team di sviluppo, voglio che le email siano generate da template HTML riutilizzabili invece che da stringhe inline nel codice, e come giocatore voglio ricevere una email (oltre alla notifica push) quando devo confermare una partita o quando una partita viene contestata, così che il branding sia consistente e gestibile senza toccare codice C#, e nessuna richiesta di conferma passi inosservata per chi non ha la PWA installata o le notifiche push attive.
+
+**Demonstrates**
+Le 3 email esistenti (reset password, attivazione giocatore, notifica aggiunta circolo) sono renderizzate da file template HTML in `src/Golp.Api/EmailTemplates/` con placeholder, non più da stringhe C# inline. Quando viene creata una partita, i 4 partecipanti (esclusi i confirmatori automatici se previsti) ricevono sia la push esistente sia una nuova email di richiesta conferma. Quando una partita passa a stato "disputed", il proprietario del circolo riceve una email di notifica.
+
+**Acceptance Criteria**
+- [ ] Esiste un meccanismo di rendering template (es. `IEmailTemplateRenderer`) che carica un file HTML da `EmailTemplates/` e sostituisce placeholder (`{{Nome}}`) con valori a runtime
+- [ ] Le 3 email esistenti (`SendPasswordResetEmailAsync`, `SendCircleActivationEmailAsync`, `SendAddedToCircleNotificationAsync`) usano il nuovo meccanismo di template, nessun HTML inline rimane in `SmtpEmailService.cs`/`DevelopmentEmailService.cs`
+- [ ] Esiste un layout/header-footer condiviso tra i template per branding consistente (logo/nome GOLP, colori base)
+- [ ] Alla creazione di una partita (stesso punto in cui oggi parte la push in `MatchEndpoints.cs`), ai partecipanti che devono confermare viene inviata anche una email con link diretto alla pagina di conferma
+- [ ] Quando una partita passa a stato `disputed`, il proprietario del circolo riceve una email di notifica con riferimento alla partita
+- [ ] Se l'invio email fallisce (SMTP non raggiungibile), il flusso applicativo principale (creazione partita / dispute) non viene bloccato — l'errore è loggato, non propagato all'utente
+- [ ] `DevelopmentEmailService` (fallback console, usato quando SMTP non configurato) supporta gli stessi template, stampa il contenuto risolto in console invece di inviarlo
+
+**Out of scope**
+- Preferenze/opt-out email per utente (tutte le email previste restano obbligatorie, nessuna UI impostazioni) — deciso in AN-001
+- Notifica email per "conferma forzata dal proprietario" (US-013) o "partita confermata con esito" — non richieste in questa storia
+- Localizzazione multi-lingua dei template (solo italiano)
+- Giocatore del mese/anno via email — storia separata (richiede anche scheduler), vedi AN-001
+
+**Open questions**
+- (nessuna — risolte in AN-001 durante discussione 2026-06-19)
+
+---
+
+#### US-021: Notifica email automatica giocatore del mese/anno
+
+**Epic:** EP-004 | **Priority:** LOW | **Story Points:** 5 | **Status:** TODO
+**Blocked by:** US-020
+
+**Story**
+Come giocatore che vince il premio "giocatore del mese" o "giocatore dell'anno" in un circolo, voglio ricevere una email automatica che me lo comunica, così che non debba scoprirlo per caso aprendo la pagina premi.
+
+**Demonstrates**
+Un job schedulato calcola, alla chiusura di ogni mese/anno, il vincitore di ciascun circolo (stessa logica oggi esposta on-demand da `GET /circles/{id}/awards`) e invia una email al vincitore con il periodo e il risultato. Il job gira una sola volta per periodo per circolo, anche se eseguito più volte (idempotente).
+
+**Acceptance Criteria**
+- [ ] Esiste un meccanismo di esecuzione schedulata (es. `IHostedService`/`BackgroundService`) che gira periodicamente (es. ogni notte) e verifica se è il primo giorno di un nuovo mese/anno per cui calcolare il vincitore del periodo precedente
+- [ ] Per ogni circolo con almeno 1 partita confermata nel periodo, calcola il vincitore con la stessa logica di `GetAwardsAsync` esistente
+- [ ] Il vincitore riceve una email con periodo (es. "Giugno 2026"), nome circolo, e il risultato (net gain / partite giocate)
+- [ ] Se un circolo non ha un vincitore per il periodo (nessuna partita confermata), nessuna email viene inviata per quel circolo
+- [ ] Il job è idempotente: se eseguito più volte per lo stesso periodo/circolo, non invia email duplicate (es. tramite tabella di stato "periodo già processato")
+- [ ] Se l'invio email fallisce per un circolo, gli altri circoli del batch continuano a essere processati (un fallimento non blocca gli altri)
+
+**Out of scope**
+- Notifica per "secondo posto" o classifiche complete via email (solo il vincitore)
+- UI per configurare l'orario/frequenza del job (valore fisso in configurazione)
+- Esecuzione retroattiva per periodi passati già conclusi prima del rilascio di questa storia
+
+**Open questions**
+- Il job deve girare su un thread in-process (`BackgroundService` nello stesso processo API) o un processo separato (Azure Function/WebJob)? Impatta deploy su Azure App Service esistente — da chiarire in fase di piano tecnico.
+
+---
+
+> **PROSSIMO PASSO:** esegui `/eq-plan US-018` per pianificare l'aggiunta manuale di giocatori al circolo, `/eq-plan US-019` per la sessione lunga via refresh token, `/eq-plan US-020` per il refactor email a template + notifiche partita, oppure `/eq-plan US-021` per la notifica email premi mensili/annuali, oppure `/eq-next` per il riepilogo dello stato corrente.

@@ -172,6 +172,131 @@ public class AuthIntegrationTests : IClassFixture<IntegrationTestFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
+    // US-019 AC1 — register ritorna accessToken + refreshToken, persistito con UserAgent
+    [Fact]
+    public async Task Register_ReturnsAccessAndRefreshToken_PersistedWithUserAgent()
+    {
+        var email = UniqueEmail();
+        _client.DefaultRequestHeaders.UserAgent.ParseAdd("TestAgent/1.0");
+
+        var response = await _client.PostAsJsonAsync("/auth/register",
+            new { name = "Marco", email, password = "password123" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.NotEmpty(body.GetProperty("accessToken").GetString()!);
+        Assert.NotEmpty(body.GetProperty("refreshToken").GetString()!);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var user = await db.Users.FirstAsync(u => u.Email == email.ToLowerInvariant());
+        var stored = await db.RefreshTokens.SingleAsync(t => t.UserId == user.Id);
+        Assert.Contains("TestAgent", stored.UserAgent);
+    }
+
+    // US-019 AC1 — login ritorna accessToken + refreshToken
+    [Fact]
+    public async Task Login_ReturnsAccessAndRefreshToken()
+    {
+        var email = UniqueEmail();
+        await _client.PostAsJsonAsync("/auth/register",
+            new { name = "Marco", email, password = "password123" });
+
+        var response = await _client.PostAsJsonAsync("/auth/login",
+            new { email, password = "password123" });
+
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.NotEmpty(body.GetProperty("accessToken").GetString()!);
+        Assert.NotEmpty(body.GetProperty("refreshToken").GetString()!);
+    }
+
+    // US-019 AC2/AC4 — refresh valido rinnova access+refresh token
+    [Fact]
+    public async Task Refresh_ValidToken_ReturnsNewAccessAndRefreshToken()
+    {
+        var email = UniqueEmail();
+        var registerResp = await _client.PostAsJsonAsync("/auth/register",
+            new { name = "Marco", email, password = "password123" });
+        var registerBody = await registerResp.Content.ReadFromJsonAsync<JsonElement>();
+        var refreshToken = registerBody.GetProperty("refreshToken").GetString()!;
+
+        var response = await _client.PostAsJsonAsync("/auth/refresh", new { refreshToken });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.NotEmpty(body.GetProperty("accessToken").GetString()!);
+        var newRefreshToken = body.GetProperty("refreshToken").GetString()!;
+        Assert.NotEqual(refreshToken, newRefreshToken);
+    }
+
+    // US-019 AC4 — refresh non valido → 401
+    [Fact]
+    public async Task Refresh_InvalidToken_Returns401()
+    {
+        var response = await _client.PostAsJsonAsync("/auth/refresh", new { refreshToken = "not-a-real-token" });
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    // US-019 reuse-detection — riuso di un refresh token già ruotato → 401 e revoca tutta la famiglia
+    [Fact]
+    public async Task Refresh_ReusedToken_RevokesWholeFamily()
+    {
+        var email = UniqueEmail();
+        var registerResp = await _client.PostAsJsonAsync("/auth/register",
+            new { name = "Marco", email, password = "password123" });
+        var registerBody = await registerResp.Content.ReadFromJsonAsync<JsonElement>();
+        var firstRefreshToken = registerBody.GetProperty("refreshToken").GetString()!;
+
+        // primo refresh: ruota il token, quello vecchio diventa "usato"
+        var firstRotate = await _client.PostAsJsonAsync("/auth/refresh", new { refreshToken = firstRefreshToken });
+        var firstRotateBody = await firstRotate.Content.ReadFromJsonAsync<JsonElement>();
+        var secondRefreshToken = firstRotateBody.GetProperty("refreshToken").GetString()!;
+
+        // riuso del token vecchio (già ruotato) → 401
+        var reuseResponse = await _client.PostAsJsonAsync("/auth/refresh", new { refreshToken = firstRefreshToken });
+        Assert.Equal(HttpStatusCode.Unauthorized, reuseResponse.StatusCode);
+
+        // il token successivo della stessa famiglia è stato revocato a cascata
+        var cascadeResponse = await _client.PostAsJsonAsync("/auth/refresh", new { refreshToken = secondRefreshToken });
+        Assert.Equal(HttpStatusCode.Unauthorized, cascadeResponse.StatusCode);
+    }
+
+    // US-019 AC5 — logout revoca il refresh token lato server
+    [Fact]
+    public async Task Logout_RevokesRefreshToken()
+    {
+        var email = UniqueEmail();
+        var registerResp = await _client.PostAsJsonAsync("/auth/register",
+            new { name = "Marco", email, password = "password123" });
+        var registerBody = await registerResp.Content.ReadFromJsonAsync<JsonElement>();
+        var refreshToken = registerBody.GetProperty("refreshToken").GetString()!;
+
+        var logoutResponse = await _client.PostAsJsonAsync("/auth/logout", new { refreshToken });
+        Assert.Equal(HttpStatusCode.OK, logoutResponse.StatusCode);
+
+        var refreshAfterLogout = await _client.PostAsJsonAsync("/auth/refresh", new { refreshToken });
+        Assert.Equal(HttpStatusCode.Unauthorized, refreshAfterLogout.StatusCode);
+    }
+
+    // US-019 AC6 — cambio password revoca tutti i refresh token dell'utente
+    [Fact]
+    public async Task PasswordReset_RevokesAllRefreshTokens()
+    {
+        var email = UniqueEmail();
+        var registerResp = await _client.PostAsJsonAsync("/auth/register",
+            new { name = "Marco", email, password = "oldpassword1" });
+        var registerBody = await registerResp.Content.ReadFromJsonAsync<JsonElement>();
+        var refreshToken = registerBody.GetProperty("refreshToken").GetString()!;
+
+        await _client.PostAsJsonAsync("/auth/password-reset/request", new { email });
+        var resetToken = await GetLastResetTokenAsync(email);
+        await _client.PostAsJsonAsync("/auth/password-reset/confirm",
+            new { token = resetToken, newPassword = "newpassword1" });
+
+        var refreshAfterReset = await _client.PostAsJsonAsync("/auth/refresh", new { refreshToken });
+        Assert.Equal(HttpStatusCode.Unauthorized, refreshAfterReset.StatusCode);
+    }
+
     private async Task<string?> GetLastResetTokenAsync(string email)
     {
         using var scope = _factory.Services.CreateScope();
@@ -212,6 +337,32 @@ public class TestEmailCapture : Golp.Api.Services.IEmailService
 
     public string? GetLastToken(string email) =>
         _tokens.TryGetValue(email, out var t) ? t : null;
+
+    public Task SendCircleActivationEmailAsync(string email, string circleName, string activationLink)
+    {
+        var uri = new Uri(activationLink);
+        var token = System.Web.HttpUtility.ParseQueryString(uri.Query)["token"];
+        if (token != null)
+            _tokens[email] = token;
+        return Task.CompletedTask;
+    }
+
+    public Task SendAddedToCircleNotificationAsync(string email, string circleName) => Task.CompletedTask;
+
+    public List<(string Email, string CircleName, string MatchLink)> ConfirmationRequestsSent { get; } = [];
+    public List<(string Email, string CircleName, string MatchLink)> DisputeNotificationsSent { get; } = [];
+
+    public Task SendMatchConfirmationRequestEmailAsync(string email, string circleName, string matchLink)
+    {
+        ConfirmationRequestsSent.Add((email, circleName, matchLink));
+        return Task.CompletedTask;
+    }
+
+    public Task SendMatchDisputedEmailAsync(string email, string circleName, string matchLink)
+    {
+        DisputeNotificationsSent.Add((email, circleName, matchLink));
+        return Task.CompletedTask;
+    }
 }
 
 public class IntegrationTestFactory : WebApplicationFactory<Program>

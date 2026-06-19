@@ -1,0 +1,60 @@
+<div class="invite-overlay" (click)="close()">
+  <div class="invite-card" (click)="$event.stopPropagation()">
+    <button class="close-btn" (click)="close()" aria-label="Chiudi">×</button>
+    <h2>Aggiungi giocatore</h2>
+    <p class="circle-name">{{ circleName }}</p>
+
+    @if (error) {
+      <p class="error">{{ error }}</p>
+    }
+
+    @switch (step) {
+      @case ('email') {
+        <input
+          type="email"
+          class="input"
+          placeholder="Email del giocatore"
+          [(ngModel)]="email"
+          (keyup.enter)="submitEmail()"
+        />
+        <div class="actions">
+          <button class="btn btn-primary" [disabled]="loading" (click)="submitEmail()">
+            {{ loading ? 'Verifica…' : 'Continua' }}
+          </button>
+        </div>
+      }
+      @case ('confirmExisting') {
+        <p>Esiste già un account per <strong>{{ existingName }}</strong> ({{ email }}).</p>
+        <p>Confermi di volerlo aggiungere a questo circolo?</p>
+        <div class="actions">
+          <button class="btn btn-primary" [disabled]="loading" (click)="confirmExisting()">
+            {{ loading ? 'Aggiunta…' : 'Conferma e aggiungi' }}
+          </button>
+          <button class="btn btn-secondary" (click)="step = 'email'">Annulla</button>
+        </div>
+      }
+      @case ('newPlayer') {
+        <p>Nessun account trovato per <strong>{{ email }}</strong>. Inserisci il nome per crearne uno.</p>
+        <input
+          type="text"
+          class="input"
+          placeholder="Nome del giocatore"
+          [(ngModel)]="name"
+          (keyup.enter)="submitNewPlayer()"
+        />
+        <div class="actions">
+          <button class="btn btn-primary" [disabled]="loading" (click)="submitNewPlayer()">
+            {{ loading ? 'Creazione…' : 'Crea e aggiungi' }}
+          </button>
+          <button class="btn btn-secondary" (click)="step = 'email'">Annulla</button>
+        </div>
+      }
+      @case ('success') {
+        <p>{{ successMessage }}</p>
+        <div class="actions">
+          <button class="btn btn-primary" (click)="close()">Chiudi</button>
+        </div>
+      }
+    }
+  </div>
+</div>
