@@ -20,27 +20,44 @@ describe('InviteDialogComponent', () => {
     }).compileComponents();
   });
 
-  function createComponent() {
+  function createComponent(canShare: boolean) {
     const fixture = TestBed.createComponent(InviteDialogComponent);
     fixture.componentInstance.circleId = CIRCLE_ID;
     fixture.componentInstance.circleName = CIRCLE_NAME;
+    fixture.componentInstance.canShare = canShare;
     fixture.detectChanges();
     return fixture;
   }
 
   it('calls getInviteLink with correct circleId on init', () => {
-    createComponent();
+    createComponent(false);
     expect(circleSvc.getInviteLink).toHaveBeenCalledWith(CIRCLE_ID);
   });
 
   it('builds inviteUrl containing the token', () => {
-    const fixture = createComponent();
+    const fixture = createComponent(false);
     const comp = fixture.componentInstance;
     expect(comp.inviteUrl).toContain(`/join?token=${TOKEN}`);
   });
 
+  it('when canShare, auto-triggers navigator.share and closes the dialog', () => {
+    const shareSpy = jasmine.createSpy('share').and.returnValue(Promise.resolve());
+    (navigator as any).share = shareSpy;
+    let emitted = false;
+
+    const fixture = createComponent(true);
+    fixture.componentInstance.closed.subscribe(() => (emitted = true));
+    fixture.componentInstance.ngOnInit();
+
+    expect(shareSpy).toHaveBeenCalledWith({
+      title: `Unisciti a ${CIRCLE_NAME} su GOLP`,
+      url: fixture.componentInstance.inviteUrl,
+    });
+    expect(emitted).toBeTrue();
+  });
+
   it('copyLink calls navigator.clipboard.writeText with full invite URL', async () => {
-    const fixture = createComponent();
+    const fixture = createComponent(false);
     const comp = fixture.componentInstance;
     const clipboardSpy = spyOn(navigator.clipboard, 'writeText').and.returnValue(Promise.resolve());
 
@@ -50,7 +67,7 @@ describe('InviteDialogComponent', () => {
   });
 
   it('sendEmail opens mailto containing the invite URL', () => {
-    const fixture = createComponent();
+    const fixture = createComponent(false);
     const comp = fixture.componentInstance;
     const openSpy = spyOn(window, 'open');
 
@@ -63,7 +80,7 @@ describe('InviteDialogComponent', () => {
   });
 
   it('close emits closed event', () => {
-    const fixture = createComponent();
+    const fixture = createComponent(false);
     const comp = fixture.componentInstance;
     let emitted = false;
     comp.closed.subscribe(() => (emitted = true));

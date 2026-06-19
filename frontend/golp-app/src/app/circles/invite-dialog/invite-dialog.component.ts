@@ -20,18 +20,34 @@ export class InviteDialogComponent implements OnInit {
   loading = true;
   error = '';
   copied = false;
+  canShare = typeof navigator !== 'undefined' && !!navigator.share;
 
   ngOnInit(): void {
     this.circleService.getInviteLink(this.circleId).subscribe({
       next: (res) => {
         this.inviteUrl = `${window.location.origin}/join?token=${res.inviteToken}`;
         this.loading = false;
+        if (this.canShare) {
+          this.shareLink();
+          this.close();
+        }
       },
       error: () => {
         this.error = 'Impossibile generare il link. Riprova.';
         this.loading = false;
       },
     });
+  }
+
+  shareLink(): void {
+    navigator
+      .share({
+        title: `Unisciti a ${this.circleName} su GOLP`,
+        url: this.inviteUrl,
+      })
+      .catch(() => {
+        // utente ha annullato la condivisione: nessuna azione necessaria
+      });
   }
 
   copyLink(): void {

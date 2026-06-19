@@ -1,12 +1,12 @@
 # Backlog — GOLP
 
-**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-06-15
+**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-06-19
 
 ## Riepilogo
 
 - Epic totali: 5
-- Storie totali: 17
-- Storie TODO: 1 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 2 | DONE: 14
+- Storie totali: 18
+- Storie TODO: 2 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 2 | DONE: 14
 
 ---
 
@@ -595,4 +595,37 @@ Fabio è in classifica con 1050 punti. Clicca "Come funziona il rating?" dalla p
 
 ---
 
-> **PROSSIMO PASSO:** esegui `/eq-plan US-017` per pianificare la pagina simulatore ELO, oppure `/eq-next` per il riepilogo dello stato corrente.
+#### US-018: Aggiunta manuale di un giocatore al circolo da parte del proprietario
+
+**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 5 | **Status:** TODO
+**Blocked by:** -
+
+**Story**
+Come proprietario di un circolo, voglio registrare direttamente un nuovo giocatore inserendo i suoi dati, così che possa aggiungerlo al circolo senza dover passare da un link di invito.
+
+**Demonstrates**
+Il proprietario, dalla pagina di gestione del circolo, inserisce email e nome di un giocatore. Se l'email non esiste già nel sistema, viene creato un nuovo account e il giocatore riceve una email con le istruzioni per impostare la password e accedere. Se l'email corrisponde a un utente già registrato, il proprietario vede il nome associato e deve confermare prima che il giocatore venga aggiunto come membro del circolo (rating iniziale 1000); il giocatore riceve una email di notifica che è stato aggiunto al circolo.
+
+**Acceptance Criteria**
+- [ ] Solo il proprietario del circolo può accedere alla funzione di aggiunta manuale giocatore (autorizzazione lato API)
+- [ ] Il form richiede almeno email; se l'email non è già registrata, richiede anche nome (e altri campi minimi richiesti dalla registrazione)
+- [ ] Se l'email esiste già nel DB, l'API restituisce il nome associato e NON crea un nuovo utente; il frontend mostra il nome e chiede conferma esplicita prima di procedere
+- [ ] Alla conferma, se l'utente esiste già: viene aggiunto come `CircleMembership` del circolo con rating iniziale 1000 (se non già membro)
+- [ ] Se l'email non esiste: viene creato un nuovo utente con stato "in attesa di attivazione" (password non impostata) e aggiunto come membro del circolo con rating iniziale 1000
+- [ ] Nel caso di nuovo utente, viene inviata una email con link/istruzioni per impostare la password e accedere (riuso flusso reset/attivazione password esistente)
+- [ ] Nel caso di utente già esistente, viene inviata una email di notifica che informa dell'aggiunta al circolo
+- [ ] Se l'utente (esistente) è già membro del circolo, l'azione non duplica la membership e mostra messaggio informativo invece di errore
+- [ ] L'email del nuovo giocatore deve passare la stessa validazione di formato usata in registrazione
+
+**Out of scope**
+- Import massivo di giocatori (CSV/bulk)
+- Possibilità per il giocatore aggiunto di rifiutare l'iscrizione al circolo
+- Modifica successiva dell'email del giocatore aggiunto
+
+**Open questions**
+- L'email in ambiente di sviluppo passa da `DevelopmentEmailService` (solo console): verificare se basta per questa storia o serve già SMTP reale.
+- Il "nome" per un nuovo utente creato qui è obbligatorio o può restare vuoto fino al primo login dell'utente stesso?
+
+---
+
+> **PROSSIMO PASSO:** esegui `/eq-plan US-018` per pianificare l'aggiunta manuale di giocatori al circolo, oppure `/eq-next` per il riepilogo dello stato corrente.
