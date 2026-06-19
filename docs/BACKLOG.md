@@ -6,7 +6,7 @@
 
 - Epic totali: 5
 - Storie totali: 21
-- Storie TODO: 2 | PLANNED: 2 | IN_PROGRESS: 0 | REVIEW: 4 | DONE: 14
+- Storie TODO: 2 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 14
 
 ---
 
@@ -664,7 +664,8 @@ Login emette un access token JWT di breve durata (es. 1h, come oggi) e un refres
 
 #### US-020: Email su template riutilizzabili + notifiche email per richiesta conferma e contestazione partita
 
-**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** IN_PROGRESS
+**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** REVIEW
+**Review note (2026-06-19):** Backend: `Services/IEmailTemplateRenderer.cs`/`EmailTemplateRenderer.cs` (rendering placeholder+layout), `EmailTemplates/*.html` (5 template + layout condiviso), `SmtpEmailService.cs`/`DevelopmentEmailService.cs` migrati ai template (zero HTML inline), `IEmailService` esteso con `SendMatchConfirmationRequestEmailAsync`/`SendMatchDisputedEmailAsync`. `MatchEndpoints.cs`: email ai 3 destinatari su creazione partita (oltre al push esistente) e all'owner su dispute, entrambe fire-and-forget con try/catch per-destinatario (un fallimento non blocca gli altri né il flusso principale). Test: 3 unit `EmailTemplateRendererTests`, regressione 38 test esistenti, 4 nuovi integration test (conferma partita, dispute, 2 di resilienza a fallimento SMTP). Reviewer APPROVE — no critical aperti. Suite completa: 174/183 BE (9 fail pre-esistenti `SimulateEndpointTests`, non toccati da questa storia). > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-020`.
 **Blocked by:** -
 
 **Story**

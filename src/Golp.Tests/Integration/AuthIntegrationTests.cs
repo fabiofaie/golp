@@ -326,6 +326,9 @@ public class TestEmailCapture : Golp.Api.Services.IEmailService
 {
     private readonly Dictionary<string, string> _tokens = new();
 
+    /// <summary>Quando true, ogni metodo di invio lancia eccezione dopo aver registrato la chiamata (simula SMTP down).</summary>
+    public bool ShouldThrow { get; set; }
+
     public Task SendPasswordResetEmailAsync(string email, string resetLink)
     {
         var uri = new Uri(resetLink);
@@ -349,19 +352,29 @@ public class TestEmailCapture : Golp.Api.Services.IEmailService
 
     public Task SendAddedToCircleNotificationAsync(string email, string circleName) => Task.CompletedTask;
 
-    public List<(string Email, string CircleName, string MatchLink)> ConfirmationRequestsSent { get; } = [];
-    public List<(string Email, string CircleName, string MatchLink)> DisputeNotificationsSent { get; } = [];
+    public System.Collections.Concurrent.ConcurrentBag<(string Email, string CircleName, string MatchLink)> ConfirmationRequestsSent { get; } = new();
+    public System.Collections.Concurrent.ConcurrentBag<(string Email, string CircleName, string MatchLink)> DisputeNotificationsSent { get; } = new();
 
     public Task SendMatchConfirmationRequestEmailAsync(string email, string circleName, string matchLink)
     {
         ConfirmationRequestsSent.Add((email, circleName, matchLink));
+        if (ShouldThrow) throw new InvalidOperationException("Simulated SMTP failure");
         return Task.CompletedTask;
     }
 
     public Task SendMatchDisputedEmailAsync(string email, string circleName, string matchLink)
     {
         DisputeNotificationsSent.Add((email, circleName, matchLink));
+        if (ShouldThrow) throw new InvalidOperationException("Simulated SMTP failure");
         return Task.CompletedTask;
+    }
+
+    /// <summary>Polling helper: il dispatch email è fire-and-forget, serve attendere senza sleep fisso.</summary>
+    public async Task WaitUntilCountAsync(Func<int> countSelector, int expectedCount, TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        while (countSelector() < expectedCount && DateTime.UtcNow < deadline)
+            await Task.Delay(25);
     }
 }
 

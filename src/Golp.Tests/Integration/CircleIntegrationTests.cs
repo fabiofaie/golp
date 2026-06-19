@@ -706,6 +706,8 @@ public class AddMemberEndpointTests : IClassFixture<JoinCircleTestFactory>
 
 public class JoinCircleTestFactory : WebApplicationFactory<Program>
 {
+    public TestEmailCapture EmailCapture { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
@@ -713,7 +715,8 @@ public class JoinCircleTestFactory : WebApplicationFactory<Program>
             var toRemove = services
                 .Where(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>)
                          || d.ServiceType == typeof(AppDbContext)
-                         || d.ServiceType.Namespace?.StartsWith("Microsoft.EntityFrameworkCore") == true)
+                         || d.ServiceType.Namespace?.StartsWith("Microsoft.EntityFrameworkCore") == true
+                         || d.ServiceType == typeof(Golp.Api.Services.IEmailService))
                 .ToList();
             foreach (var d in toRemove)
                 services.Remove(d);
@@ -723,6 +726,9 @@ public class JoinCircleTestFactory : WebApplicationFactory<Program>
             services.AddDbContext<AppDbContext>((sp, options) =>
                 options.UseInMemoryDatabase(dbName)
                        .UseInternalServiceProvider(sp));
+
+            services.AddSingleton(EmailCapture);
+            services.AddScoped<Golp.Api.Services.IEmailService>(sp => sp.GetRequiredService<TestEmailCapture>());
         });
 
         builder.UseEnvironment("Testing");

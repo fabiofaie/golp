@@ -77,6 +77,55 @@ public class DisputeMatchTests : IClassFixture<DisputeMatchTestFactory>
         Assert.Equal(HttpStatusCode.Conflict, r2.StatusCode);
     }
 
+    // US-020 AC5/AC6 — dispute notifica via email l'owner del circolo, fallimento invio non blocca la dispute
+    [Fact]
+    public async Task DisputeMatch_SendsEmailToCircleOwner()
+    {
+        var (circleId, ids, tokens) = await SetupAsync();
+        var ownerEmail = ExtractEmailFromJwt(tokens[0]);
+        SetAuth(tokens[0]);
+        var matchId = GetId(await (await PostMatchAsync(circleId, ids[0], ids[1], ids[2], ids[3]))
+            .Content.ReadFromJsonAsync<JsonElement>());
+
+        SetAuth(tokens[1]);
+        var r = await _client.PostAsync($"/circles/{circleId}/matches/{matchId}/dispute", null);
+        Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+
+        await _factory.EmailCapture.WaitUntilCountAsync(
+            () => _factory.EmailCapture.DisputeNotificationsSent.Count(s => s.MatchLink.Contains(matchId.ToString())), 1, TimeSpan.FromSeconds(5));
+
+        var sent = _factory.EmailCapture.DisputeNotificationsSent.Where(s => s.MatchLink.Contains(matchId.ToString())).ToList();
+        Assert.Single(sent);
+        Assert.Equal(ownerEmail, sent[0].Email);
+        Assert.Contains($"/circles/{circleId}/matches/{matchId}", sent[0].MatchLink);
+    }
+
+    // US-020 AC6 — fallimento invio email non blocca la dispute
+    [Fact]
+    public async Task DisputeMatch_EmailSendFails_DisputeStillSucceeds()
+    {
+        var (circleId, ids, tokens) = await SetupAsync();
+        SetAuth(tokens[0]);
+        var matchId = GetId(await (await PostMatchAsync(circleId, ids[0], ids[1], ids[2], ids[3]))
+            .Content.ReadFromJsonAsync<JsonElement>());
+
+        _factory.EmailCapture.ShouldThrow = true;
+        try
+        {
+            SetAuth(tokens[1]);
+            var r = await _client.PostAsync($"/circles/{circleId}/matches/{matchId}/dispute", null);
+            Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+
+            await _factory.EmailCapture.WaitUntilCountAsync(
+                () => _factory.EmailCapture.DisputeNotificationsSent.Count(s => s.MatchLink.Contains(matchId.ToString())), 1, TimeSpan.FromSeconds(5));
+            Assert.Equal(1, _factory.EmailCapture.DisputeNotificationsSent.Count(s => s.MatchLink.Contains(matchId.ToString())));
+        }
+        finally
+        {
+            _factory.EmailCapture.ShouldThrow = false;
+        }
+    }
+
     // Non-partecipante → 403
     [Fact]
     public async Task DisputeMatch_NonParticipant_Returns403()
@@ -179,6 +228,15 @@ public class DisputeMatchTests : IClassFixture<DisputeMatchTestFactory>
         return Guid.Parse(doc.RootElement.GetProperty("sub").GetString()!);
     }
 
+    private static string ExtractEmailFromJwt(string jwt)
+    {
+        var payload = jwt.Split('.')[1];
+        var padded = payload + new string('=', (4 - payload.Length % 4) % 4);
+        var bytes = Convert.FromBase64String(padded.Replace('-', '+').Replace('_', '/'));
+        using var doc = JsonDocument.Parse(bytes);
+        return doc.RootElement.GetProperty("email").GetString()!;
+    }
+
     private Task<HttpResponseMessage> PostMatchAsync(Guid circleId, Guid t1p1, Guid t1p2, Guid t2p1, Guid t2p2) =>
         _client.PostAsJsonAsync($"/circles/{circleId}/matches", new
         {
@@ -197,6 +255,7 @@ public class DisputeMatchTests : IClassFixture<DisputeMatchTestFactory>
 public class DisputeMatchTestFactory : WebApplicationFactory<Program>
 {
     public TestDisputeRatingService DisputeRatingService { get; } = new();
+    public TestEmailCapture EmailCapture { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -205,7 +264,8 @@ public class DisputeMatchTestFactory : WebApplicationFactory<Program>
             var toRemove = services
                 .Where(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>)
                          || d.ServiceType == typeof(AppDbContext)
-                         || d.ServiceType.Namespace?.StartsWith("Microsoft.EntityFrameworkCore") == true)
+                         || d.ServiceType.Namespace?.StartsWith("Microsoft.EntityFrameworkCore") == true
+                         || d.ServiceType == typeof(Golp.Api.Services.IEmailService))
                 .ToList();
             foreach (var d in toRemove)
                 services.Remove(d);
@@ -217,6 +277,9 @@ public class DisputeMatchTestFactory : WebApplicationFactory<Program>
                        .UseInternalServiceProvider(sp));
 
             services.AddSingleton<IRatingService>(DisputeRatingService);
+
+            services.AddSingleton(EmailCapture);
+            services.AddScoped<Golp.Api.Services.IEmailService>(sp => sp.GetRequiredService<TestEmailCapture>());
         });
 
         builder.UseEnvironment("Testing");

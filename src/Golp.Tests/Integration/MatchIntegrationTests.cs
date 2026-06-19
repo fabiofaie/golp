@@ -241,6 +241,55 @@ public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
         Assert.Equivalent(new[] { ids[1], ids[2], ids[3] }, call.RecipientUserIds);
     }
 
+    // US-020 AC4 — email di richiesta conferma ai 3 partecipanti, escluso l'inseritore (oltre al push)
+    [Fact]
+    public async Task CreateMatch_SendsConfirmationEmailToThreeRecipients_ExcludingCreator()
+    {
+        var (circleId, ids, tokens) = await SetupAsync();
+        SetAuth(tokens[0]);
+
+        var resp = await PostMatchAsync(circleId, ids[0], ids[1], ids[2], ids[3],
+            new[] { new { team1 = 6, team2 = 4 } });
+
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        var json = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        var matchId = json.GetProperty("id").GetString()!;
+
+        await _factory.EmailCapture.WaitUntilCountAsync(
+            () => _factory.EmailCapture.ConfirmationRequestsSent.Count(s => s.MatchLink.Contains(matchId)), 3, TimeSpan.FromSeconds(5));
+
+        var sent = _factory.EmailCapture.ConfirmationRequestsSent.Where(s => s.MatchLink.Contains(matchId)).ToList();
+        Assert.Equal(3, sent.Count);
+        Assert.All(sent, s => Assert.Contains($"/circles/{circleId}/matches/", s.MatchLink));
+    }
+
+    // US-020 AC6 — fallimento invio email non blocca la creazione partita (fire-and-forget)
+    [Fact]
+    public async Task CreateMatch_EmailSendFails_MatchCreationStillSucceeds()
+    {
+        _factory.EmailCapture.ShouldThrow = true;
+        try
+        {
+            var (circleId, ids, tokens) = await SetupAsync();
+            SetAuth(tokens[0]);
+
+            var resp = await PostMatchAsync(circleId, ids[0], ids[1], ids[2], ids[3],
+                new[] { new { team1 = 6, team2 = 4 } });
+
+            Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+            var json = await resp.Content.ReadFromJsonAsync<JsonElement>();
+            var matchId = json.GetProperty("id").GetString()!;
+
+            await _factory.EmailCapture.WaitUntilCountAsync(
+                () => _factory.EmailCapture.ConfirmationRequestsSent.Count(s => s.MatchLink.Contains(matchId)), 3, TimeSpan.FromSeconds(5));
+            Assert.Equal(3, _factory.EmailCapture.ConfirmationRequestsSent.Count(s => s.MatchLink.Contains(matchId)));
+        }
+        finally
+        {
+            _factory.EmailCapture.ShouldThrow = false;
+        }
+    }
+
     // ─── helpers ──────────────────────────────────────────────────────────────
 
     private async Task<(Guid CircleId, Guid[] Ids, string[] Tokens)> SetupAsync(bool useSets = true)
@@ -316,6 +365,7 @@ public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
 public class MatchTestFactory : WebApplicationFactory<Program>
 {
     public RecordingPushNotificationService PushRecorder { get; } = new();
+    public TestEmailCapture EmailCapture { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -324,7 +374,8 @@ public class MatchTestFactory : WebApplicationFactory<Program>
             var toRemove = services
                 .Where(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>)
                          || d.ServiceType == typeof(AppDbContext)
-                         || d.ServiceType.Namespace?.StartsWith("Microsoft.EntityFrameworkCore") == true)
+                         || d.ServiceType.Namespace?.StartsWith("Microsoft.EntityFrameworkCore") == true
+                         || d.ServiceType == typeof(Golp.Api.Services.IEmailService))
                 .ToList();
             foreach (var d in toRemove)
                 services.Remove(d);
@@ -337,6 +388,9 @@ public class MatchTestFactory : WebApplicationFactory<Program>
 
             services.RemoveAll(typeof(IPushNotificationService));
             services.AddSingleton<IPushNotificationService>(PushRecorder);
+
+            services.AddSingleton(EmailCapture);
+            services.AddScoped<Golp.Api.Services.IEmailService>(sp => sp.GetRequiredService<TestEmailCapture>());
         });
 
         builder.UseEnvironment("Testing");

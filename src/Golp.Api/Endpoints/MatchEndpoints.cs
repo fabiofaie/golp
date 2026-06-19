@@ -28,7 +28,8 @@ public static class MatchEndpoints
         ClaimsPrincipal user,
         AppDbContext db,
         IServiceScopeFactory scopeFactory,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        IConfiguration configuration)
     {
         var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
@@ -123,10 +124,13 @@ public static class MatchEndpoints
         db.MatchConfirmations.Add(creatorConfirmation);
         await db.SaveChangesAsync();
 
-        // US-006: push ai 3 da confermare (escluso l'inseritore), fire-and-forget.
+        // US-006/US-020: push + email ai 3 da confermare (escluso l'inseritore), fire-and-forget.
         // Scope DI nuovo: quello della request viene disposed alla risposta.
         var recipientIds = allPlayers.Where(id => id != userId).ToArray();
         var matchId = match.Id;
+        var circleName = circle.Name;
+        var frontendBase = configuration["Cors:AllowedOrigins:0"] ?? "http://localhost:4200";
+        var matchLink = $"{frontendBase}/circles/{circleId}/matches/{matchId}";
         _ = Task.Run(async () =>
         {
             try
@@ -141,6 +145,35 @@ public static class MatchEndpoints
                 // ma un errore di risoluzione DI non deve restare invisibile
                 loggerFactory.CreateLogger(nameof(MatchEndpoints))
                     .LogWarning(ex, "Push dispatch failed for match {MatchId}", matchId);
+            }
+
+            var emailLogger = loggerFactory.CreateLogger(nameof(MatchEndpoints));
+            try
+            {
+                using var scope = scopeFactory.CreateScope();
+                var scopedDb = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+                var recipientEmails = await scopedDb.Users
+                    .Where(u => recipientIds.Contains(u.Id))
+                    .Select(u => u.Email)
+                    .ToListAsync();
+
+                foreach (var email in recipientEmails)
+                {
+                    try
+                    {
+                        await emailService.SendMatchConfirmationRequestEmailAsync(email, circleName, matchLink);
+                    }
+                    catch (Exception ex)
+                    {
+                        // un destinatario che fallisce non deve impedire l'invio agli altri
+                        emailLogger.LogWarning(ex, "Confirmation email failed for {Email}, match {MatchId}", email, matchId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                emailLogger.LogWarning(ex, "Confirmation email dispatch failed for match {MatchId}", matchId);
             }
         });
 
@@ -347,7 +380,10 @@ public static class MatchEndpoints
         Guid circleId,
         Guid matchId,
         ClaimsPrincipal user,
-        AppDbContext db)
+        AppDbContext db,
+        IServiceScopeFactory scopeFactory,
+        ILoggerFactory loggerFactory,
+        IConfiguration configuration)
     {
         var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
@@ -366,6 +402,32 @@ public static class MatchEndpoints
 
         match.Status = "disputed";
         await db.SaveChangesAsync();
+
+        // US-020: notifica email all'owner del circolo, fire-and-forget (non blocca la dispute).
+        var frontendBase = configuration["Cors:AllowedOrigins:0"] ?? "http://localhost:4200";
+        var matchLink = $"{frontendBase}/circles/{circleId}/matches/{matchId}";
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                using var scope = scopeFactory.CreateScope();
+                var scopedDb = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+
+                var owner = await scopedDb.Circles
+                    .Where(c => c.Id == circleId)
+                    .Select(c => new { c.Name, c.Owner.Email })
+                    .FirstOrDefaultAsync();
+
+                if (owner != null)
+                    await emailService.SendMatchDisputedEmailAsync(owner.Email, owner.Name, matchLink);
+            }
+            catch (Exception ex)
+            {
+                loggerFactory.CreateLogger(nameof(MatchEndpoints))
+                    .LogWarning(ex, "Dispute email dispatch failed for match {MatchId}", matchId);
+            }
+        });
 
         return Results.Ok(new { status = match.Status });
     }
