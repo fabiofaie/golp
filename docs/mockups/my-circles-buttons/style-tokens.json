@@ -1,0 +1,56 @@
+{
+  "colors": {
+    "bg": "#0A0A0A",
+    "surface": "#141414",
+    "surfaceElevated": "#1F1F1F",
+    "border": "#2C2C2C",
+    "borderOwner": "rgba(255, 85, 0, 0.35)",
+    "accent": "#FF5500",
+    "accentHover": "#E64D00",
+    "accentDim": "rgba(255, 85, 0, 0.12)",
+    "textPrimary": "#FFFFFF",
+    "textSecondary": "#9A9A9A",
+    "textPlaceholder": "#484848"
+  },
+  "typography": {
+    "fontFamily": "'Inter', system-ui, -apple-system, sans-serif",
+    "buttonLabel": { "size": "13px", "weight": 600, "letterSpacing": "0.01em" },
+    "sectionLabel": { "size": "10px", "weight": 700, "letterSpacing": "0.08em", "transform": "uppercase" }
+  },
+  "spacing": {
+    "buttonGap": "8px",
+    "rowGap": "10px",
+    "buttonPaddingY": "10px",
+    "buttonPaddingX": "12px",
+    "cardPadding": "20px"
+  },
+  "radius": {
+    "button": "10px",
+    "card": "16px",
+    "badge": "20px"
+  },
+  "motion": {
+    "buttonTransition": "120ms ease-out",
+    "hoverLift": "translateY(-1px)"
+  },
+  "buttonVariants": {
+    "primary": {
+      "background": "var(--color-accent)",
+      "color": "#0A0A0A",
+      "border": "none",
+      "usage": "azione principale a maggior frequenza d'uso (Registra partita)"
+    },
+    "ghostNav": {
+      "background": "transparent",
+      "border": "1px solid var(--color-border)",
+      "color": "var(--color-text-primary)",
+      "usage": "navigazione verso vista dati (Classifica, Partite, Premi, Stats)"
+    },
+    "ghostOwner": {
+      "background": "transparent",
+      "border": "1px dashed var(--color-border-owner)",
+      "color": "var(--color-accent)",
+      "usage": "azioni visibili solo al proprietario del circolo (Invita, + Giocatore)"
+    }
+  }
+}

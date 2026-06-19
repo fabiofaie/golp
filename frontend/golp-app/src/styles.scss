@@ -273,6 +273,79 @@ html, body {
   &:hover { border-color: var(--color-text-secondary); color: var(--color-text-primary); }
 }
 
+/* ---- Card circolo: pulsanti azione con gerarchia (my-circles) ---- */
+.circle-action-row {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.btn-action {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--r-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  padding: var(--sp-3) var(--sp-3);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.12s ease-out, background 0.12s ease-out, border-color 0.12s ease-out;
+  white-space: nowrap;
+
+  svg { flex-shrink: 0; }
+  &:hover { transform: translateY(-1px); }
+}
+
+/* Azione principale della card: a maggior frequenza d'uso */
+.btn-action-primary {
+  background: var(--color-accent);
+  border: none;
+  color: #0A0A0A;
+  &:hover { background: var(--color-accent-hover); }
+}
+
+/* Navigazione verso vista dati: stesso peso per tutte */
+.btn-action-nav {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  &:hover { border-color: var(--color-text-secondary); background: var(--color-surface-elevated); }
+}
+
+/* Owner-only: bordo tratteggiato accent, segnala "visibile solo a te" */
+.btn-action-owner {
+  background: none;
+  border: 1px dashed rgba(255, 85, 0, 0.35);
+  color: var(--color-accent);
+  &:hover { background: var(--color-accent-dim); border-color: var(--color-accent); }
+}
+
+.circle-owner-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+  }
+
+  span {
+    font-size: 9px;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text-placeholder);
+  }
+}
+
 .auth-footer {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
