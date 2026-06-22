@@ -723,4 +723,34 @@ Un job schedulato calcola, alla chiusura di ogni mese/anno, il vincitore di cias
 
 ---
 
-> **PROSSIMO PASSO:** esegui `/eq-plan US-018` per pianificare l'aggiunta manuale di giocatori al circolo, `/eq-plan US-019` per la sessione lunga via refresh token, `/eq-plan US-020` per il refactor email a template + notifiche partita, oppure `/eq-plan US-021` per la notifica email premi mensili/annuali, oppure `/eq-next` per il riepilogo dello stato corrente.
+#### US-022: Numero di versione visibile in login e dashboard
+
+**Epic:** EP-005 | **Priority:** LOW | **Story Points:** 3 | **Status:** PLANNED
+**Blocked by:** -
+
+**Story**
+Come amministratore/sviluppatore del progetto, voglio che la schermata di login e la dashboard mostrino un numero di versione del software, così che possa verificare rapidamente quale build è in esecuzione su ciascun ambiente (prod/test) senza dover ispezionare manualmente il deploy.
+
+**Demonstrates**
+Login e dashboard mostrano una piccola label di versione (es. in footer), non invasiva. La versione è derivata in modo deterministico dall'ultimo commit (hash o data) tramite un algoritmo riconoscibile da chi conosce la logica ma non deducibile dall'utente finale guardando solo il numero. Lo stesso commit produce sempre lo stesso numero di versione.
+
+**Acceptance Criteria**
+- [ ] La schermata di login mostra un numero di versione (es. in un footer discreto)
+- [ ] La dashboard mostra lo stesso numero di versione
+- [ ] Il numero di versione è generato automaticamente ad ogni build, senza intervento manuale (es. da script di build/CI, non da un valore hardcoded da aggiornare a mano)
+- [ ] Lo stesso commit produce sempre lo stesso numero di versione, in build diverse (deterministico)
+- [ ] Build di commit diversi producono numeri di versione diversi, così è possibile verificare se due ambienti (prod/test) eseguono lo stesso codice
+- [ ] Il formato mostrato all'utente è semplice da leggere e comunicare (es. pattern tipo semver o build counter), senza esporre direttamente hash o data del commit
+
+**Out of scope**
+- Changelog visibile all'utente collegato alla versione
+- Versioning semantico "vero" con incrementi manuali di major/minor per breaking change
+- Sincronizzazione di versione tra frontend e backend come requisito vincolante (possono avere numeri propri, da chiarire in piano tecnico)
+
+**Open questions**
+- Algoritmo esatto di trasformazione commit→numero versione (idee da valutare in `/eq-plan`: contatore commit via `git rev-list --count HEAD`, data ultimo commit in formato `YY.MM.DD`, oppure hash troncato mappato a base36/base62)
+- Frontend (build Angular) e backend (assembly .NET) mostrano versioni indipendenti o devono combaciare in un unico numero condiviso?
+
+---
+
+> **PROSSIMO PASSO:** esegui `/eq-plan US-018` per pianificare l'aggiunta manuale di giocatori al circolo, `/eq-plan US-019` per la sessione lunga via refresh token, `/eq-plan US-020` per il refactor email a template + notifiche partita, `/eq-plan US-021` per la notifica email premi mensili/annuali, `/eq-plan US-022` per il numero di versione in login/dashboard, oppure `/eq-next` per il riepilogo dello stato corrente.

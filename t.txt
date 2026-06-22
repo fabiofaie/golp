@@ -1,0 +1,16 @@
+Aiutami a sistemare l'ambiente di rilascio del progetto.
+Ho preparato i DNS in questo modo:
+golp -> front end di prod
+golpapi -> API di prod
+
+golptest -> front end di test
+golpapitest -> api di test
+
+
+tutti puntano allo stesso IP: 4.245.228.135
+
+sul server devo impostare i setting
+
+i database sono entrambi su azure (eqproject.database.windows.net) e si chiamano GolpDb e GolpDbTest.
+
+Aiutami a sistemare i settings secondo queste informazioni. E poi aiutami passo passo nel deploy.

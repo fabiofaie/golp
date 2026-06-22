@@ -63,6 +63,16 @@
                   "with": "src/environments/environment.development.ts"
                 }
               ]
+            },
+            "testing": {
+              "outputHashing": "all",
+              "serviceWorker": "ngsw-config.json",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -75,6 +85,9 @@
             },
             "development": {
               "buildTarget": "golp-app:build:development"
+            },
+            "testing": {
+              "buildTarget": "golp-app:build:testing"
             }
           },
           "defaultConfiguration": "development"
