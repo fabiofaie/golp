@@ -20,6 +20,9 @@ $zipPath = Join-Path $root "publish\golp-frontend-$Env.zip"
 
 Push-Location $appDir
 try {
+    Write-Host "Generazione numero di versione..." -ForegroundColor Cyan
+    node scripts/generate-version.js
+
     if ($Env -eq "Production") {
         Write-Host "Building frontend (production)..." -ForegroundColor Cyan
         npm run build

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>US-024 — Guida installazione</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<div class="phone-frame">
+  <div class="install-guide">
+    <div class="install-guide__header">
+      <a class="install-guide__back" href="index.html">← Torna indietro</a>
+      <h2 class="install-guide__title">Installa Golp sul telefono</h2>
+      <span class="platform-badge" id="badge">📱 Rilevato: Android · Chrome</span>
+
+      <div class="tabs" id="tabs">
+        <button class="tab" data-platform="ios-safari">iOS · Safari</button>
+        <button class="tab" data-platform="android-chrome">Android · Chrome</button>
+        <button class="tab" data-platform="android-samsung">Android · Samsung Internet</button>
+        <button class="tab" data-platform="fallback">Altro (fallback)</button>
+      </div>
+    </div>
+
+    <div class="install-guide__body" id="body">
+      <!-- popolato da app.js -->
+    </div>
+
+    <div class="install-guide__footer">
+      <button class="btn btn-ghost" style="width:100%; padding:12px;" onclick="window.location.href='index.html'">Chiudi guida</button>
+    </div>
+  </div>
+</div>
+
+<p class="demo-note">Mockup statico — i tab simulano il branching automatico per OS+browser rilevato (AC3/AC4/AC6). Nell'app reale il tab corretto è già selezionato senza scelta dell'utente; i tab qui servono solo a dimostrare le 4 varianti di contenuto.</p>
+
+<script src="app.js"></script>
+</body>
+</html>

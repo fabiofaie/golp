@@ -43,7 +43,12 @@
       "Bash(cygpath -w /tmp/icongen)",
       "Read(//c//**)",
       "Read(///tmp/icongen//**)",
-      "PowerShell(dotnet publish *)"
+      "PowerShell(dotnet publish *)",
+      "Bash(npm test *)",
+      "Bash(grep -E \"FAILED$\")",
+      "Bash(dotnet run *)",
+      "Bash(tee /tmp/api.log)",
+      "Bash(powershell -NoProfile -Command 'Get-Process -Name dotnet -ErrorAction SilentlyContinue | Where-Object {$_.MainWindowTitle -eq '\\\\'''\\\\''} | Select-Object Id')"
     ]
   }
 }

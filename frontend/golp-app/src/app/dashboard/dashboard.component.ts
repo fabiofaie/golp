@@ -2,11 +2,12 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { Router } from '@angular/router';
+import { AppVersionComponent } from '../shared/version/app-version.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, AppVersionComponent],
   template: `
     <div class="page">
       <header class="auth-header">
@@ -22,6 +23,8 @@ import { Router } from '@angular/router';
           <a routerLink="/elo-info" class="btn-ghost">Simula una partita</a>
         </div>
       </main>
+
+      <app-version></app-version>
     </div>
   `
 })

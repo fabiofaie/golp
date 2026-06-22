@@ -5,11 +5,12 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../auth.service';
 import { CircleService } from '../../circles/circle.service';
+import { AppVersionComponent } from '../../shared/version/app-version.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, RouterLink],
+  imports: [ReactiveFormsModule, CommonModule, RouterLink, AppVersionComponent],
   templateUrl: './login.component.html'
 })
 export class LoginComponent implements OnInit {

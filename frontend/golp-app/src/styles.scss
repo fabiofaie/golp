@@ -90,6 +90,11 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Riserva spazio per il bottom-sheet di invito installazione PWA (US-024), così non sovrappone bottoni/contenuto sottostante */
+body.has-pwa-install-banner {
+  padding-bottom: 96px;
+}
+
 .page {
   min-height: 100vh;
   max-width: 390px;

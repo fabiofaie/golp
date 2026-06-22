@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>US-024 — Dashboard con invito installazione</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<div class="phone-frame">
+  <div class="app-screen">
+    <h1>Ciao Marco 👋</h1>
+    <p class="lead">Ecco i tuoi circoli</p>
+
+    <div class="fake-card">
+      <div class="fake-line short"></div>
+      <div class="fake-line med"></div>
+      <div class="fake-line short"></div>
+    </div>
+    <div class="fake-card">
+      <div class="fake-line short"></div>
+      <div class="fake-line med"></div>
+      <div class="fake-line short"></div>
+    </div>
+  </div>
+
+  <!-- Install banner: mostrato al primo accesso da browser mobile, non standalone -->
+  <div class="install-banner" id="banner">
+    <button class="install-banner__close" onclick="document.getElementById('banner').style.display='none'" aria-label="Chiudi">✕</button>
+    <div class="install-banner__icon">📲</div>
+    <div class="install-banner__body">
+      <p class="install-banner__title">Golp funziona meglio installata</p>
+      <p class="install-banner__text">Accesso più rapido, notifiche partite, niente barra del browser.</p>
+      <div class="install-banner__actions">
+        <a class="btn btn-primary" href="guide.html?platform=android-chrome">Scopri come</a>
+        <button class="btn btn-ghost" onclick="document.getElementById('banner').style.display='none'">Non ora</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="demo-note">Mockup statico — il banner qui è sempre visibile per demo. Nell'app reale appare solo al primo accesso da browser mobile non-standalone, e non si ripresenta dopo chiusura o installazione (US-024, AC1/AC2).</p>
+
+</body>
+</html>

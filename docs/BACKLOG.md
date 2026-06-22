@@ -1,12 +1,12 @@
 # Backlog — GOLP
 
-**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-06-19
+**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-06-22
 
 ## Riepilogo
 
 - Epic totali: 5
-- Storie totali: 21
-- Storie TODO: 2 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 14
+- Storie totali: 23
+- Storie TODO: 2 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 15
 
 ---
 
@@ -725,7 +725,9 @@ Un job schedulato calcola, alla chiusura di ogni mese/anno, il vincitore di cias
 
 #### US-022: Numero di versione visibile in login e dashboard
 
-**Epic:** EP-005 | **Priority:** LOW | **Story Points:** 3 | **Status:** PLANNED
+**Epic:** EP-005 | **Priority:** LOW | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-06-22):** Review umana OK.
+**Review note (2026-06-22):** Codice in `frontend/golp-app/scripts/generate-version.js` (generator), `frontend/golp-app/src/app/shared/version/app-version.component.ts` (componente condiviso + test), wiring in `scripts/deploy-frontend.ps1`. Verificato manualmente: determinismo stesso-commit (doppia esecuzione → stesso output), build+zip end-to-end con version.ts rigenerato (v38/d11eb98), unit test 2/2 verdi. Reviewer APPROVE — no critical aperti. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-022` (o aggiorna manualmente lo status a `DONE`).
 **Blocked by:** -
 
 **Story**
@@ -753,4 +755,71 @@ Login e dashboard mostrano una piccola label di versione (es. in footer), non in
 
 ---
 
-> **PROSSIMO PASSO:** esegui `/eq-plan US-018` per pianificare l'aggiunta manuale di giocatori al circolo, `/eq-plan US-019` per la sessione lunga via refresh token, `/eq-plan US-020` per il refactor email a template + notifiche partita, `/eq-plan US-021` per la notifica email premi mensili/annuali, `/eq-plan US-022` per il numero di versione in login/dashboard, oppure `/eq-next` per il riepilogo dello stato corrente.
+#### US-023: Aggiornamento automatico dei client dopo un rilascio
+
+**Epic:** EP-005 | **Priority:** LOW | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-22):** Review umana OK.
+**Review note (2026-06-22):** Codice in `frontend/golp-app/src/app/shared/update/` (`AppUpdateService` + `AppUpdateBannerComponent`, con test), wiring in `app.component.ts` (visibilitychange + NavigationEnd), cache hardening in `frontend/golp-app/public/web.config`. 12 unit test nuovi (6 service + 3 banner + 2 wiring AppComponent + build verificato). Test suite: 9 fail pre-esistenti (non toccati da questa storia), 78 verdi. Reviewer APPROVE — no critical aperti. Nota non bloccante: header HTTP reali (`index.html` no-cache, bundle cache lunga) verificati solo a livello build/struttura XML, non su IIS reale — da confermare al primo deploy su Testing. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-023` (o aggiorna manualmente lo status a `DONE`).
+**Blocked by:** -
+
+**Story**
+Come Marco (giocatore amatoriale che usa la PWA installata sul telefono) voglio che l'app mi avvisi quando è disponibile una nuova versione e mi lasci aggiornare con un click, così che dopo un rilascio non resti bloccato su una versione vecchia senza saperlo. Come amministratore/sviluppatore voglio che il meccanismo di cache HTTP non impedisca ai client di scoprire le nuove versioni.
+
+**Demonstrates**
+Dopo un deploy, un utente che ha l'app già aperta (o la riapre dopo averla lasciata in background) vede entro breve tempo un banner non invasivo "Nuova versione disponibile — Aggiorna"; al click, l'app si aggiorna e mostra il nuovo numero di versione (US-022). Nessun reload automatico forzato senza preavviso.
+
+**Acceptance Criteria**
+- [ ] `index.html` viene servito da IIS con cache non persistente (no-cache/validazione), così che un client non resti bloccato su un `index.html` vecchio che referenzia bundle non più esistenti
+- [ ] I bundle con hash di contenuto (JS/CSS generati da Angular CLI) hanno una politica di cache lunga esplicita (gli hash già garantiscono invalidazione automatica ad ogni build diversa)
+- [ ] Quando l'app torna in foreground (utente riapre il tab/la PWA dopo averla lasciata in background) o l'utente naviga tra le pagine principali, l'app verifica se è disponibile una versione più recente
+- [ ] Se una versione più recente è pronta, l'utente vede un banner/avviso non bloccante (niente `confirm()`/`alert()`) con un'azione esplicita per aggiornare
+- [ ] Al click sull'azione di aggiornamento, l'app attiva la nuova versione e si ricarica, mostrando il nuovo numero di versione (coerente con US-022)
+- [ ] Se non è disponibile nessuna versione nuova, non viene mostrato nessun banner (nessun falso positivo)
+- [ ] Il meccanismo di check non genera errori bloccanti se l'app è offline al momento del controllo
+
+**Out of scope**
+- Reload automatico forzato senza interazione dell'utente (si avvisa, non si interrompe il lavoro in corso)
+- Polling continuo a intervalli fissi in background (il check è legato a eventi: ritorno in foreground / navigazione tra pagine principali, non un timer sempre attivo)
+- Versione del backend (.NET API) — fuori scope come già per US-022
+- Un pulsante manuale "Aggiorna applicazione" sempre visibile indipendente dal banner (può essere una storia futura se il banner via eventi si rivela insufficiente)
+
+**Open questions**
+- Posizione e stile del banner di avviso: va deciso in fase di piano/design (toast in alto, barra in dashboard, badge vicino al numero di versione di US-022).
+- `web.config` (`frontend/golp-app/public/web.config`) oggi non ha nessuna direttiva di cache: va aggiunta una regola che tenga `index.html` sempre non-cacheable e dia cache lunga ai bundle hashati — la sintassi IIS esatta (override per singolo file dentro `<staticContent>`) va verificata in fase di piano tecnico.
+- Il meccanismo si basa su `SwUpdate` di `@angular/service-worker` (già registrato in `app.config.ts`, mai usato esplicitamente finora) — va confermato che la versione installata supporti l'API `versionUpdates`/`checkForUpdate()`/`activateUpdate()` usata nel piano.
+
+---
+
+#### US-024: Guida all'installazione della PWA per nuovi utenti da browser
+
+**Epic:** EP-001 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** PLANNED
+**Blocked by:** -
+
+**Story**
+Come Marco (nuovo utente che apre Golp per la prima volta da un browser mobile), voglio che mi venga spiegato che l'app funziona meglio se installata sul telefono, e voglio una mini guida su misura per il mio browser/sistema operativo, così che possa installarla senza dover cercare istruzioni altrove.
+
+**Demonstrates**
+Al primo accesso da browser (non da PWA già installata) su un dispositivo mobile, l'utente vede un messaggio/banner che spiega il beneficio dell'installazione. Se l'utente chiede di vedere la guida, gli viene mostrata una mini guida con gli step specifici per il suo browser (es. Safari iOS vs Chrome Android) e sistema operativo (iOS vs Android), non un'istruzione generica uguale per tutti.
+
+**Acceptance Criteria**
+- [ ] Al primo accesso via browser (non PWA già installata, rilevabile es. tramite `display-mode: standalone`) viene mostrato un messaggio non bloccante che invita all'installazione, spiegando il beneficio
+- [ ] Il messaggio non viene più mostrato nelle sessioni successive una volta che l'utente l'ha chiuso o ha già installato l'app (no banner ripetuto ad ogni visita)
+- [ ] Il sistema rileva browser (es. Safari, Chrome, Samsung Internet, Firefox) e sistema operativo del dispositivo (iOS, Android) lato client
+- [ ] In base a browser+OS rilevati, viene mostrata una mini guida con gli step corretti per quella combinazione (es. iOS Safari: "Condividi → Aggiungi a Home"; Android Chrome: prompt nativo `beforeinstallprompt` o istruzioni "Menu → Installa app")
+- [ ] Se il browser supporta il prompt nativo di installazione (`beforeinstallprompt` su Chrome/Edge Android), la guida offre anche un'azione diretta che lo attiva, oltre alla spiegazione manuale
+- [ ] Se browser/OS non sono supportati per l'installazione PWA (combinazione non riconosciuta), non viene mostrata una guida errata o fuorviante — fallback a un messaggio generico o nessun messaggio
+- [ ] Su desktop il comportamento è gestito esplicitamente (mostrare guida desktop, oppure non mostrare nulla — da chiarire in piano tecnico) e non mostra per errore istruzioni pensate per mobile
+
+**Out of scope**
+- Tracciamento/analytics di quanti utenti installano effettivamente l'app
+- Incentivi o reminder periodici post-rifiuto (un solo invito iniziale, non campagna ricorrente)
+- Installazione automatica o forzata senza azione esplicita dell'utente
+
+**Open questions**
+- Su desktop: mostrare comunque l'invito (con istruzioni desktop) o sopprimerlo del tutto? Da decidere in `/eq-plan`.
+- Se l'utente chiude il banner senza installare, va riproposto dopo N giorni/visite, o mai più nella stessa sessione browser/dispositivo?
+- Lista browser/OS da supportare esplicitamente nella mini guida (almeno Safari iOS, Chrome Android; Samsung Internet e Firefox Android da valutare in piano).
+
+---
+
+> **PROSSIMO PASSO:** esegui `/eq-plan US-018` per pianificare l'aggiunta manuale di giocatori al circolo, `/eq-plan US-019` per la sessione lunga via refresh token, `/eq-plan US-020` per il refactor email a template + notifiche partita, `/eq-plan US-021` per la notifica email premi mensili/annuali, `/eq-plan US-022` per il numero di versione in login/dashboard, `/eq-plan US-023` per l'azione "Aggiorna applicazione" in UI, `/eq-plan US-024` per la guida di installazione PWA, oppure `/eq-next` per il riepilogo dello stato corrente.
