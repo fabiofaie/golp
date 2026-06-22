@@ -5,8 +5,8 @@
 ## Riepilogo
 
 - Epic totali: 5
-- Storie totali: 23
-- Storie TODO: 2 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 15
+- Storie totali: 24
+- Storie TODO: 2 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 16
 
 ---
 
@@ -822,4 +822,34 @@ Al primo accesso da browser (non da PWA già installata) su un dispositivo mobil
 
 ---
 
-> **PROSSIMO PASSO:** esegui `/eq-plan US-018` per pianificare l'aggiunta manuale di giocatori al circolo, `/eq-plan US-019` per la sessione lunga via refresh token, `/eq-plan US-020` per il refactor email a template + notifiche partita, `/eq-plan US-021` per la notifica email premi mensili/annuali, `/eq-plan US-022` per il numero di versione in login/dashboard, `/eq-plan US-023` per l'azione "Aggiorna applicazione" in UI, `/eq-plan US-024` per la guida di installazione PWA, oppure `/eq-next` per il riepilogo dello stato corrente.
+#### US-025: Il proprietario del circolo può registrare partite cui non partecipa
+
+**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-06-22):** Review umana OK.
+**Review note (2026-06-22):** Codice in `src/Golp.Api/Endpoints/MatchEndpoints.cs` (`CreateMatchAsync`: eccezione owner + conferma implicita condizionale), test in `src/Golp.Tests/Integration/MatchIntegrationTests.cs` (2 nuovi + 1 esistente che copre il caso non-owner). Suite: 176 verdi, 9 fail pre-esistenti in `SimulateEndpointTests` (non toccati, confermati identici su main via stash). Reviewer APPROVE — no critical aperti. Deviazione dal piano: errore resta `400` (non `403`) per non rompere test esistente. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-025` (o aggiorna manualmente lo status a `DONE`).
+**Blocked by:** -
+
+**Story**
+Come proprietario di un circolo, voglio poter registrare una partita giocata tra 4 membri anche quando io stesso non sono uno dei 4 giocatori, così che possa inserire i risultati per conto del gruppo senza dover chiedere a uno dei partecipanti di farlo.
+
+**Demonstrates**
+Il proprietario del circolo apre il form di registrazione partita e seleziona 4 giocatori tra i membri, nessuno dei quali è lui stesso: la partita viene creata normalmente. Un membro qualsiasi che non è proprietario e non partecipa alla partita continua a non poter registrarla (resta bloccato come oggi).
+
+**Acceptance Criteria**
+- [ ] Il proprietario del circolo può creare una partita (`POST /circles/{circleId}/matches`) selezionando 4 giocatori che non includono lui stesso
+- [ ] Un membro non-proprietario che tenta di registrare una partita cui non partecipa riceve ancora un errore (comportamento attuale invariato)
+- [ ] Quando il proprietario registra una partita cui non partecipa, la conferma implicita 1/4 riservata all'inseritore NON viene applicata (lui non essendo un giocatore non può "confermare" un risultato di cui non è parte): la partita parte da 0/4 conferme
+- [ ] La partita richiede comunque le conferme di tutti i 4 giocatori effettivi prima di passare a `confirmed`
+- [ ] Nel frontend, il form di registrazione partita permette al proprietario di compilare le 4 posizioni giocatore senza forzare la propria selezione in una delle squadre
+
+**Out of scope**
+- Estendere il privilegio a ruoli diversi dal proprietario (es. "admin di circolo" se introdotto in futuro)
+- Modificare la logica di `force-confirm` esistente (resta una funzionalità separata)
+- Notifiche/email dedicate per questo caso (restano quelle già esistenti per richiesta conferma)
+
+**Open questions**
+- (nessuna)
+
+---
+
+> **PROSSIMO PASSO:** esegui `/eq-plan US-025` per pianificare l'apertura della registrazione partite al proprietario non partecipante, `/eq-plan US-018` per l'aggiunta manuale di giocatori al circolo, `/eq-plan US-019` per la sessione lunga via refresh token, `/eq-plan US-020` per il refactor email a template + notifiche partita, `/eq-plan US-021` per la notifica email premi mensili/annuali, `/eq-plan US-022` per il numero di versione in login/dashboard, `/eq-plan US-023` per l'azione "Aggiorna applicazione" in UI, `/eq-plan US-024` per la guida di installazione PWA, oppure `/eq-next` per il riepilogo dello stato corrente.

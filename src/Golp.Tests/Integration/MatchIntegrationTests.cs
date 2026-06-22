@@ -99,7 +99,7 @@ public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 
-    // AC3 — inseritore non in nessun team → 400
+    // AC3 — inseritore non in nessun team, e non owner → 400
     [Fact]
     public async Task CreateMatch_CreatorNotInTeam_Returns400()
     {
@@ -112,6 +112,50 @@ public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
             new[] { new { team1 = 6, team2 = 4 } });
 
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    // US-025 AC1+AC3 — owner non tra i 4 giocatori → 201, nessuna conferma implicita (0/4)
+    [Fact]
+    public async Task CreateMatch_OwnerNotInTeam_Returns201_NoImplicitConfirmation()
+    {
+        var (circleId, ids, tokens) = await SetupAsync();
+        // ids[0]/tokens[0] è l'owner (vedi SetupAsync): registra una partita tra p2/p3/p4 + un quarto membro.
+        var (p5Id, _) = await RegisterAndJoinAsync(circleId);
+        SetAuth(tokens[0]);
+
+        var resp = await PostMatchAsync(circleId, ids[1], ids[2], ids[3], p5Id,
+            new[] { new { team1 = 6, team2 = 4 } });
+
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        var json = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        var matchId = json.GetProperty("id").GetString()!;
+
+        var listResp = await _client.GetAsync($"/circles/{circleId}/matches");
+        var list = await listResp.Content.ReadFromJsonAsync<JsonElement>();
+        var match = list.EnumerateArray().First(m => m.GetProperty("id").GetString() == matchId);
+
+        Assert.Equal(0, match.GetProperty("confirmationsCount").GetInt32());
+    }
+
+    // US-025 AC2 — owner che PARTECIPA: comportamento invariato, 1/4 conferme (regression guard)
+    [Fact]
+    public async Task CreateMatch_OwnerInTeam_Returns201_WithImplicitConfirmation()
+    {
+        var (circleId, ids, tokens) = await SetupAsync();
+        SetAuth(tokens[0]);
+
+        var resp = await PostMatchAsync(circleId, ids[0], ids[1], ids[2], ids[3],
+            new[] { new { team1 = 6, team2 = 4 } });
+
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        var json = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        var matchId = json.GetProperty("id").GetString()!;
+
+        var listResp = await _client.GetAsync($"/circles/{circleId}/matches");
+        var list = await listResp.Content.ReadFromJsonAsync<JsonElement>();
+        var match = list.EnumerateArray().First(m => m.GetProperty("id").GetString() == matchId);
+
+        Assert.Equal(1, match.GetProperty("confirmationsCount").GetInt32());
     }
 
     // AC5 — tie sets → 400 (sets=true, 1-1)

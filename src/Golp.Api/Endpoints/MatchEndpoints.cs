@@ -65,8 +65,8 @@ public static class MatchEndpoints
         }
 
         var creatorInTeam = req.Team1.Contains(userId) || req.Team2.Contains(userId);
-        if (!creatorInTeam)
-            return Results.BadRequest(new { error = "L'inseritore deve essere uno dei 4 giocatori" });
+        if (!creatorInTeam && circle.OwnerId != userId)
+            return Results.BadRequest(new { error = "L'inseritore deve essere uno dei 4 giocatori o il proprietario del circolo" });
 
         if (req.Sets == null || req.Sets.Length == 0)
             return Results.BadRequest(new { error = "Il punteggio è obbligatorio" });
@@ -111,17 +111,21 @@ public static class MatchEndpoints
             Team2Score = s.Team2,
         }).ToList();
 
-        // TASK-2: inseritore = conferma implicita 1/4
-        var creatorConfirmation = new MatchConfirmation
-        {
-            MatchId     = match.Id,
-            UserId      = userId,
-            ConfirmedAt = DateTimeOffset.UtcNow,
-        };
-
         db.Matches.Add(match);
         db.MatchSets.AddRange(sets);
-        db.MatchConfirmations.Add(creatorConfirmation);
+
+        // Inseritore = conferma implicita 1/4, solo se è uno dei 4 giocatori
+        // (l'owner che registra per altri non partecipa: non può "confermare" un risultato suo).
+        if (creatorInTeam)
+        {
+            db.MatchConfirmations.Add(new MatchConfirmation
+            {
+                MatchId     = match.Id,
+                UserId      = userId,
+                ConfirmedAt = DateTimeOffset.UtcNow,
+            });
+        }
+
         await db.SaveChangesAsync();
 
         // US-006/US-020: push + email ai 3 da confermare (escluso l'inseritore), fire-and-forget.
