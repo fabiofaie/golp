@@ -6,7 +6,7 @@
 
 - Epic totali: 5
 - Storie totali: 32
-- Storie TODO: 8 | PLANNED: 2 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 17
+- Storie TODO: 7 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 19
 
 ---
 
@@ -929,7 +929,9 @@ Apro un link di invito a un circolo: atterro su un componente dedicato che mi ch
 
 #### US-027: Palette colori tema chiaro con contrasto verificato
 
-**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** PLANNED
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-23):** Review umana OK. Token validati live dal tema chiaro funzionante di US-028.
+**Review note (2026-06-23):** Codice in `frontend/golp-app/src/styles.scss` (nuovo blocco `:root.theme-light` con tutte le 65 `--color-*` ridefinite, parallele a quelle scure — verificato 1:1 via grep, nessuna var orfana). Token derivati da `docs/mockups/US-027/style-tokens.json` (mockup comparativo scuro/chiaro in `docs/mockups/US-027/index.html`). Blocco inerte: nessun componente applica la classe `theme-light` in questa storia (attivazione = US-028). Test suite frontend: 115/124 verdi, 9 fail pre-esistenti non toccati (PushNotificationService/AuthService/AppComponent). Reviewer APPROVE — no critical aperti. Nota non bloccante: alcuni valori hardcoded fuori da `:root` (`.score-input`, breakpoint desktop `body`, `.btn-action-primary`, `.feedback-icon`) restano scuri e andranno gestiti quando US-028 attiva il toggle. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-027` (o aggiorna manualmente lo status a `DONE`).
 **Blocked by:** -
 
 **Story**
@@ -959,7 +961,10 @@ Esiste un secondo set di token CSS (tema chiaro) accanto a quello scuro esistent
 
 #### US-028: Switch manuale tema chiaro/scuro con persistenza per device
 
-**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** TODO
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-23):** Review umana OK.
+**Review note (2026-06-23):** Nuovo `frontend/golp-app/src/app/theme/theme.service.ts` (signal + effect che applica classe `theme-light` su `document.documentElement`, default scuro, persistenza `localStorage` chiave `golp_theme`), inject in `app.component.ts` per attivazione al bootstrap. Nuovo `profile/profile.component.ts` (pagina Profilo con toggle Scuro/Chiaro, classi esistenti), rotta `/profilo` protetta in `app.routes.ts`, link in `dashboard.component.ts`. Test: 5 unit (ThemeService) + 3 component (ProfileComponent) + 2 e2e (`e2e/profile-theme.spec.ts`: default scuro, toggle chiaro, persistenza post-reload, cross-pagina) tutti verdi. Suite: 123/132 verdi, 9 fail pre-esistenti non toccati (PushNotificationService/AuthService/AppComponent `should render title` cerca boilerplate Angular rimosso). Reviewer APPROVE — no critical. Nota non bloccante: valori hardcoded fuori `:root` (`.score-input`, breakpoint desktop `body`, `.feedback-icon`) restano scuri anche in tema chiaro (rischio già noto da US-027) — follow-up per renderli tema-aware. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-028` (o aggiorna manualmente lo status a `DONE`).
+**Visual evidence (2026-06-23):** docs/test-results/US-028/report.md — verdetto **APPROVE** dopo fix. Il difetto iniziale (tema chiaro illeggibile su desktop ≥600px per valori CSS hardcoded fuori da `:root`) è stato corretto in reopen: nuovi token `--color-bg-deep`/`--color-input-bg`/`--color-input-border` in `styles.scss` + `style-tokens.json`, `.page{background:var(--color-bg)}`, media query desktop e score-input ora tema-aware. Re-verifica: screenshot `AC-3-FIXED-*` mostrano Profilo e dashboard leggibili in chiaro su desktop, e2e 2/2, suite 123/132 (9 pre-esistenti).
 **Blocked by:** US-027
 
 **Story**

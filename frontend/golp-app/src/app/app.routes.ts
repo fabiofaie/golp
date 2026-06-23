@@ -74,6 +74,11 @@ export const routes: Routes = [
     loadComponent: () => import('./circles/join-circle/join-circle.component').then(m => m.JoinCircleComponent)
   },
   {
+    path: 'profilo',
+    loadComponent: () => import('./profile/profile.component').then(m => m.ProfileComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'elo-info',
     loadComponent: () => import('./elo-info/elo-info.component').then(m => m.EloInfoComponent)
   },

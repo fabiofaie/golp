@@ -21,6 +21,7 @@ import { AppVersionComponent } from '../shared/version/app-version.component';
           <a routerLink="/circles" class="btn-ghost">I miei circoli</a>
           <a routerLink="/circles/new" class="btn-ghost">+ Nuovo circolo</a>
           <a routerLink="/elo-info" class="btn-ghost">Simula una partita</a>
+          <a routerLink="/profilo" class="btn-ghost">Profilo</a>
         </div>
       </main>
 

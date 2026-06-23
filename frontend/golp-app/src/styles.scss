@@ -3,6 +3,9 @@
 
 :root {
   --color-bg:               #0A0A0A;
+  --color-bg-deep:          #050505;
+  --color-input-bg:         #0F0F0F;
+  --color-input-border:     #3A3A3A;
   --color-surface:          #141414;
   --color-surface-elevated: #1F1F1F;
   --color-border:           #2C2C2C;
@@ -78,6 +81,87 @@
   --shadow-md: 0 4px 16px rgba(0,0,0,0.6);
 }
 
+/* Tema chiaro (US-027) — override dei token --color-* per attivazione futura (US-028).
+   Fonte di verità: docs/mockups/US-027/style-tokens.json (sezione "light"). */
+:root.theme-light {
+  --color-bg:               #F7F5F2;
+  --color-bg-deep:          #EDEAE5;
+  --color-input-bg:         #FFFFFF;
+  --color-input-border:     #D9D5CF;
+  --color-surface:          #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-border:           #E2DFDA;
+  --color-accent:           #FF5500;
+  --color-accent-hover:     #E64D00;
+  --color-accent-dim:       rgba(255, 85, 0, 0.10);
+  --color-text-primary:     #1A1A1A;
+  --color-text-secondary:   #5F5C57;
+  --color-text-placeholder: #A39E97;
+  --color-error:            #D92D20;
+  --color-error-bg:         rgba(217, 45, 32, 0.08);
+  --color-success:          #15803D;
+  --color-success-bg:       rgba(21, 128, 61, 0.08);
+
+  --color-gold:             #B45309;
+  --color-gold-bg:          rgba(180, 83, 9, 0.10);
+  --color-gold-border:      rgba(180, 83, 9, 0.28);
+  --color-silver:           #6B7280;
+  --color-silver-bg:        rgba(107, 114, 128, 0.10);
+  --color-silver-border:    rgba(107, 114, 128, 0.25);
+  --color-bronze:           #92400E;
+  --color-bronze-bg:        rgba(146, 64, 14, 0.10);
+  --color-bronze-border:    rgba(146, 64, 14, 0.25);
+  --color-current-user-bg:  rgba(255, 85, 0, 0.06);
+  --color-current-border:   rgba(255, 85, 0, 0.30);
+  --color-rating:           #FF5500;
+  --color-unclassified-bg:  #F0EDE8;
+
+  --color-partner:          #15803D;
+  --color-partner-bg:       rgba(21, 128, 61, 0.08);
+  --color-partner-border:   rgba(21, 128, 61, 0.22);
+  --color-partner-ring:     #15803D;
+  --color-partner-ring-trk: rgba(21, 128, 61, 0.15);
+  --shadow-partner:         0 4px 20px rgba(21, 128, 61, 0.12);
+  --color-opponent:         #D92D20;
+  --color-opponent-bg:      rgba(217, 45, 32, 0.08);
+  --color-opponent-border:  rgba(217, 45, 32, 0.22);
+  --color-opponent-ring:    #D92D20;
+  --color-opponent-ring-trk:rgba(217, 45, 32, 0.15);
+  --shadow-opponent:        0 4px 20px rgba(217, 45, 32, 0.12);
+
+  --color-sport-padel:          #FF5500;
+  --color-sport-beachtennis:    #0284C7;
+  --color-sport-basket2v2:      #B45309;
+  --color-sport-burraco:        #7C3AED;
+
+  --color-team1:        #FF5500;
+  --color-team1-bg:     rgba(255, 85, 0, 0.08);
+  --color-team1-border: rgba(255, 85, 0, 0.25);
+  --color-team2:        #0284C7;
+  --color-team2-bg:     rgba(2, 132, 199, 0.08);
+  --color-team2-border: rgba(2, 132, 199, 0.25);
+
+  --color-pending:        #B45309;
+  --color-pending-bg:     rgba(180, 83, 9, 0.10);
+  --color-pending-border: rgba(180, 83, 9, 0.25);
+  --color-disputed:       #D92D20;
+  --color-disputed-bg:    rgba(217, 45, 32, 0.10);
+  --color-disputed-border:rgba(217, 45, 32, 0.25);
+  --color-dot-empty:      #D9D5CF;
+  --color-dot-filled:     #15803D;
+  --color-dot-you:        #FF5500;
+
+  --color-delta-positive:        #15803D;
+  --color-delta-positive-bg:     rgba(21, 128, 61, 0.08);
+  --color-delta-positive-border: rgba(21, 128, 61, 0.22);
+  --color-delta-negative:        #D92D20;
+  --color-delta-negative-bg:     rgba(217, 45, 32, 0.08);
+  --color-delta-negative-border: rgba(217, 45, 32, 0.22);
+  --color-delta-zero:            #6B7280;
+  --color-delta-zero-bg:         rgba(107, 114, 128, 0.08);
+  --color-delta-zero-border:     rgba(107, 114, 128, 0.20);
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
@@ -99,6 +183,7 @@ body.has-pwa-install-banner {
   min-height: 100vh;
   max-width: 390px;
   margin: 0 auto;
+  background: var(--color-bg);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -754,8 +839,8 @@ body.has-pwa-install-banner {
 
 .score-input {
   width: 100%;
-  background: #0F0F0F;
-  border: 1px solid #3A3A3A;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-input-border);
   border-radius: var(--r-md);
   color: var(--color-text-primary);
   font-family: var(--font-family);
@@ -778,8 +863,8 @@ body.has-pwa-install-banner {
 .score-single-input {
   width: 100%;
   max-width: 120px;
-  background: #0F0F0F;
-  border: 1px solid #3A3A3A;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-input-border);
   border-radius: var(--r-md);
   color: var(--color-text-primary);
   font-family: var(--font-family);
@@ -858,7 +943,7 @@ body.has-pwa-install-banner {
 .score-team-label--t2 { color: var(--color-team2); }
 
 @media (min-width: 600px) {
-  body { background: #050505; }
+  body { background: var(--color-bg-deep); }
   .page {
     margin-top: 40px;
     margin-bottom: 40px;

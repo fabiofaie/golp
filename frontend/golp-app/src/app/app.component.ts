@@ -4,6 +4,7 @@ import { filter } from 'rxjs';
 import { AppUpdateService } from './shared/update/app-update.service';
 import { AppUpdateBannerComponent } from './shared/update/app-update-banner.component';
 import { PwaInstallBannerComponent } from './shared/pwa-install/pwa-install-banner.component';
+import { ThemeService } from './theme/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -16,6 +17,8 @@ export class AppComponent implements OnInit {
 
   private readonly router = inject(Router);
   private readonly updateService = inject(AppUpdateService);
+  // Inject al bootstrap: registra l'effect del tema e applica la classe salvata (US-028)
+  private readonly themeService = inject(ThemeService);
 
   ngOnInit(): void {
     document.addEventListener('visibilitychange', () => {
