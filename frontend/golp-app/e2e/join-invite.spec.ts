@@ -38,7 +38,7 @@ test.describe('Join invite — US-015', () => {
     const { inviteToken } = await createCircleAndGetInviteToken(ownerToken);
 
     await page.goto(`http://localhost:4200/join?token=${inviteToken}`);
-    await page.getByRole('button', { name: 'No, sono nuovo' }).click();
+    await page.getByRole('button', { name: 'No, non ho mai usato GOLP' }).click();
 
     await expect(page.locator('a', { hasText: 'Registrati' })).toBeVisible();
     const href = await page.locator('a', { hasText: 'Registrati' }).getAttribute('href');

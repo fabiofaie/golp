@@ -20,8 +20,8 @@
 
       <div style="display:flex; flex-direction:column; gap:12px; margin-top:32px;">
         <p style="text-align:center;">Hai già usato l'app GOLP?</p>
-        <button type="button" class="btn-primary" (click)="answerHasUsedGolp(true)">Sì, ho già un account</button>
-        <button type="button" (click)="answerHasUsedGolp(false)">No, sono nuovo</button>
+        <button type="button" class="btn-primary" (click)="answerHasUsedGolp(false)">No, non ho mai usato GOLP</button>
+        <button type="button" class="btn-ghost" style="text-align:center;" (click)="answerHasUsedGolp(true)">Sì, ho già un account</button>
       </div>
     } @else if (hasUsedGolp) {
       <h1 class="auth-title">Bentornato!</h1>
