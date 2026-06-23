@@ -1,12 +1,12 @@
 # Backlog — GOLP
 
-**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-06-22
+**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-06-23
 
 ## Riepilogo
 
 - Epic totali: 5
-- Storie totali: 24
-- Storie TODO: 2 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 16
+- Storie totali: 25
+- Storie TODO: 2 | PLANNED: 2 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 16
 
 ---
 
@@ -478,6 +478,7 @@ Come creatore di un circolo, voglio generare un link di invito e condividerlo tr
 Dal dettaglio del circolo, il creatore preme "Invita" e ottiene una dialog con il link generato, il pulsante "Copia link" e il pulsante "Invia via email" (mailto). Il link è unico per circolo e non scade.
 
 **Acceptance Criteria**
+
 - [ ] Solo il creatore del circolo vede il pulsante "Invita"
 - [ ] Premendo "Invita" si apre una dialog/modal con il link di invito
 - [ ] `GET /circles/{circleId}/invite-link` restituisce `{ inviteToken: "..." }` (403 se non creatore)
@@ -487,11 +488,13 @@ Dal dettaglio del circolo, il creatore preme "Invita" e ottiene una dialog con i
 - [ ] Il link funziona anche su mobile (WhatsApp, altri — è un URL standard da incollare)
 
 **Out of scope**
+
 - Scadenza o revoca del link (il token è permanente per ora)
 - Invito diretto via app (notifica push, SMS)
 - Gestione di più token attivi contemporaneamente
 
 **Open questions**
+
 - Il token va rigenerato se il creatore preme di nuovo "Invita", o è sempre lo stesso?
 
 ---
@@ -510,6 +513,7 @@ Come utente che ha ricevuto un link di invito, voglio registrarmi al sistema e t
 L'utente apre `/join?token=<token>`, viene reindirizzato alla registrazione (o al login se già ha un account), e dopo l'autenticazione è iscritto al circolo con rating iniziale 1000 e vede il circolo nella propria lista.
 
 **Acceptance Criteria**
+
 - [ ] La rotta `/join?token=<token>` è accessibile senza autenticazione
 - [ ] Se l'utente non è autenticato, viene reindirizzato a `/register?inviteToken=<token>` (token preservato)
 - [ ] Se l'utente è già autenticato, viene reindirizzato a `/login?inviteToken=<token>`
@@ -519,10 +523,12 @@ L'utente apre `/join?token=<token>`, viene reindirizzato alla registrazione (o a
 - [ ] Un utente già membro che usa lo stesso link riceve messaggio informativo, non errore
 
 **Out of scope**
+
 - Approvazione manuale del creatore prima dell'ingresso
 - Limite al numero di iscrizioni via link
 
 **Open questions**
+
 - Se il token è valido ma il circolo è stato eliminato, cosa mostrare?
 
 ---
@@ -530,7 +536,8 @@ L'utente apre `/join?token=<token>`, viene reindirizzato alla registrazione (o a
 ---
 
 ## EP-005 — Configurazione e Amministrazione
-*Funzionalità per gestire la piattaforma senza dover rilasciare nuove versioni: sport, parametri ELO, configurazioni operative.*
+
+_Funzionalità per gestire la piattaforma senza dover rilasciare nuove versioni: sport, parametri ELO, configurazioni operative._
 
 #### US-016: Sport configurabili da database
 
@@ -544,6 +551,7 @@ Come amministratore della piattaforma, voglio gestire l'elenco degli sport suppo
 Un amministratore aggiunge un nuovo sport (`padel 4v4`) direttamente sul DB. Senza alcun deploy, l'endpoint `/sports` lo restituisce già e i giocatori possono selezionarlo durante la registrazione di una partita.
 
 **Acceptance Criteria**
+
 - [ ] Esiste una tabella `Sports` nel DB con colonne: `Id`, `Key`, `DisplayName`, `PointUnit`, `Sets`, `TeamSize`, `IsActive`
 - [ ] L'endpoint `GET /sports` legge da DB (non da `SportsConfig` statico) e restituisce solo sport con `IsActive = true`
 - [ ] `SportsConfig` statico viene rimosso o deprecato: nessun endpoint lo usa più direttamente
@@ -552,11 +560,13 @@ Un amministratore aggiunge un nuovo sport (`padel 4v4`) direttamente sul DB. Sen
 - [ ] La validazione sport nelle partite (`MatchEndpoints`) usa i valori da DB, non dalla classe statica
 
 **Out of scope**
+
 - UI di amministrazione per gestire sport (CRUD via interfaccia grafica)
 - Autenticazione/autorizzazione per la modifica della tabella Sports (gestita solo via accesso diretto al DB)
 - Parametri ELO (K, amplifier) in database
 
 **Open questions**
+
 - La colonna `Key` deve essere stabile (usata come FK nelle partite esistenti) o è solo display? Verificare se il dominio usa già una stringa-chiave o un ID numerico per riferirsi agli sport nei match registrati.
 
 ---
@@ -575,6 +585,7 @@ Come giocatore, voglio leggere una spiegazione semplice di come viene calcolato 
 Fabio è in classifica con 1050 punti. Clicca "Come funziona il rating?" dalla pagina classifica. Legge la spiegazione in linguaggio semplice. Inserisce: sé stesso 1050, compagno 980, avversari 1100 e 1090, risultato vittoria. La pagina mostra "+18 punti" per lui e "+15 per il compagno". Torna alla classifica.
 
 **Acceptance Criteria**
+
 - [ ] Esiste una route `/elo-info` (o simile) con una pagina standalone raggiungibile senza login
 - [ ] La pagina contiene una sezione testuale che spiega l'algoritmo ELO in linguaggio non tecnico (cosa è il rating iniziale, come sale/scende, ruolo del K dinamico per i primi 15 match)
 - [ ] La pagina contiene un form simulatore con 4 campi rating (proprio, compagno, avversario 1, avversario 2) e un selettore "modalità risultato"
@@ -586,12 +597,14 @@ Fabio è in classifica con 1050 punti. Clicca "Come funziona il rating?" dalla p
 - [ ] Dalla dashboard è presente un link/card "Simula una partita" che porta a `/elo-info`
 
 **Out of scope**
+
 - Storico simulazioni salvate
 - Simulazione multi-round o tornei
 - Personalizzazione parametri ELO (K, amplifier) da UI
 - Login obbligatorio per accedere alla pagina
 
 **Open questions**
+
 - -
 
 ---
@@ -610,6 +623,7 @@ Come proprietario di un circolo, voglio registrare direttamente un nuovo giocato
 Il proprietario, dalla pagina di gestione del circolo, inserisce email e nome di un giocatore. Se l'email non esiste già nel sistema, viene creato un nuovo account e il giocatore riceve una email con le istruzioni per impostare la password e accedere. Se l'email corrisponde a un utente già registrato, il proprietario vede il nome associato e deve confermare prima che il giocatore venga aggiunto come membro del circolo (rating iniziale 1000); il giocatore riceve una email di notifica che è stato aggiunto al circolo.
 
 **Acceptance Criteria**
+
 - [ ] Solo il proprietario del circolo può accedere alla funzione di aggiunta manuale giocatore (autorizzazione lato API)
 - [ ] Il form richiede almeno email; se l'email non è già registrata, richiede anche nome (e altri campi minimi richiesti dalla registrazione)
 - [ ] Se l'email esiste già nel DB, l'API restituisce il nome associato e NON crea un nuovo utente; il frontend mostra il nome e chiede conferma esplicita prima di procedere
@@ -621,11 +635,13 @@ Il proprietario, dalla pagina di gestione del circolo, inserisce email e nome di
 - [ ] L'email del nuovo giocatore deve passare la stessa validazione di formato usata in registrazione
 
 **Out of scope**
+
 - Import massivo di giocatori (CSV/bulk)
 - Possibilità per il giocatore aggiunto di rifiutare l'iscrizione al circolo
 - Modifica successiva dell'email del giocatore aggiunto
 
 **Open questions**
+
 - L'email in ambiente di sviluppo passa da `DevelopmentEmailService` (solo console): verificare se basta per questa storia o serve già SMTP reale.
 - Il "nome" per un nuovo utente creato qui è obbligatorio o può restare vuoto fino al primo login dell'utente stesso?
 
@@ -645,6 +661,7 @@ Come giocatore che ha installato l'app come PWA in home screen, voglio restare l
 Login emette un access token JWT di breve durata (es. 1h, come oggi) e un refresh token long-lived persistito in DB. Quando l'access token scade, il frontend lo rinnova automaticamente tramite il refresh token senza richiedere credenziali. Ogni rinnovo valido estende la scadenza del refresh token di altri N giorni (sliding window). Se l'utente non usa l'app per più di N giorni, il refresh token scade e serve nuovo login. Il proprietario dell'account può revocare le sessioni attive (logout singolo device o da tutti i device); un cambio password revoca tutti i refresh token esistenti.
 
 **Acceptance Criteria**
+
 - [ ] Login e registrazione restituiscono access token (JWT, breve durata) + refresh token (long-lived)
 - [ ] Endpoint `POST /auth/refresh` scambia un refresh token valido con un nuovo access token; il refresh token stesso viene rinnovato (scadenza estesa di N giorni dal momento dell'uso)
 - [ ] Durata refresh token configurabile via `appsettings.json` (es. `Jwt:RefreshTokenExpiryDays`), default 90
@@ -656,11 +673,13 @@ Login emette un access token JWT di breve durata (es. 1h, come oggi) e un refres
 - [ ] Nessuna eccezione alle regole di isolamento multi-tenant per `circle_id` introdotta dal nuovo schema di token
 
 **Out of scope**
+
 - Scadenza assoluta indipendente dall'uso (no limite massimo "comunque rilogin dopo X tempo")
 - Dashboard utente per visualizzare/gestire le proprie sessioni/device attivi (solo revoca implicita su logout/cambio password)
 - Sistema di analytics completo (funnel, eventi): il tracciamento serve solo a stimare utenti/dispositivi attivi
 
 **Open questions**
+
 - Rilevazione riuso di un refresh token già consumato (rotazione con detection furto): da includere in questa storia o rimandata a una storia successiva di hardening?
 
 ---
@@ -678,6 +697,7 @@ Come team di sviluppo, voglio che le email siano generate da template HTML riuti
 Le 3 email esistenti (reset password, attivazione giocatore, notifica aggiunta circolo) sono renderizzate da file template HTML in `src/Golp.Api/EmailTemplates/` con placeholder, non più da stringhe C# inline. Quando viene creata una partita, i 4 partecipanti (esclusi i confirmatori automatici se previsti) ricevono sia la push esistente sia una nuova email di richiesta conferma. Quando una partita passa a stato "disputed", il proprietario del circolo riceve una email di notifica.
 
 **Acceptance Criteria**
+
 - [ ] Esiste un meccanismo di rendering template (es. `IEmailTemplateRenderer`) che carica un file HTML da `EmailTemplates/` e sostituisce placeholder (`{{Nome}}`) con valori a runtime
 - [ ] Le 3 email esistenti (`SendPasswordResetEmailAsync`, `SendCircleActivationEmailAsync`, `SendAddedToCircleNotificationAsync`) usano il nuovo meccanismo di template, nessun HTML inline rimane in `SmtpEmailService.cs`/`DevelopmentEmailService.cs`
 - [ ] Esiste un layout/header-footer condiviso tra i template per branding consistente (logo/nome GOLP, colori base)
@@ -687,12 +707,14 @@ Le 3 email esistenti (reset password, attivazione giocatore, notifica aggiunta c
 - [ ] `DevelopmentEmailService` (fallback console, usato quando SMTP non configurato) supporta gli stessi template, stampa il contenuto risolto in console invece di inviarlo
 
 **Out of scope**
+
 - Preferenze/opt-out email per utente (tutte le email previste restano obbligatorie, nessuna UI impostazioni) — deciso in AN-001
 - Notifica email per "conferma forzata dal proprietario" (US-013) o "partita confermata con esito" — non richieste in questa storia
 - Localizzazione multi-lingua dei template (solo italiano)
 - Giocatore del mese/anno via email — storia separata (richiede anche scheduler), vedi AN-001
 
 **Open questions**
+
 - (nessuna — risolte in AN-001 durante discussione 2026-06-19)
 
 ---
@@ -709,6 +731,7 @@ Come giocatore che vince il premio "giocatore del mese" o "giocatore dell'anno" 
 Un job schedulato calcola, alla chiusura di ogni mese/anno, il vincitore di ciascun circolo (stessa logica oggi esposta on-demand da `GET /circles/{id}/awards`) e invia una email al vincitore con il periodo e il risultato. Il job gira una sola volta per periodo per circolo, anche se eseguito più volte (idempotente).
 
 **Acceptance Criteria**
+
 - [ ] Esiste un meccanismo di esecuzione schedulata (es. `IHostedService`/`BackgroundService`) che gira periodicamente (es. ogni notte) e verifica se è il primo giorno di un nuovo mese/anno per cui calcolare il vincitore del periodo precedente
 - [ ] Per ogni circolo con almeno 1 partita confermata nel periodo, calcola il vincitore con la stessa logica di `GetAwardsAsync` esistente
 - [ ] Il vincitore riceve una email con periodo (es. "Giugno 2026"), nome circolo, e il risultato (net gain / partite giocate)
@@ -717,11 +740,13 @@ Un job schedulato calcola, alla chiusura di ogni mese/anno, il vincitore di cias
 - [ ] Se l'invio email fallisce per un circolo, gli altri circoli del batch continuano a essere processati (un fallimento non blocca gli altri)
 
 **Out of scope**
+
 - Notifica per "secondo posto" o classifiche complete via email (solo il vincitore)
 - UI per configurare l'orario/frequenza del job (valore fisso in configurazione)
 - Esecuzione retroattiva per periodi passati già conclusi prima del rilascio di questa storia
 
 **Open questions**
+
 - Il job deve girare su un thread in-process (`BackgroundService` nello stesso processo API) o un processo separato (Azure Function/WebJob)? Impatta deploy su Azure App Service esistente — da chiarire in fase di piano tecnico.
 
 ---
@@ -740,6 +765,7 @@ Come amministratore/sviluppatore del progetto, voglio che la schermata di login 
 Login e dashboard mostrano una piccola label di versione (es. in footer), non invasiva. La versione è derivata in modo deterministico dall'ultimo commit (hash o data) tramite un algoritmo riconoscibile da chi conosce la logica ma non deducibile dall'utente finale guardando solo il numero. Lo stesso commit produce sempre lo stesso numero di versione.
 
 **Acceptance Criteria**
+
 - [ ] La schermata di login mostra un numero di versione (es. in un footer discreto)
 - [ ] La dashboard mostra lo stesso numero di versione
 - [ ] Il numero di versione è generato automaticamente ad ogni build, senza intervento manuale (es. da script di build/CI, non da un valore hardcoded da aggiornare a mano)
@@ -748,11 +774,13 @@ Login e dashboard mostrano una piccola label di versione (es. in footer), non in
 - [ ] Il formato mostrato all'utente è semplice da leggere e comunicare (es. pattern tipo semver o build counter), senza esporre direttamente hash o data del commit
 
 **Out of scope**
+
 - Changelog visibile all'utente collegato alla versione
 - Versioning semantico "vero" con incrementi manuali di major/minor per breaking change
 - Sincronizzazione di versione tra frontend e backend come requisito vincolante (possono avere numeri propri, da chiarire in piano tecnico)
 
 **Open questions**
+
 - Algoritmo esatto di trasformazione commit→numero versione (idee da valutare in `/eq-plan`: contatore commit via `git rev-list --count HEAD`, data ultimo commit in formato `YY.MM.DD`, oppure hash troncato mappato a base36/base62)
 - Frontend (build Angular) e backend (assembly .NET) mostrano versioni indipendenti o devono combaciare in un unico numero condiviso?
 
@@ -772,6 +800,7 @@ Come Marco (giocatore amatoriale che usa la PWA installata sul telefono) voglio 
 Dopo un deploy, un utente che ha l'app già aperta (o la riapre dopo averla lasciata in background) vede entro breve tempo un banner non invasivo "Nuova versione disponibile — Aggiorna"; al click, l'app si aggiorna e mostra il nuovo numero di versione (US-022). Nessun reload automatico forzato senza preavviso.
 
 **Acceptance Criteria**
+
 - [ ] `index.html` viene servito da IIS con cache non persistente (no-cache/validazione), così che un client non resti bloccato su un `index.html` vecchio che referenzia bundle non più esistenti
 - [ ] I bundle con hash di contenuto (JS/CSS generati da Angular CLI) hanno una politica di cache lunga esplicita (gli hash già garantiscono invalidazione automatica ad ogni build diversa)
 - [ ] Quando l'app torna in foreground (utente riapre il tab/la PWA dopo averla lasciata in background) o l'utente naviga tra le pagine principali, l'app verifica se è disponibile una versione più recente
@@ -781,12 +810,14 @@ Dopo un deploy, un utente che ha l'app già aperta (o la riapre dopo averla lasc
 - [ ] Il meccanismo di check non genera errori bloccanti se l'app è offline al momento del controllo
 
 **Out of scope**
+
 - Reload automatico forzato senza interazione dell'utente (si avvisa, non si interrompe il lavoro in corso)
 - Polling continuo a intervalli fissi in background (il check è legato a eventi: ritorno in foreground / navigazione tra pagine principali, non un timer sempre attivo)
 - Versione del backend (.NET API) — fuori scope come già per US-022
 - Un pulsante manuale "Aggiorna applicazione" sempre visibile indipendente dal banner (può essere una storia futura se il banner via eventi si rivela insufficiente)
 
 **Open questions**
+
 - Posizione e stile del banner di avviso: va deciso in fase di piano/design (toast in alto, barra in dashboard, badge vicino al numero di versione di US-022).
 - `web.config` (`frontend/golp-app/public/web.config`) oggi non ha nessuna direttiva di cache: va aggiunta una regola che tenga `index.html` sempre non-cacheable e dia cache lunga ai bundle hashati — la sintassi IIS esatta (override per singolo file dentro `<staticContent>`) va verificata in fase di piano tecnico.
 - Il meccanismo si basa su `SwUpdate` di `@angular/service-worker` (già registrato in `app.config.ts`, mai usato esplicitamente finora) — va confermato che la versione installata supporti l'API `versionUpdates`/`checkForUpdate()`/`activateUpdate()` usata nel piano.
@@ -806,6 +837,7 @@ Come Marco (nuovo utente che apre Golp per la prima volta da un browser mobile),
 Al primo accesso da browser (non da PWA già installata) su un dispositivo mobile, l'utente vede un messaggio/banner che spiega il beneficio dell'installazione. Se l'utente chiede di vedere la guida, gli viene mostrata una mini guida con gli step specifici per il suo browser (es. Safari iOS vs Chrome Android) e sistema operativo (iOS vs Android), non un'istruzione generica uguale per tutti.
 
 **Acceptance Criteria**
+
 - [ ] Al primo accesso via browser (non PWA già installata, rilevabile es. tramite `display-mode: standalone`) viene mostrato un messaggio non bloccante che invita all'installazione, spiegando il beneficio
 - [ ] Il messaggio non viene più mostrato nelle sessioni successive una volta che l'utente l'ha chiuso o ha già installato l'app (no banner ripetuto ad ogni visita)
 - [ ] Il sistema rileva browser (es. Safari, Chrome, Samsung Internet, Firefox) e sistema operativo del dispositivo (iOS, Android) lato client
@@ -815,11 +847,13 @@ Al primo accesso da browser (non da PWA già installata) su un dispositivo mobil
 - [ ] Su desktop il comportamento è gestito esplicitamente (mostrare guida desktop, oppure non mostrare nulla — da chiarire in piano tecnico) e non mostra per errore istruzioni pensate per mobile
 
 **Out of scope**
+
 - Tracciamento/analytics di quanti utenti installano effettivamente l'app
 - Incentivi o reminder periodici post-rifiuto (un solo invito iniziale, non campagna ricorrente)
 - Installazione automatica o forzata senza azione esplicita dell'utente
 
 **Open questions**
+
 - Su desktop: mostrare comunque l'invito (con istruzioni desktop) o sopprimerlo del tutto? Da decidere in `/eq-plan`.
 - Se l'utente chiude il banner senza installare, va riproposto dopo N giorni/visite, o mai più nella stessa sessione browser/dispositivo?
 - Lista browser/OS da supportare esplicitamente nella mini guida (almeno Safari iOS, Chrome Android; Samsung Internet e Firefox Android da valutare in piano).
@@ -840,6 +874,7 @@ Come proprietario di un circolo, voglio poter registrare una partita giocata tra
 Il proprietario del circolo apre il form di registrazione partita e seleziona 4 giocatori tra i membri, nessuno dei quali è lui stesso: la partita viene creata normalmente. Un membro qualsiasi che non è proprietario e non partecipa alla partita continua a non poter registrarla (resta bloccato come oggi).
 
 **Acceptance Criteria**
+
 - [ ] Il proprietario del circolo può creare una partita (`POST /circles/{circleId}/matches`) selezionando 4 giocatori che non includono lui stesso
 - [ ] Un membro non-proprietario che tenta di registrare una partita cui non partecipa riceve ancora un errore (comportamento attuale invariato)
 - [ ] Quando il proprietario registra una partita cui non partecipa, la conferma implicita 1/4 riservata all'inseritore NON viene applicata (lui non essendo un giocatore non può "confermare" un risultato di cui non è parte): la partita parte da 0/4 conferme
@@ -847,13 +882,48 @@ Il proprietario del circolo apre il form di registrazione partita e seleziona 4 
 - [ ] Nel frontend, il form di registrazione partita permette al proprietario di compilare le 4 posizioni giocatore senza forzare la propria selezione in una delle squadre
 
 **Out of scope**
+
 - Estendere il privilegio a ruoli diversi dal proprietario (es. "admin di circolo" se introdotto in futuro)
 - Modificare la logica di `force-confirm` esistente (resta una funzionalità separata)
 - Notifiche/email dedicate per questo caso (restano quelle già esistenti per richiesta conferma)
 
 **Open questions**
+
 - (nessuna)
 
 ---
 
-> **PROSSIMO PASSO:** esegui `/eq-plan US-025` per pianificare l'apertura della registrazione partite al proprietario non partecipante, `/eq-plan US-018` per l'aggiunta manuale di giocatori al circolo, `/eq-plan US-019` per la sessione lunga via refresh token, `/eq-plan US-020` per il refactor email a template + notifiche partita, `/eq-plan US-021` per la notifica email premi mensili/annuali, `/eq-plan US-022` per il numero di versione in login/dashboard, `/eq-plan US-023` per l'azione "Aggiorna applicazione" in UI, `/eq-plan US-024` per la guida di installazione PWA, oppure `/eq-next` per il riepilogo dello stato corrente.
+#### US-026: Flusso di invito a un circolo specializzato per nuovi vs esistenti utenti
+
+**Epic:** EP-001 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** REVIEW
+**Review note (2026-06-23):** Backend: nuovo `GET /circles/invite/{token}` anonimo in `src/Golp.Api/Endpoints/CircleEndpoints.cs` (valida token senza consumarlo), test in `src/Golp.Tests/Integration/JoinByTokenEndpointTests.cs` (2 nuovi, 189 totali verdi). Frontend: `circle.service.ts` (+`getInviteInfo`), `join-circle.component.ts/html` refactorati con step esplicito "Hai già usato GOLP?" (sì→login, no→registrazione, autenticato→auto-join invariato), 7 test component verdi (124 totali, 9 fail pre-esistenti non toccati: AuthService/PushNotification/AppComponent, confermati su file non modificati da questa storia). E2E `join-invite.spec.ts` estesa, 5/5 verdi. Reviewer APPROVE — no critical aperti. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-026` (o aggiorna manualmente lo status a `DONE`).
+**Blocked by:** -
+
+**Story**
+Come giocatore invitato a unirmi a un circolo, voglio che il link di invito mi porti a una pagina dedicata che mi chiede esplicitamente se ho già usato GOLP, così che venga indirizzato direttamente al passo giusto (registrazione se sono nuovo, semplice conferma di associazione se ho già un account) senza passaggi inutili.
+
+**Demonstrates**
+Apro un link di invito a un circolo: atterro su un componente dedicato che mi chiede "Hai già usato GOLP?". Se rispondo no, vado dritto alla form di registrazione (con il circolo di destinazione già noto). Se rispondo sì, dopo il login mi viene chiesta solo la conferma di associazione al circolo (niente form di registrazione).
+
+**Acceptance Criteria**
+
+- [ ] Il link di invito atterra su un nuovo componente dedicato (non più direttamente su login o registrazione) che chiede esplicitamente "Hai già usato l'app GOLP?"
+- [ ] Se l'utente risponde "no", viene portato alla form di registrazione esistente, con il circolo target dell'invito già associato al flusso (nessuna form di scelta del circolo)
+- [ ] Se l'utente risponde "sì", viene portato al login; dopo login riuscito, vede solo una schermata di conferma associazione al circolo (no form di registrazione)
+- [ ] Dopo la conferma di associazione (caso "sì") o dopo la registrazione completata (caso "no"), l'utente risulta membro del circolo invitante
+- [ ] Il token/codice di invito originale resta valido durante tutto il flusso (registrazione o login), anche se l'utente naviga avanti e indietro tra le scelte
+- [ ] Un token di invito non valido o già usato mostra un errore chiaro, prima ancora di chiedere "hai già usato GOLP?"
+
+**Out of scope**
+
+- Modificare il meccanismo di generazione/distribuzione del link di invito stesso (resta come oggi)
+- Inviti multipli/bulk o gestione di inviti scaduti con rinnovo automatico
+- Onboarding guidato post-registrazione oltre l'associazione al circolo (es. tour prodotto)
+
+**Open questions**
+
+- (nessuna)
+
+---
+
+> **PROSSIMO PASSO:** esegui `/eq-plan US-026` per pianificare il flusso di invito specializzato nuovo/esistente, `oppure `/eq-next` per il riepilogo dello stato corrente.

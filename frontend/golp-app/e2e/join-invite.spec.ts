@@ -23,15 +23,38 @@ async function createCircleAndGetInviteToken(ownerToken: string): Promise<{ circ
 }
 
 test.describe('Join invite — US-015', () => {
-  test('unauthenticated user opens /join?token=X — sees invite page with register/login CTAs', async ({ page }) => {
+  test('unauthenticated user opens /join?token=X — sees the "hai già usato GOLP?" question', async ({ page }) => {
     const ownerToken = await registerUser(uniqueEmail('jo_owner'), 'Join Owner');
     const { inviteToken } = await createCircleAndGetInviteToken(ownerToken);
 
     await page.goto(`http://localhost:4200/join?token=${inviteToken}`);
 
     await expect(page.locator('h1')).toContainText('invitato', { timeout: 10000 });
+    await expect(page.getByText('Hai già usato')).toBeVisible();
+  });
+
+  test('unauthenticated new user answers "no" — goes to register with inviteToken preserved', async ({ page }) => {
+    const ownerToken = await registerUser(uniqueEmail('jo_owner_no'), 'Join Owner No');
+    const { inviteToken } = await createCircleAndGetInviteToken(ownerToken);
+
+    await page.goto(`http://localhost:4200/join?token=${inviteToken}`);
+    await page.getByRole('button', { name: 'No, sono nuovo' }).click();
+
     await expect(page.locator('a', { hasText: 'Registrati' })).toBeVisible();
+    const href = await page.locator('a', { hasText: 'Registrati' }).getAttribute('href');
+    expect(href).toContain(`inviteToken=${inviteToken}`);
+  });
+
+  test('unauthenticated existing user answers "sì" — goes to login with inviteToken preserved', async ({ page }) => {
+    const ownerToken = await registerUser(uniqueEmail('jo_owner_si'), 'Join Owner Si');
+    const { inviteToken } = await createCircleAndGetInviteToken(ownerToken);
+
+    await page.goto(`http://localhost:4200/join?token=${inviteToken}`);
+    await page.getByRole('button', { name: 'Sì, ho già un account' }).click();
+
     await expect(page.locator('a', { hasText: 'Accedi' })).toBeVisible();
+    const href = await page.locator('a', { hasText: 'Accedi' }).getAttribute('href');
+    expect(href).toContain(`inviteToken=${inviteToken}`);
   });
 
   test('invalid token — authenticated user sees error message', async ({ page }) => {

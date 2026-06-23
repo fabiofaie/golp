@@ -12,6 +12,7 @@ public static class CircleEndpoints
     public static IEndpointRouteBuilder MapCircleEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/sports", GetSports);
+        app.MapGet("/circles/invite/{token}", GetInviteInfoAsync);
 
         var circles = app.MapGroup("/circles").RequireAuthorization();
         circles.MapGet("/", GetAllCirclesAsync);
@@ -276,6 +277,18 @@ public static class CircleEndpoints
             .ToList();
 
         return Results.Ok(new { classified, unclassified });
+    }
+
+    // GET /circles/invite/{token} — public, valida un token senza consumarlo
+    private static async Task<IResult> GetInviteInfoAsync(
+        string token,
+        AppDbContext db)
+    {
+        var circle = await db.Circles.FirstOrDefaultAsync(c => c.JoinCode == token);
+        if (circle == null)
+            return Results.NotFound(new { valid = false });
+
+        return Results.Ok(new { valid = true, circleName = circle.Name });
     }
 
     // POST /circles/join-by-token — join tramite inviteToken (JoinCode)

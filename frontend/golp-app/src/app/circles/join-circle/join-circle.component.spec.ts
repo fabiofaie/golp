@@ -5,13 +5,18 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { JoinCircleComponent } from './join-circle.component';
 import { AuthService } from '../../auth/auth.service';
-import { CircleService, JoinByTokenResult } from '../circle.service';
+import { CircleService, InviteInfo, JoinByTokenResult } from '../circle.service';
 
 const TOKEN = 'abc123token';
 const CIRCLE_ID = 'circle-uuid-1';
+const CIRCLE_NAME = 'Padel Club Roma';
 
 function makeResult(overrides: Partial<JoinByTokenResult> = {}): JoinByTokenResult {
   return { circleId: CIRCLE_ID, myRating: 1000, alreadyMember: false, ...overrides };
+}
+
+function makeInviteInfo(overrides: Partial<InviteInfo> = {}): InviteInfo {
+  return { valid: true, circleName: CIRCLE_NAME, ...overrides };
 }
 
 describe('JoinCircleComponent', () => {
@@ -25,7 +30,8 @@ describe('JoinCircleComponent', () => {
     routerSpy.serializeUrl.and.returnValue('');
     authSvc = jasmine.createSpyObj('AuthService', ['isAuthenticated']);
     authSvc.isAuthenticated.and.returnValue(authenticated);
-    circleSvc = jasmine.createSpyObj('CircleService', ['joinByToken']);
+    circleSvc = jasmine.createSpyObj('CircleService', ['joinByToken', 'getInviteInfo']);
+    circleSvc.getInviteInfo.and.returnValue(of(makeInviteInfo()));
 
     TestBed.configureTestingModule({
       imports: [JoinCircleComponent],
@@ -53,20 +59,54 @@ describe('JoinCircleComponent', () => {
     fixture.detectChanges();
     const comp = fixture.componentInstance;
     expect(comp.error).toBe('Link non valido o scaduto');
+    expect(circleSvc.getInviteInfo).not.toHaveBeenCalled();
   });
 
-  it('unauthenticated user with token — shows register/login CTAs, no redirect', () => {
+  it('invalid token — shows error without asking the question', () => {
+    setup(TOKEN, false);
+    circleSvc.getInviteInfo.and.returnValue(throwError(() => ({ status: 404 })));
+    const fixture = TestBed.createComponent(JoinCircleComponent);
+    fixture.detectChanges();
+    const comp = fixture.componentInstance;
+    expect(comp.error).toBe('Link non valido o scaduto');
+    expect(comp.hasUsedGolp).toBeNull();
+  });
+
+  it('unauthenticated user with valid token — shows the "hai già usato GOLP?" question', () => {
     setup(TOKEN, false);
     const fixture = TestBed.createComponent(JoinCircleComponent);
     fixture.detectChanges();
     const comp = fixture.componentInstance;
     expect(comp.error).toBe('');
+    expect(comp.hasUsedGolp).toBeNull();
     expect(circleSvc.joinByToken).not.toHaveBeenCalled();
     const el: HTMLElement = fixture.nativeElement;
-    expect(el.textContent).toContain('Registrati');
+    expect(el.textContent).toContain('Hai già usato');
   });
 
-  it('authenticated user with valid token — joins and navigates to circle', () => {
+  it('answering "no" shows the register CTA with inviteToken in query params', () => {
+    setup(TOKEN, false);
+    const fixture = TestBed.createComponent(JoinCircleComponent);
+    fixture.detectChanges();
+    fixture.componentInstance.answerHasUsedGolp(false);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.textContent).toContain('Registrati');
+    expect(fixture.componentInstance.inviteTokenParam).toEqual({ inviteToken: TOKEN });
+  });
+
+  it('answering "sì" shows the login CTA with inviteToken in query params', () => {
+    setup(TOKEN, false);
+    const fixture = TestBed.createComponent(JoinCircleComponent);
+    fixture.detectChanges();
+    fixture.componentInstance.answerHasUsedGolp(true);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.textContent).toContain('Accedi');
+    expect(fixture.componentInstance.inviteTokenParam).toEqual({ inviteToken: TOKEN });
+  });
+
+  it('authenticated user with valid token — skips the question, joins and navigates to circle', () => {
     setup(TOKEN, true);
     circleSvc.joinByToken.and.returnValue(of(makeResult()));
     const fixture = TestBed.createComponent(JoinCircleComponent);
@@ -77,7 +117,7 @@ describe('JoinCircleComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/circles']);
   });
 
-  it('authenticated user with invalid token — shows error', () => {
+  it('authenticated user — join failure shows error', () => {
     setup(TOKEN, true);
     circleSvc.joinByToken.and.returnValue(throwError(() => ({ status: 404 })));
     const fixture = TestBed.createComponent(JoinCircleComponent);

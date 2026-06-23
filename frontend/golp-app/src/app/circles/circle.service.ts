@@ -111,6 +111,11 @@ export interface JoinByTokenResult {
   alreadyMember: boolean;
 }
 
+export interface InviteInfo {
+  valid: boolean;
+  circleName?: string;
+}
+
 export interface AddMemberResult {
   exists: boolean;
   name?: string;
@@ -165,6 +170,10 @@ export class CircleService {
 
   joinByToken(inviteToken: string): Observable<JoinByTokenResult> {
     return this.http.post<JoinByTokenResult>(`${this.base}/circles/join-by-token`, { inviteToken });
+  }
+
+  getInviteInfo(token: string): Observable<InviteInfo> {
+    return this.http.get<InviteInfo>(`${this.base}/circles/invite/${token}`);
   }
 
   checkOrAddMember(circleId: string, email: string, name?: string, confirmed = false): Observable<AddMemberResult> {

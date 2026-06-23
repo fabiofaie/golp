@@ -21,6 +21,7 @@ export class JoinCircleComponent implements OnInit {
   error = '';
   alreadyMember = false;
   circleName = '';
+  hasUsedGolp: boolean | null = null;
 
   get inviteTokenParam(): Record<string, string> {
     return this.token ? { inviteToken: this.token } : {};
@@ -34,23 +35,43 @@ export class JoinCircleComponent implements OnInit {
       return;
     }
 
-    if (this.authSvc.isAuthenticated()) {
-      this.loading = true;
-      this.circleSvc.joinByToken(this.token).subscribe({
-        next: (res) => {
-          if (res.alreadyMember) {
-            this.alreadyMember = true;
-            this.loading = false;
-            setTimeout(() => this.router.navigate(['/circles']), 2000);
-          } else {
-            this.router.navigate(['/circles']);
-          }
-        },
-        error: () => {
-          this.loading = false;
-          this.error = 'Link non valido o scaduto';
-        },
-      });
+    this.loading = true;
+    this.circleSvc.getInviteInfo(this.token).subscribe({
+      next: (info) => {
+        this.circleName = info.circleName ?? '';
+        this.continueAfterValidToken();
+      },
+      error: () => {
+        this.loading = false;
+        this.error = 'Link non valido o scaduto';
+      },
+    });
+  }
+
+  answerHasUsedGolp(answer: boolean): void {
+    this.hasUsedGolp = answer;
+  }
+
+  private continueAfterValidToken(): void {
+    if (!this.authSvc.isAuthenticated()) {
+      this.loading = false;
+      return;
     }
+
+    this.circleSvc.joinByToken(this.token).subscribe({
+      next: (res) => {
+        if (res.alreadyMember) {
+          this.alreadyMember = true;
+          this.loading = false;
+          setTimeout(() => this.router.navigate(['/circles']), 2000);
+        } else {
+          this.router.navigate(['/circles']);
+        }
+      },
+      error: () => {
+        this.loading = false;
+        this.error = 'Link non valido o scaduto';
+      },
+    });
   }
 }

@@ -84,6 +84,32 @@ public class JoinByTokenEndpointTests : IClassFixture<JoinByTokenTestFactory>
         Assert.Equal(1000, body.GetProperty("myRating").GetInt32());
     }
 
+    [Fact]
+    public async Task InviteInfo_ValidToken_Returns200WithCircleName()
+    {
+        var (token, _) = await SetupCircleWithInviteAsync();
+        _client.DefaultRequestHeaders.Authorization = null;
+
+        var r = await _client.GetAsync($"/circles/invite/{token}");
+
+        Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+        var body = await r.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(body.GetProperty("valid").GetBoolean());
+        Assert.False(string.IsNullOrEmpty(body.GetProperty("circleName").GetString()));
+    }
+
+    [Fact]
+    public async Task InviteInfo_InvalidToken_Returns404()
+    {
+        _client.DefaultRequestHeaders.Authorization = null;
+
+        var r = await _client.GetAsync("/circles/invite/nonexistenttoken");
+
+        Assert.Equal(HttpStatusCode.NotFound, r.StatusCode);
+        var body = await r.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.False(body.GetProperty("valid").GetBoolean());
+    }
+
     // ─── helpers ────────────────────────────────────────────────────────────────
 
     private async Task<(string InviteToken, Guid CircleId)> SetupCircleWithInviteAsync()

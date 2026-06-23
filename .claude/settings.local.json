@@ -49,7 +49,12 @@
       "Bash(dotnet run *)",
       "Bash(tee /tmp/api.log)",
       "Bash(powershell -NoProfile -Command 'Get-Process -Name dotnet -ErrorAction SilentlyContinue | Where-Object {$_.MainWindowTitle -eq '\\\\'''\\\\''} | Select-Object Id')",
-      "Bash(npx jest *)"
+      "Bash(npx jest *)",
+      "PowerShell(dotnet user-secrets init *)",
+      "PowerShell(dotnet user-secrets set *)",
+      "PowerShell(dotnet user-secrets list *)",
+      "Bash(pkill -f \"dotnet.*Golp.Api\")",
+      "Bash(pkill -f \"ng serve\\\\|@angular/cli\")"
     ]
   }
 }

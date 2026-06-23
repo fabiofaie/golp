@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve --proxy-config proxy.conf.js",
     "build": "ng build",
+    "serve:push": "ng build && npx http-server dist/golp-app/browser -p 4200",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "e2e": "npx playwright test",

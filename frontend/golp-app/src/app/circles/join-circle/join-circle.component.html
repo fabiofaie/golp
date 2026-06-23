@@ -14,16 +14,31 @@
       <a routerLink="/dashboard" class="btn-primary" style="text-align:center;">Vai alla dashboard</a>
     } @else if (alreadyMember) {
       <p style="text-align:center; margin-bottom:16px;">Sei già membro di questo circolo. Reindirizzamento…</p>
-    } @else {
+    } @else if (hasUsedGolp === null) {
       <h1 class="auth-title">Sei stato invitato!</h1>
-      <p class="auth-subtitle">Accedi o registrati per unirti al circolo.</p>
+      <p class="auth-subtitle">{{ circleName ? ('Unisciti a ' + circleName + '.') : 'Unisciti al circolo.' }}</p>
+
+      <div style="display:flex; flex-direction:column; gap:12px; margin-top:32px;">
+        <p style="text-align:center;">Hai già usato l'app GOLP?</p>
+        <button type="button" class="btn-primary" (click)="answerHasUsedGolp(true)">Sì, ho già un account</button>
+        <button type="button" (click)="answerHasUsedGolp(false)">No, sono nuovo</button>
+      </div>
+    } @else if (hasUsedGolp) {
+      <h1 class="auth-title">Bentornato!</h1>
+      <p class="auth-subtitle">Accedi per confermare l'associazione al circolo.</p>
+
+      <div style="display:flex; flex-direction:column; gap:12px; margin-top:32px;">
+        <a [routerLink]="['/login']" [queryParams]="inviteTokenParam" class="btn-primary" style="text-align:center;">
+          Accedi
+        </a>
+      </div>
+    } @else {
+      <h1 class="auth-title">Benvenuto su GOLP!</h1>
+      <p class="auth-subtitle">Registrati per unirti al circolo.</p>
 
       <div style="display:flex; flex-direction:column; gap:12px; margin-top:32px;">
         <a [routerLink]="['/register']" [queryParams]="inviteTokenParam" class="btn-primary" style="text-align:center;">
           Registrati
-        </a>
-        <a [routerLink]="['/login']" [queryParams]="inviteTokenParam" style="text-align:center; font-size:13px; color:var(--color-text-secondary); text-decoration:none; display:block;">
-          Hai già un account? Accedi →
         </a>
       </div>
     }
