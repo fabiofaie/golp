@@ -6,7 +6,7 @@
 
 - Epic totali: 5
 - Storie totali: 25
-- Storie TODO: 2 | PLANNED: 2 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 16
+- Storie TODO: 2 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 17
 
 ---
 
@@ -895,7 +895,8 @@ Il proprietario del circolo apre il form di registrazione partita e seleziona 4 
 
 #### US-026: Flusso di invito a un circolo specializzato per nuovi vs esistenti utenti
 
-**Epic:** EP-001 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** REVIEW
+**Epic:** EP-001 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-23):** Review umana OK.
 **Review note (2026-06-23):** Backend: nuovo `GET /circles/invite/{token}` anonimo in `src/Golp.Api/Endpoints/CircleEndpoints.cs` (valida token senza consumarlo), test in `src/Golp.Tests/Integration/JoinByTokenEndpointTests.cs` (2 nuovi, 189 totali verdi). Frontend: `circle.service.ts` (+`getInviteInfo`), `join-circle.component.ts/html` refactorati con step esplicito "Hai già usato GOLP?" (sì→login, no→registrazione, autenticato→auto-join invariato), 7 test component verdi (124 totali, 9 fail pre-esistenti non toccati: AuthService/PushNotification/AppComponent, confermati su file non modificati da questa storia). E2E `join-invite.spec.ts` estesa, 5/5 verdi. Reviewer APPROVE — no critical aperti. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-026` (o aggiorna manualmente lo status a `DONE`).
 **Blocked by:** -
 

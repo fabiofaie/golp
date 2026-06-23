@@ -5,12 +5,19 @@
 .EXAMPLE
   ./scripts/deploy-api.ps1 -Env Production
   ./scripts/deploy-api.ps1 -Env Testing
+  ./scripts/deploy-api.ps1 -Env Production -FirebaseServiceAccountKeyPath "C:\Users\<tu>\secrets\golp\serviceAccountKey.json"
 #>
 param(
     [Parameter(Mandatory = $true)]
     [ValidateSet("Production", "Testing")]
-    [string]$Env
+    [string]$Env,
+
+    # Path al serviceAccountKey.json (vedi docs/firebase-setup.md, step 4).
+    # Se omesso, le push notification restano disabilitate nel pacchetto pubblicato.
+    [string]$FirebaseServiceAccountKeyPath
 )
+
+$FirebaseVapidPublicKey = "BO_2P0f2FoKqd6r5n5Vp5cvvXJFmyxRrmZFw-PGw1D_x9E55Z2TMe6euVAtYx0eYxSNAHsOiUzR18mx-XuXXlMo"
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
@@ -43,6 +50,27 @@ $envVarNode = $xml.CreateElement("environmentVariable")
 $envVarNode.SetAttribute("name", "ASPNETCORE_ENVIRONMENT")
 $envVarNode.SetAttribute("value", $Env)
 $envVarsNode.AppendChild($envVarNode) | Out-Null
+
+Write-Host "Iniezione Firebase:VapidPublicKey in web.config..." -ForegroundColor Cyan
+$vapidNode = $xml.CreateElement("environmentVariable")
+$vapidNode.SetAttribute("name", "Firebase__VapidPublicKey")
+$vapidNode.SetAttribute("value", $FirebaseVapidPublicKey)
+$envVarsNode.AppendChild($vapidNode) | Out-Null
+
+if ($FirebaseServiceAccountKeyPath) {
+    if (-not (Test-Path $FirebaseServiceAccountKeyPath)) {
+        throw "FirebaseServiceAccountKeyPath non trovato: $FirebaseServiceAccountKeyPath"
+    }
+    Write-Host "Iniezione Firebase:ServiceAccountJson in web.config..." -ForegroundColor Cyan
+    $saJson = Get-Content -Raw $FirebaseServiceAccountKeyPath
+    $saNode = $xml.CreateElement("environmentVariable")
+    $saNode.SetAttribute("name", "Firebase__ServiceAccountJson")
+    $saNode.SetAttribute("value", $saJson)
+    $envVarsNode.AppendChild($saNode) | Out-Null
+}
+else {
+    Write-Host "FirebaseServiceAccountKeyPath non specificato: push notification disabilitate in questo pacchetto." -ForegroundColor Yellow
+}
 
 $xml.Save($webConfigPath)
 
