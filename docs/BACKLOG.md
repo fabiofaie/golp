@@ -5,8 +5,8 @@
 ## Riepilogo
 
 - Epic totali: 5
-- Storie totali: 25
-- Storie TODO: 2 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 17
+- Storie totali: 32
+- Storie TODO: 8 | PLANNED: 2 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 17
 
 ---
 
@@ -927,4 +927,206 @@ Apro un link di invito a un circolo: atterro su un componente dedicato che mi ch
 
 ---
 
-> **PROSSIMO PASSO:** esegui `/eq-plan US-026` per pianificare il flusso di invito specializzato nuovo/esistente, `oppure `/eq-next` per il riepilogo dello stato corrente.
+#### US-027: Palette colori tema chiaro con contrasto verificato
+
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** PLANNED
+**Blocked by:** -
+
+**Story**
+Come utente dell'app, voglio una palette colori chiara alternativa a quella scura attuale, così che possa scegliere il tema più leggibile per me senza perdere distinzione visiva tra elementi (oro/argento/bronzo, partner/avversario, sport, stati di errore/successo).
+
+**Demonstrates**
+Esiste un secondo set di token CSS (tema chiaro) accanto a quello scuro esistente in `styles.scss`: sfondo, superfici, testo, border invertiti su base chiara; i colori semantici (accent, oro/argento/bronzo, partner/avversario, sport, errore/successo) sono ricalibrati per garantire contrasto leggibile (AA) su sfondo chiaro, pur restando riconoscibili come "lo stesso colore" del tema scuro.
+
+**Acceptance Criteria**
+
+- [ ] Esiste un set completo di token colore per il tema chiaro, parallelo a quello scuro esistente (stessa lista di variabili `--color-*`)
+- [ ] Testo primario/secondario su sfondo chiaro rispetta un contrasto minimo WCAG AA (4.5:1 per testo normale, 3:1 per testo grande)
+- [ ] I colori oro/argento/bronzo (classifica) restano distinguibili tra loro su sfondo chiaro
+- [ ] I colori partner/avversario (statistiche) restano distinguibili tra loro su sfondo chiaro
+- [ ] I colori per sport (padel/beach tennis/basket/burraco) restano distinguibili tra loro su sfondo chiaro
+- [ ] I colori di errore/successo restano riconoscibili (non confondibili con altri stati) su sfondo chiaro
+- [ ] Nessuna pagina esistente applica ancora il tema chiaro in questa storia (solo i token sono definiti, l'attivazione è in US-028)
+
+**Out of scope**
+- Attivazione/switch del tema (vedi US-028)
+- Modifiche al layout o alla struttura dei componenti, solo colori
+
+**Open questions**
+- (nessuna)
+
+---
+
+#### US-028: Switch manuale tema chiaro/scuro con persistenza per device
+
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** TODO
+**Blocked by:** US-027
+
+**Story**
+Come utente dell'app, voglio poter scegliere tra tema scuro e tema chiaro da una pagina impostazioni, così che la mia scelta resti applicata ad ogni mia visita successiva su questo dispositivo.
+
+**Demonstrates**
+Una nuova pagina "Profilo" (raggiungibile dall'area autenticata) mostra un controllo per scegliere tema scuro/chiaro. L'app parte sempre in tema scuro di default per un utente che non ha mai scelto; cambiando il controllo, l'interfaccia si aggiorna immediatamente con i token di US-027; la scelta resta valida nelle visite successive sullo stesso browser/device, anche dopo logout/login.
+
+**Acceptance Criteria**
+
+- [ ] Esiste una pagina/sezione "Profilo" raggiungibile dall'area autenticata con un controllo tema scuro/chiaro
+- [ ] Senza una scelta precedente salvata, l'app applica il tema scuro di default
+- [ ] Cambiando il controllo, l'interfaccia applica immediatamente la palette corrispondente (tutte le pagine, non solo quella impostazioni) senza reload manuale
+- [ ] La scelta di tema viene salvata in `localStorage` (non sul backend, non legata all'account)
+- [ ] Ricaricando la pagina o tornando sull'app in una sessione successiva sullo stesso device, il tema scelto resta applicato
+- [ ] Su un device/browser diverso (o dopo pulizia localStorage), l'app torna al default scuro
+
+**Out of scope**
+- Sincronizzazione della preferenza tra device diversi o legata all'account (richiederebbe backend, non in questa storia)
+- Tema automatico basato su `prefers-color-scheme` del sistema operativo
+- Pagina impostazioni con altre opzioni oltre al tema (resta minimale, solo il toggle tema in questa storia)
+
+**Open questions**
+- (nessuna)
+
+---
+
+#### US-029: Attivazione/disattivazione notifiche push dalla pagina Profilo
+
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** TODO
+**Blocked by:** US-028
+
+**Story**
+Come utente dell'app, voglio attivare o disattivare le notifiche push dalla pagina Profilo, così che possa controllare se ricevere notifiche del browser senza dover modificare i permessi del browser stesso.
+
+**Demonstrates**
+Nella pagina Profilo (introdotta in US-028) appare un toggle "Notifiche push" oltre al tema. Attivandolo, viene richiesto il permesso del browser (se non già concesso) e si registra la subscription esistente (`PushNotificationService`); disattivandolo, la subscription viene rimossa e l'utente non riceve più notifiche su quel device. Lo stato del toggle riflette sempre lo stato reale del permesso/subscription al caricamento della pagina.
+
+**Acceptance Criteria**
+
+- [ ] La pagina Profilo mostra un toggle "Notifiche push" accanto al selettore tema
+- [ ] Attivando il toggle quando il permesso browser non è ancora stato richiesto, viene mostrato il prompt nativo del browser; se l'utente nega, il toggle torna su "off" e mostra un messaggio che spiega come riattivarlo dalle impostazioni del browser
+- [ ] Attivando il toggle con permesso già concesso, viene creata/registrata la subscription push tramite `PushNotificationService` esistente
+- [ ] Disattivando il toggle, la subscription push lato browser/backend viene rimossa
+- [ ] Al caricamento della pagina, il toggle riflette lo stato reale corrente (subscription attiva sì/no), non solo un valore salvato localmente
+- [ ] Se il browser non supporta le notifiche push, il toggle è disabilitato con un messaggio esplicativo invece di fallire silenziosamente
+
+**Out of scope**
+- Granularità per tipo di notifica (es. solo conferme partita vs solo inviti) — è on/off globale
+- Notifiche push su più device contemporaneamente gestite da questa storia (ogni device gestisce la propria subscription)
+
+**Open questions**
+- (nessuna)
+
+---
+
+#### US-030: Modifica nome visualizzato dalla pagina Profilo
+
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** TODO
+**Blocked by:** US-028
+
+**Story**
+Come utente dell'app, voglio poter modificare il mio nome visualizzato dalla pagina Profilo, così che non resti fissato a quello scelto in fase di registrazione se cambia o lo sbaglio.
+
+**Demonstrates**
+Nella pagina Profilo (introdotta in US-028) appare un campo con il nome visualizzato attuale (`User.Name`), modificabile e salvabile. Dopo il salvataggio, il nuovo nome è visibile ovunque venga mostrato il nome utente (classifica, profilo, conferme partita) senza richiedere logout/login.
+
+**Acceptance Criteria**
+
+- [ ] La pagina Profilo mostra un campo "Nome visualizzato" precompilato con il valore attuale
+- [ ] Salvando un nuovo valore valido, viene chiamato un endpoint dedicato che aggiorna `User.Name` e l'interfaccia mostra una conferma di salvataggio
+- [ ] Il nuovo nome compare subito (senza re-login) in tutte le viste che mostrano il nome utente nella sessione corrente (es. header, classifica, lista partite)
+- [ ] Un nome vuoto o solo spazi viene rifiutato con un messaggio di errore, nessuna chiamata API viene fatta
+- [ ] Un nome troppo lungo (oltre il limite definito lato backend) viene rifiutato con messaggio di errore prima del salvataggio
+
+**Out of scope**
+- Modifica di email o password da questa storia (restano flussi separati)
+- Cronologia/audit dei cambi nome
+- Unicità del nome visualizzato tra utenti (non è un vincolo richiesto)
+
+**Open questions**
+- (nessuna)
+
+---
+
+#### US-031: Logout da tutti i device dal Profilo
+
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** TODO
+**Blocked by:** US-028
+
+**Story**
+Come utente dell'app, voglio poter disconnettere tutte le sessioni attive su qualsiasi device dalla pagina Profilo, così che possa proteggere il mio account se temo accessi non autorizzati o ho perso un device.
+
+**Demonstrates**
+Nella pagina Profilo appare un'azione "Esci da tutti i device". Attivandola, tutti i JWT emessi finora per l'utente diventano invalidi (anche quello della sessione corrente), e l'utente viene riportato al login. Un nuovo login emette un token valido normalmente.
+
+**Acceptance Criteria**
+
+- [ ] Esiste un meccanismo di revoca lato backend (es. versione/`security stamp` su `User`, controllato ad ogni validazione JWT) dato che oggi i token non sono revocabili
+- [ ] L'azione "Esci da tutti i device" richiede una conferma esplicita prima di eseguire (azione distruttiva per le sessioni)
+- [ ] Dopo l'azione, qualsiasi richiesta autenticata con un token emesso prima della revoca viene rifiutata con 401, incluso quello del device che ha eseguito l'azione
+- [ ] Dopo l'azione, l'utente che l'ha eseguita viene reindirizzato al login sul device corrente
+- [ ] Un nuovo login dopo la revoca funziona normalmente ed emette un token valido
+
+**Out of scope**
+- Elenco dettagliato delle sessioni/device attivi con possibilità di revocarne una singola (qui è "tutte o nessuna")
+- Notifica email all'utente quando l'azione viene eseguita
+
+**Open questions**
+- (nessuna)
+
+---
+
+#### US-032: Eliminazione account dal Profilo
+
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 8 | **Status:** TODO
+**Blocked by:** US-028
+
+**Story**
+Come utente dell'app, voglio poter eliminare il mio account dalla pagina Profilo, così che possa smettere di usare il servizio e non lasciare i miei dati personali accessibili.
+
+**Demonstrates**
+Nella pagina Profilo appare un'azione "Elimina account" che richiede conferma esplicita (es. ridigitare la password). Dopo la conferma, l'account viene eliminato (o anonimizzato secondo la decisione presa in planning) e l'utente non può più fare login con quelle credenziali. Le partite storiche confermate restano coerenti per gli altri 3 giocatori coinvolti (rating e storico non si rompono).
+
+**Acceptance Criteria**
+
+- [ ] L'azione "Elimina account" richiede conferma esplicita con re-inserimento password, non un solo click
+- [ ] Dopo l'eliminazione, login con le vecchie credenziali fallisce in modo esplicito
+- [ ] Le `CircleMembership` dell'utente eliminato vengono rimosse: l'utente non appare più come membro in nessun circolo
+- [ ] Le partite storiche `confirmed` in cui l'utente eliminato era coinvolto restano consultabili dagli altri 3 giocatori (nome storicizzato o "Utente eliminato", a decidere in planning), senza alterare il loro rating già calcolato
+- [ ] Partite `pending` che richiedono ancora la conferma dell'utente eliminato vengono gestite in modo esplicito (es. annullate o auto-confermate), non restano bloccate indefinitamente
+- [ ] L'eliminazione è irreversibile: non esiste un endpoint di "ripristino" account
+
+**Out of scope**
+- Periodo di grazia/soft-delete con possibilità di annullare l'eliminazione entro N giorni
+- Export dei propri dati prima della cancellazione (GDPR data portability) — eventuale storia futura
+
+**Open questions**
+- Eliminazione hard (riga rimossa) o soft (anonimizzata mantenendo riferimenti)? Da decidere in `/eq-plan` con l'Architect, impatta lo schema partite/membership
+
+---
+
+#### US-033: Riepilogo rating per circolo nel Profilo
+
+**Epic:** EP-005 | **Priority:** LOW | **Story Points:** 2 | **Status:** TODO
+**Blocked by:** US-028
+
+**Story**
+Come utente dell'app, voglio vedere nel mio Profilo il rating attuale in ciascun circolo a cui appartengo, così che abbia una vista d'insieme senza dover entrare in ogni circolo singolarmente.
+
+**Demonstrates**
+La pagina Profilo mostra un elenco dei circoli dell'utente con, per ciascuno, il rating attuale (dato già esposto da `GET /circles/me`) e il nome del circolo. Cliccando un circolo si naviga alla sua vista dedicata.
+
+**Acceptance Criteria**
+
+- [ ] Il Profilo mostra un elenco con nome circolo + rating attuale per ogni circolo di cui l'utente è membro
+- [ ] L'elenco usa i dati già disponibili da `GET /circles/me` (nessun nuovo endpoint backend necessario)
+- [ ] Cliccando una riga dell'elenco, l'utente viene portato alla pagina del circolo corrispondente
+- [ ] Se l'utente non è membro di nessun circolo, viene mostrato un messaggio chiaro invece di una lista vuota muta
+
+**Out of scope**
+- Grafici storici di andamento rating (resta nella sezione statistiche esistente, se presente)
+- Confronto tra circoli o classifiche aggregate
+
+**Open questions**
+- (nessuna)
+
+---
+
+> **PROSSIMO PASSO:** esegui `/eq-plan US-027` per pianificare la palette chiara, oppure `/eq-next` per il riepilogo dello stato corrente.

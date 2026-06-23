@@ -1,0 +1,208 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #EDEAE5;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  padding: 32px 16px 64px;
+  color: #1A1A1A;
+}
+
+.page-header {
+  max-width: 900px;
+  margin: 0 auto 28px;
+  text-align: center;
+}
+
+.page-header h1 {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+}
+
+.page-header p {
+  font-size: 14px;
+  color: #5F5C57;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.compare-grid {
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 720px) {
+  .compare-grid { grid-template-columns: 1fr; }
+}
+
+.theme-col {
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.theme-col-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 6px 0;
+  border-radius: 999px;
+}
+
+/* ---- DARK THEME (palette attuale) ---- */
+.theme-dark {
+  background: #0A0A0A;
+  --bg: #0A0A0A; --surface: #141414; --surface-elevated: #1F1F1F; --border: #2C2C2C;
+  --accent: #FF5500; --accent-hover: #E64D00; --accent-dim: rgba(255,85,0,0.12);
+  --text-primary: #FFFFFF; --text-secondary: #9A9A9A; --text-placeholder: #484848;
+  --error: #FF4444; --error-bg: rgba(255,68,68,0.10);
+  --success: #22C55E; --success-bg: rgba(34,197,94,0.10);
+  --gold: #F59E0B; --gold-bg: rgba(245,158,11,0.10); --gold-border: rgba(245,158,11,0.28);
+  --silver: #9CA3AF; --silver-bg: rgba(156,163,175,0.10); --silver-border: rgba(156,163,175,0.25);
+  --bronze: #D97706; --bronze-bg: rgba(217,119,6,0.10); --bronze-border: rgba(217,119,6,0.25);
+  --partner: #22C55E; --partner-bg: rgba(34,197,94,0.08); --partner-border: rgba(34,197,94,0.22);
+  --opponent: #FF4444; --opponent-bg: rgba(255,68,68,0.08); --opponent-border: rgba(255,68,68,0.22);
+  --sport-padel: #FF5500; --sport-beachtennis: #0EA5E9; --sport-basket: #F59E0B; --sport-burraco: #8B5CF6;
+  --pending: #F59E0B; --disputed: #FF4444; --dot-empty: #2C2C2C; --dot-filled: #22C55E;
+  --delta-pos: #22C55E; --delta-neg: #FF4444; --delta-zero: #9A9A9A;
+}
+.theme-dark .theme-col-label { background: #1F1F1F; color: #9A9A9A; }
+
+/* ---- LIGHT THEME (proposta US-027) ---- */
+.theme-light {
+  background: #F7F5F2;
+  --bg: #F7F5F2; --surface: #FFFFFF; --surface-elevated: #FFFFFF; --border: #E2DFDA;
+  --accent: #FF5500; --accent-hover: #E64D00; --accent-dim: rgba(255,85,0,0.10);
+  --text-primary: #1A1A1A; --text-secondary: #5F5C57; --text-placeholder: #A39E97;
+  --error: #D92D20; --error-bg: rgba(217,45,32,0.08);
+  --success: #15803D; --success-bg: rgba(21,128,61,0.08);
+  --gold: #B45309; --gold-bg: rgba(180,83,9,0.10); --gold-border: rgba(180,83,9,0.28);
+  --silver: #6B7280; --silver-bg: rgba(107,114,128,0.10); --silver-border: rgba(107,114,128,0.25);
+  --bronze: #92400E; --bronze-bg: rgba(146,64,14,0.10); --bronze-border: rgba(146,64,14,0.25);
+  --partner: #15803D; --partner-bg: rgba(21,128,61,0.08); --partner-border: rgba(21,128,61,0.22);
+  --opponent: #D92D20; --opponent-bg: rgba(217,45,32,0.08); --opponent-border: rgba(217,45,32,0.22);
+  --sport-padel: #FF5500; --sport-beachtennis: #0284C7; --sport-basket: #B45309; --sport-burraco: #7C3AED;
+  --pending: #B45309; --disputed: #D92D20; --dot-empty: #D9D5CF; --dot-filled: #15803D;
+  --delta-pos: #15803D; --delta-neg: #D92D20; --delta-zero: #6B7280;
+  box-shadow: 0 1px 12px rgba(0,0,0,0.06);
+}
+.theme-light .theme-col-label { background: #F0EDE8; color: #5F5C57; border: 1px solid #E2DFDA; }
+
+/* ---- Componenti (stessi nomi/struttura di styles.scss) ---- */
+
+.circle-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.circle-card-header { display: flex; align-items: center; justify-content: space-between; }
+.circle-name { font-size: 17px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; }
+
+.sport-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  color: var(--sport-padel);
+  border-color: color-mix(in srgb, var(--sport-padel) 35%, transparent);
+  background: color-mix(in srgb, var(--sport-padel) 10%, transparent);
+}
+
+.circle-rating-row {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.rating-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; }
+.rating-value { font-size: 24px; font-weight: 900; color: var(--accent); letter-spacing: -0.5px; }
+.ranking-value { font-size: 24px; font-weight: 900; color: var(--text-primary); letter-spacing: -0.5px; }
+.ranking-total { font-size: 13px; color: var(--text-secondary); }
+
+.leaderboard { display: flex; flex-direction: column; gap: 8px; }
+.lb-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  background: var(--surface); border: 1px solid var(--border);
+}
+.lb-rank { font-size: 13px; font-weight: 900; width: 22px; text-align: center; color: var(--text-secondary); }
+.lb-name { flex: 1; font-size: 14px; font-weight: 500; color: var(--text-primary); }
+.lb-rating { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+
+.lb-row--gold   { background: var(--gold-bg);   border-color: var(--gold-border); }
+.lb-row--gold   .lb-rank { color: var(--gold); }
+.lb-row--silver { background: var(--silver-bg); border-color: var(--silver-border); }
+.lb-row--silver .lb-rank { color: var(--silver); }
+.lb-row--bronze { background: var(--bronze-bg); border-color: var(--bronze-border); }
+.lb-row--bronze .lb-rank { color: var(--bronze); }
+
+.stats-row { display: flex; gap: 10px; }
+.stat-chip {
+  flex: 1; text-align: center; padding: 12px; border-radius: 10px;
+  font-size: 12px; font-weight: 700;
+}
+.stat-chip--partner { background: var(--partner-bg); border: 1px solid var(--partner-border); color: var(--partner); }
+.stat-chip--opponent { background: var(--opponent-bg); border: 1px solid var(--opponent-border); color: var(--opponent); }
+
+.match-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
+}
+.match-card-header { display: flex; justify-content: space-between; align-items: center; }
+.match-date { font-size: 11px; color: var(--text-placeholder); }
+.status-badge { font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 999px; border: 1px solid transparent; }
+.status-badge--pending   { color: var(--pending);  background: color-mix(in srgb, var(--pending) 10%, transparent);  border-color: color-mix(in srgb, var(--pending) 28%, transparent); }
+.status-badge--confirmed { color: var(--success);  background: var(--success-bg); border-color: color-mix(in srgb, var(--success) 25%, transparent); }
+.status-badge--disputed  { color: var(--disputed); background: color-mix(in srgb, var(--disputed) 10%, transparent); border-color: color-mix(in srgb, var(--disputed) 25%, transparent); }
+
+.confirm-dots { display: flex; gap: 6px; }
+.confirm-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--dot-empty); }
+.confirm-dot--filled { background: var(--dot-filled); }
+.confirm-dot--you { background: var(--dot-you); }
+
+.delta-badges { display: flex; gap: 8px; }
+.delta-badge { font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 999px; border: 1px solid transparent; }
+.delta-badge--positive { color: var(--delta-pos);  background: color-mix(in srgb, var(--delta-pos) 8%, transparent);  border-color: color-mix(in srgb, var(--delta-pos) 22%, transparent); }
+.delta-badge--negative { color: var(--delta-neg);  background: color-mix(in srgb, var(--delta-neg) 8%, transparent);  border-color: color-mix(in srgb, var(--delta-neg) 22%, transparent); }
+.delta-badge--zero     { color: var(--delta-zero); background: color-mix(in srgb, var(--delta-zero) 8%, transparent); border-color: color-mix(in srgb, var(--delta-zero) 20%, transparent); }
+
+.sport-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.sport-pill { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; color: #fff; }
+.sport-pill--padel { background: var(--sport-padel); }
+.sport-pill--beachtennis { background: var(--sport-beachtennis); }
+.sport-pill--basket { background: var(--sport-basket); }
+.sport-pill--burraco { background: var(--sport-burraco); }
+
+.btn-primary {
+  background: var(--accent); color: #fff; border: none; border-radius: 8px;
+  font-weight: 700; font-size: 14px; padding: 12px 16px; text-align: center;
+}
+
+.text-sample { font-size: 13px; color: var(--text-secondary); }
+.text-sample strong { color: var(--text-primary); }
+
+.section-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--text-secondary); margin-top: 4px;
+}
