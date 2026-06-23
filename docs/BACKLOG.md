@@ -563,7 +563,8 @@ Un amministratore aggiunge un nuovo sport (`padel 4v4`) direttamente sul DB. Sen
 
 #### US-017: Pagina spiegazione algoritmo ELO e simulatore partita
 
-**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** REVIEW
+**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-23):** Review umana OK.
 **Review note (2026-06-15):** Backend: `RatingService.ComputeDeltas` (public static), `SimulateEndpoints.cs` (`POST /simulate-match` pubblico), `Program.cs`. Frontend: `elo-info/` (service + component + route), link in leaderboard e dashboard. Test: `SimulateEndpointTests.cs` (10 test). Reviewer APPROVE. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-017`.
 **Blocked by:** -
 
@@ -597,7 +598,8 @@ Fabio è in classifica con 1050 punti. Clicca "Come funziona il rating?" dalla p
 
 #### US-018: Aggiunta manuale di un giocatore al circolo da parte del proprietario
 
-**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 5 | **Status:** REVIEW
+**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-23):** Review umana OK.
 **Review note (2026-06-19):** Backend in `src/Golp.Api/Endpoints/CircleEndpoints.cs` (`POST /circles/{id}/members`, owner-only, 3 branch: lookup esistente, conferma+add, crea pending), `IEmailService`/`DevelopmentEmailService.cs` (+2 metodi), fix `AuthEndpoints.LoginAsync` (BCrypt.Verify lanciava eccezione su hash vuoto invece di false). Frontend in `frontend/golp-app/src/app/circles/add-member-dialog/` (componente standalone 4-step), `circle.service.ts` (+metodo), `my-circles.component.*` (bottone owner-only "+ Giocatore"). Test: 9 integration in `CircleIntegrationTests.cs` (`AddMemberEndpointTests`), 7 unit Angular, 2 E2E Playwright (`e2e/add-member.spec.ts`). Reviewer APPROVE — no critical aperti. Suite completa: 158/167 BE (9 fail pre-esistenti in `SimulateEndpointTests`, confermato su `main` via stash), 62/69 FE (7 fail pre-esistenti AuthService/AppComponent). > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-018`.
 **Blocked by:** -
 
@@ -631,7 +633,8 @@ Il proprietario, dalla pagina di gestione del circolo, inserisce email e nome di
 
 #### US-019: Sessione lunga tramite refresh token
 
-**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 5 | **Status:** REVIEW
+**Epic:** EP-001 | **Priority:** HIGH | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-23):** Review umana OK.
 **Review note (2026-06-19):** Backend: entità `RefreshToken` + migration `AddRefreshTokens`, `IRefreshTokenService`/`RefreshTokenService.cs` (issue/rotate con reuse-detection/revoke), `AuthEndpoints.cs` (+`POST /auth/refresh`, +`POST /auth/logout`, register/login ritornano `{accessToken, refreshToken}`, hook revoca-tutto su cambio password). Config `Jwt:RefreshTokenExpiryDays` (default 90). Frontend: `AuthService` (store coppia token, `refresh()`, `logout()` via API), `auth.interceptor.ts` (retry automatico su 401). Test: 2 unit `RefreshTokenServiceTests`, 8 integration in `AuthIntegrationTests.cs`, 4 unit `auth.interceptor.spec.ts`. Reviewer APPROVE — no critical aperti. Suite completa: 167/176 BE (9 fail pre-esistenti `SimulateEndpointTests`), 65/74 FE (9 fail pre-esistenti per `environment.ts` con apiUrl hardcoded a server live, non relativo — confermato non causato da questa storia). > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-019`.
 **Blocked by:** US-001
 
@@ -792,7 +795,8 @@ Dopo un deploy, un utente che ha l'app già aperta (o la riapre dopo averla lasc
 
 #### US-024: Guida all'installazione della PWA per nuovi utenti da browser
 
-**Epic:** EP-001 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** PLANNED
+**Epic:** EP-001 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-23):** Review umana OK. Status backlog non aggiornato durante lo sviluppo (commit a404cca "us-024 done"); codice verificato presente: `frontend/golp-app/src/app/shared/pwa-install/` (`pwa-install-banner`, `pwa-install-guide`, `pwa-install-steps`, `pwa-install.service`, `pwa-platform.service`, ognuno con spec), e2e in `frontend/golp-app/e2e/pwa-install.spec.ts`.
 **Blocked by:** -
 
 **Story**

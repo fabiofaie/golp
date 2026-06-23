@@ -32,7 +32,7 @@ public class SimulateEndpointTests : IClassFixture<SimulateTestFactory>
             experienced = true
         };
 
-        var resp = await _client.PostAsJsonAsync("/simulate-match", body);
+        var resp = await _client.PostAsJsonAsync("/api/simulate-match", body);
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
 
         var json = await resp.Content.ReadFromJsonAsync<JsonElement>();
@@ -69,8 +69,8 @@ public class SimulateEndpointTests : IClassFixture<SimulateTestFactory>
             experienced = true
         };
 
-        var underdogResp = await _client.PostAsJsonAsync("/simulate-match", underdogBody);
-        var equalResp    = await _client.PostAsJsonAsync("/simulate-match", equalBody);
+        var underdogResp = await _client.PostAsJsonAsync("/api/simulate-match", underdogBody);
+        var equalResp    = await _client.PostAsJsonAsync("/api/simulate-match", equalBody);
 
         var uj = await underdogResp.Content.ReadFromJsonAsync<JsonElement>();
         var ej = await equalResp.Content.ReadFromJsonAsync<JsonElement>();
@@ -100,8 +100,8 @@ public class SimulateEndpointTests : IClassFixture<SimulateTestFactory>
             experienced = true
         };
 
-        var favResp   = await _client.PostAsJsonAsync("/simulate-match", favoriteBody);
-        var equalResp = await _client.PostAsJsonAsync("/simulate-match", equalBody);
+        var favResp   = await _client.PostAsJsonAsync("/api/simulate-match", favoriteBody);
+        var equalResp = await _client.PostAsJsonAsync("/api/simulate-match", equalBody);
 
         var fj = await favResp.Content.ReadFromJsonAsync<JsonElement>();
         var ej = await equalResp.Content.ReadFromJsonAsync<JsonElement>();
@@ -132,8 +132,8 @@ public class SimulateEndpointTests : IClassFixture<SimulateTestFactory>
             experienced = true
         };
 
-        var newResp = await _client.PostAsJsonAsync("/simulate-match", newPlayerBody);
-        var expResp = await _client.PostAsJsonAsync("/simulate-match", expBody);
+        var newResp = await _client.PostAsJsonAsync("/api/simulate-match", newPlayerBody);
+        var expResp = await _client.PostAsJsonAsync("/api/simulate-match", expBody);
 
         var nj = await newResp.Content.ReadFromJsonAsync<JsonElement>();
         var ej = await expResp.Content.ReadFromJsonAsync<JsonElement>();
@@ -160,7 +160,7 @@ public class SimulateEndpointTests : IClassFixture<SimulateTestFactory>
             experienced = true
         };
 
-        var resp = await _client.PostAsJsonAsync("/simulate-match", body);
+        var resp = await _client.PostAsJsonAsync("/api/simulate-match", body);
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
 
         var json = await resp.Content.ReadFromJsonAsync<JsonElement>();
@@ -180,7 +180,7 @@ public class SimulateEndpointTests : IClassFixture<SimulateTestFactory>
             experienced = true
         };
 
-        var resp = await _client.PostAsJsonAsync("/simulate-match", body);
+        var resp = await _client.PostAsJsonAsync("/api/simulate-match", body);
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 
@@ -195,7 +195,7 @@ public class SimulateEndpointTests : IClassFixture<SimulateTestFactory>
             experienced = true
         };
 
-        var resp = await _client.PostAsJsonAsync("/simulate-match", body);
+        var resp = await _client.PostAsJsonAsync("/api/simulate-match", body);
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 
@@ -210,7 +210,7 @@ public class SimulateEndpointTests : IClassFixture<SimulateTestFactory>
             experienced = true
         };
 
-        var resp = await _client.PostAsJsonAsync("/simulate-match", body);
+        var resp = await _client.PostAsJsonAsync("/api/simulate-match", body);
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 
@@ -229,7 +229,7 @@ public class SimulateEndpointTests : IClassFixture<SimulateTestFactory>
             experienced = true
         };
 
-        var resp = await _client.PostAsJsonAsync("/simulate-match", body);
+        var resp = await _client.PostAsJsonAsync("/api/simulate-match", body);
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
     }
 
