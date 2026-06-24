@@ -1,12 +1,12 @@
 # Backlog — GOLP
 
-**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-06-23
+**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-06-24
 
 ## Riepilogo
 
 - Epic totali: 5
-- Storie totali: 33
-- Storie TODO: 7 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 20
+- Storie totali: 37
+- Storie TODO: 10 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 21
 
 ---
 
@@ -541,7 +541,7 @@ _Funzionalità per gestire la piattaforma senza dover rilasciare nuove versioni:
 
 #### US-016: Sport configurabili da database
 
-**Epic:** EP-005 | **Priority:** HIGH | **Story Points:** 5 | **Status:** TODO
+**Epic:** EP-005 | **Priority:** HIGH | **Story Points:** 5 | **Status:** PLANNED
 **Blocked by:** -
 
 **Story**
@@ -558,6 +558,7 @@ Un amministratore aggiunge un nuovo sport (`padel 4v4`) direttamente sul DB. Sen
 - [ ] Una migration EF popola la tabella con gli sport attualmente definiti in `SportsConfig` (dati iniziali idempotenti)
 - [ ] Il frontend riceve e visualizza correttamente la lista sport proveniente da DB, senza modifiche al contratto API esistente
 - [ ] La validazione sport nelle partite (`MatchEndpoints`) usa i valori da DB, non dalla classe statica
+- [ ] La colonna `Key` è solo display/lookup: il riferimento allo sport nei circoli/match resta come oggi (nessuna modifica al modo in cui `Circle` referenzia lo sport), `Key` serve solo a mappare la riga DB ai valori `SportsConfig` esistenti durante la migration
 
 **Out of scope**
 
@@ -567,7 +568,7 @@ Un amministratore aggiunge un nuovo sport (`padel 4v4`) direttamente sul DB. Sen
 
 **Open questions**
 
-- La colonna `Key` deve essere stabile (usata come FK nelle partite esistenti) o è solo display? Verificare se il dominio usa già una stringa-chiave o un ID numerico per riferirsi agli sport nei match registrati.
+- (nessuna — `Key` confermata come solo display/lookup, non FK)
 
 ---
 
@@ -721,7 +722,7 @@ Le 3 email esistenti (reset password, attivazione giocatore, notifica aggiunta c
 
 #### US-021: Notifica email automatica giocatore del mese/anno
 
-**Epic:** EP-004 | **Priority:** LOW | **Story Points:** 5 | **Status:** TODO
+**Epic:** EP-004 | **Priority:** LOW | **Story Points:** 5 | **Status:** PLANNED
 **Blocked by:** US-020
 
 **Story**
@@ -732,7 +733,7 @@ Un job schedulato calcola, alla chiusura di ogni mese/anno, il vincitore di cias
 
 **Acceptance Criteria**
 
-- [ ] Esiste un meccanismo di esecuzione schedulata (es. `IHostedService`/`BackgroundService`) che gira periodicamente (es. ogni notte) e verifica se è il primo giorno di un nuovo mese/anno per cui calcolare il vincitore del periodo precedente
+- [ ] Esiste un `BackgroundService` registrato in `Program.cs` di `src/Golp.Api` (stesso processo dell'API, nessun sito/processo Azure aggiuntivo) che gira periodicamente (es. ogni notte) e verifica se è il primo giorno di un nuovo mese/anno per cui calcolare il vincitore del periodo precedente
 - [ ] Per ogni circolo con almeno 1 partita confermata nel periodo, calcola il vincitore con la stessa logica di `GetAwardsAsync` esistente
 - [ ] Il vincitore riceve una email con periodo (es. "Giugno 2026"), nome circolo, e il risultato (net gain / partite giocate)
 - [ ] Se un circolo non ha un vincitore per il periodo (nessuna partita confermata), nessuna email viene inviata per quel circolo
@@ -747,7 +748,7 @@ Un job schedulato calcola, alla chiusura di ogni mese/anno, il vincitore di cias
 
 **Open questions**
 
-- Il job deve girare su un thread in-process (`BackgroundService` nello stesso processo API) o un processo separato (Azure Function/WebJob)? Impatta deploy su Azure App Service esistente — da chiarire in fase di piano tecnico.
+- (nessuna — job in-process via `BackgroundService` in `Golp.Api`, stesso App Service esistente)
 
 ---
 
@@ -994,14 +995,14 @@ Una nuova pagina "Profilo" (raggiungibile dall'area autenticata) mostra un contr
 
 #### US-029: Attivazione/disattivazione notifiche push dalla pagina Profilo
 
-**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** TODO
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** PLANNED
 **Blocked by:** US-028
 
 **Story**
 Come utente dell'app, voglio attivare o disattivare le notifiche push dalla pagina Profilo, così che possa controllare se ricevere notifiche del browser senza dover modificare i permessi del browser stesso.
 
 **Demonstrates**
-Nella pagina Profilo (introdotta in US-028) appare un toggle "Notifiche push" oltre al tema. Attivandolo, viene richiesto il permesso del browser (se non già concesso) e si registra la subscription esistente (`PushNotificationService`); disattivandolo, la subscription viene rimossa e l'utente non riceve più notifiche su quel device. Lo stato del toggle riflette sempre lo stato reale del permesso/subscription al caricamento della pagina.
+Nella pagina Profilo (introdotta in US-028) appare un toggle "Notifiche push" oltre al tema. Attivandolo, viene richiesto il permesso del browser (se non già concesso) e si registra la subscription esistente (`PushNotificationService`); disattivandolo, la subscription viene rimossa e l'utente non riceve più notifiche su quel device. Lo stato del toggle riflette sempre lo stato reale del permesso/subscription al caricamento della pagina. Se l'app è installata come PWA, accanto al toggle c'è un pulsante "Invia notifica di test" che invia all'utente stesso una push di prova, insieme a un testo breve che spiega come abilitare le notifiche a livello di sistema operativo e di app sul telefono. Se l'app non è installata, al posto del toggle/pulsante viene mostrata una guida/pulsante per installarla, con il testo che chiarisce che le notifiche push funzionano solo da app installata.
 
 **Acceptance Criteria**
 
@@ -1011,10 +1012,15 @@ Nella pagina Profilo (introdotta in US-028) appare un toggle "Notifiche push" ol
 - [ ] Disattivando il toggle, la subscription push lato browser/backend viene rimossa
 - [ ] Al caricamento della pagina, il toggle riflette lo stato reale corrente (subscription attiva sì/no), non solo un valore salvato localmente
 - [ ] Se il browser non supporta le notifiche push, il toggle è disabilitato con un messaggio esplicativo invece di fallire silenziosamente
+- [ ] Se l'app è installata come PWA e la subscription è attiva, è presente un pulsante "Invia notifica di test" che invia una push di prova al device corrente dell'utente stesso
+- [ ] Vicino al pulsante di test è presente un testo breve che spiega come abilitare le notifiche a livello di sistema operativo (es. permessi notifiche iOS/Android) e a livello di app, nel caso non arrivino
+- [ ] Il testo chiarisce esplicitamente che le notifiche push funzionano solo se l'app è installata come PWA, non da semplice tab del browser
+- [ ] Se l'app non è installata come PWA (rilevabile come in US-024), al posto del toggle/pulsante di test viene mostrato un pulsante o link guida per installare l'app, riusando il meccanismo di US-024 dove possibile
 
 **Out of scope**
 - Granularità per tipo di notifica (es. solo conferme partita vs solo inviti) — è on/off globale
 - Notifiche push su più device contemporaneamente gestite da questa storia (ogni device gestisce la propria subscription)
+- Invio di notifiche di test ad altri utenti (solo a se stessi)
 
 **Open questions**
 - (nessuna)
@@ -1023,7 +1029,7 @@ Nella pagina Profilo (introdotta in US-028) appare un toggle "Notifiche push" ol
 
 #### US-030: Modifica nome visualizzato dalla pagina Profilo
 
-**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** TODO
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** PLANNED
 **Blocked by:** US-028
 
 **Story**
@@ -1052,7 +1058,7 @@ Nella pagina Profilo (introdotta in US-028) appare un campo con il nome visualiz
 
 #### US-031: Logout da tutti i device dal Profilo
 
-**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** TODO
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** PLANNED
 **Blocked by:** US-028
 
 **Story**
@@ -1080,36 +1086,38 @@ Nella pagina Profilo appare un'azione "Esci da tutti i device". Attivandola, tut
 
 #### US-032: Eliminazione account dal Profilo
 
-**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 8 | **Status:** TODO
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 8 | **Status:** PLANNED
 **Blocked by:** US-028
 
 **Story**
 Come utente dell'app, voglio poter eliminare il mio account dalla pagina Profilo, così che possa smettere di usare il servizio e non lasciare i miei dati personali accessibili.
 
 **Demonstrates**
-Nella pagina Profilo appare un'azione "Elimina account" che richiede conferma esplicita (es. ridigitare la password). Dopo la conferma, l'account viene eliminato (o anonimizzato secondo la decisione presa in planning) e l'utente non può più fare login con quelle credenziali. Le partite storiche confermate restano coerenti per gli altri 3 giocatori coinvolti (rating e storico non si rompono).
+Nella pagina Profilo appare un'azione "Elimina account" che richiede conferma esplicita (es. ridigitare la password). Dopo la conferma, l'account viene anonimizzato (soft-delete: nome sostituito con "Utente eliminato", email/password invalidate, riga utente mantenuta) e l'utente non può più fare login con quelle credenziali. Le partite storiche confermate restano coerenti per gli altri 3 giocatori coinvolti (rating e storico non si rompono).
 
 **Acceptance Criteria**
 
 - [ ] L'azione "Elimina account" richiede conferma esplicita con re-inserimento password, non un solo click
+- [ ] L'eliminazione è soft/anonimizzazione: la riga `User` resta nel DB ma email e password vengono invalidate/rimpiazzate e il nome visualizzato diventa "Utente eliminato" (nessuna FK rotta verso match/membership storici)
 - [ ] Dopo l'eliminazione, login con le vecchie credenziali fallisce in modo esplicito
 - [ ] Le `CircleMembership` dell'utente eliminato vengono rimosse: l'utente non appare più come membro in nessun circolo
-- [ ] Le partite storiche `confirmed` in cui l'utente eliminato era coinvolto restano consultabili dagli altri 3 giocatori (nome storicizzato o "Utente eliminato", a decidere in planning), senza alterare il loro rating già calcolato
+- [ ] Le partite storiche `confirmed` in cui l'utente eliminato era coinvolto restano consultabili dagli altri 3 giocatori (nome mostrato "Utente eliminato"), senza alterare il loro rating già calcolato
 - [ ] Partite `pending` che richiedono ancora la conferma dell'utente eliminato vengono gestite in modo esplicito (es. annullate o auto-confermate), non restano bloccate indefinitamente
-- [ ] L'eliminazione è irreversibile: non esiste un endpoint di "ripristino" account
+- [ ] L'eliminazione è irreversibile dal punto di vista utente: non esiste un endpoint di "ripristino" account, anche se i dati restano anonimizzati in DB
 
 **Out of scope**
 - Periodo di grazia/soft-delete con possibilità di annullare l'eliminazione entro N giorni
 - Export dei propri dati prima della cancellazione (GDPR data portability) — eventuale storia futura
+- Hard delete fisico della riga utente (scelta esplicita: si anonimizza, non si rimuove)
 
 **Open questions**
-- Eliminazione hard (riga rimossa) o soft (anonimizzata mantenendo riferimenti)? Da decidere in `/eq-plan` con l'Architect, impatta lo schema partite/membership
+- (nessuna — confermata anonimizzazione/soft-delete, non hard delete)
 
 ---
 
 #### US-033: Riepilogo rating per circolo nel Profilo
 
-**Epic:** EP-005 | **Priority:** LOW | **Story Points:** 2 | **Status:** TODO
+**Epic:** EP-005 | **Priority:** LOW | **Story Points:** 2 | **Status:** PLANNED
 **Blocked by:** US-028
 
 **Story**
@@ -1170,4 +1178,89 @@ Per uno sport a set (es. padel), se una partita finisce 1-1 nei set ma con game 
 
 ---
 
-> **PROSSIMO PASSO:** esegui `/eq-plan US-034` per pianificare la correzione del margine ELO, oppure `/eq-next` per il riepilogo dello stato corrente.
+#### US-035: Notifica variazione posizione in classifica
+
+**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** PLANNED
+**Blocked by:** US-029
+
+**Story**
+Come giocatore, voglio essere notificato quando la mia posizione in classifica nel circolo cambia per effetto di una variazione diretta del mio rating, così che possa accorgermi senza dover controllare manualmente la classifica.
+
+**Demonstrates**
+Quando una partita `confirmed` aggiorna il rating di un giocatore e questo aggiornamento gli fa salire di posizione nella classifica del circolo, il giocatore riceve una notifica push (se attiva, vedi US-029) con il dettaglio della nuova posizione. Chi scende di posizione o non cambia posizione non riceve notifica.
+
+**Acceptance Criteria**
+- [ ] Dopo la conferma di una partita (4/4), per ciascun giocatore coinvolto viene confrontata la posizione in classifica del circolo prima e dopo l'aggiornamento del rating
+- [ ] Se la posizione migliora (sale), il giocatore riceve una notifica con la nuova posizione (es. "Sei salito al 3° posto nel circolo X")
+- [ ] Se la posizione non cambia o peggiora (scende), nessuna notifica viene generata per quel giocatore
+- [ ] La notifica viene inviata solo ai giocatori che hanno le notifiche push attive (dipendenza da US-029)
+- [ ] Il calcolo della posizione si basa sul ranking per `Rating` all'interno dello stesso circolo (`CircleMembership.Rating`), non su classifiche globali
+- [ ] Se più giocatori della stessa partita salgono di posizione, ciascuno riceve la propria notifica indipendente (nessun raggruppamento)
+
+**Out of scope**
+- Notifica per chi scende di posizione (deciso: solo salite generano notifica)
+- Notifica per variazioni di rating che non derivano da una partita confermata (es. correzioni manuali admin)
+- Notifica aggregata periodica ("riepilogo settimanale") — solo evento puntuale per partita
+- Canali diversi dalla push notification (email, SMS)
+
+**Open questions**
+- (nessuna — confermato: notifica solo a chi sale di posizione)
+
+---
+
+#### US-036: Conferma esplicita di irreversibilità prima della forzatura del risultato
+
+**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 2 | **Status:** PLANNED
+**Blocked by:** US-013
+
+**Story**
+Come proprietario del circolo, voglio una conferma esplicita con avviso di irreversibilità prima di forzare il risultato di una partita, così che non forzi una conferma per errore senza capire che l'azione non sarà più modificabile.
+
+**Demonstrates**
+Quando il proprietario preme "Forza conferma" su una partita `pending`, prima dell'esecuzione viene mostrato un passaggio di conferma esplicito (es. dialog) con il testo che l'azione è definitiva e la partita non potrà più essere modificata. Solo dopo la conferma esplicita la chiamata di forzatura viene eseguita; annullando il dialog non succede nulla.
+
+**Acceptance Criteria**
+- [ ] Cliccando "Forza conferma" appare un passaggio di conferma esplicito separato dal click iniziale (non un singolo click diretto sull'azione)
+- [ ] Il testo del passaggio di conferma indica chiaramente che una volta forzata la partita non è più modificabile
+- [ ] Annullando il passaggio di conferma, nessuna chiamata API viene effettuata e la partita resta `pending`
+- [ ] Confermando, il comportamento esistente di US-013 (transizione a `confirmed`, aggiornamento rating, audit trail) resta invariato
+- [ ] Il vincolo "partita forzata non più modificabile" è già vero lato backend (nessuna modifica al modello di stato richiesta) — questa storia copre solo l'avviso esplicito lato UI prima dell'azione
+
+**Out of scope**
+- Introdurre un meccanismo di modifica/riapertura partite forzate (resta non previsto, come da US-013)
+- Nota/motivazione testuale obbligatoria per la forzatura (questione aperta separata in US-013)
+
+**Open questions**
+- (nessuna)
+
+---
+
+#### US-037: Pagina di dettaglio partita
+
+**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** PLANNED
+**Blocked by:** US-005
+
+**Story**
+Come giocatore, voglio poter cliccare su una partita nell'elenco e vedere una pagina di dettaglio con risultati, date e variazione di rating, così che possa capire esattamente come e quando una partita ha influito sul mio punteggio.
+
+**Demonstrates**
+Dall'elenco partite del circolo, cliccando su una partita (in qualsiasi stato: `pending`, `confirmed`, `disputed`) si naviga a una pagina dedicata che mostra: risultato per set/game o punteggio secondo lo sport, data di registrazione della partita, data di conferma (se confermata) e da chi è stata confermata l'ultima conferma necessaria (4° giocatore o forzatura del proprietario, vedi US-013), e la variazione di rating (delta) introdotta dalla partita per ciascuno dei 4 giocatori. Per partite `pending`, la pagina non mostra delta (non ancora calcolato).
+
+**Acceptance Criteria**
+- [ ] Cliccando una riga dell'elenco partite si naviga a una pagina dedicata `/circles/:circleId/matches/:matchId/detail` (o rotta equivalente, distinta da quella di conferma US-005)
+- [ ] La pagina mostra il risultato della partita (set/game o punteggio secondo `point_unit` dello sport)
+- [ ] La pagina mostra la data di registrazione della partita
+- [ ] Per partite `confirmed`, la pagina mostra la data dell'ultima conferma che ha chiuso la partita e l'identità di chi l'ha eseguita (4° giocatore confermante, oppure proprietario in caso di forzatura US-013)
+- [ ] Per partite `confirmed`, la pagina mostra la variazione di rating (delta) applicata a ciascuno dei 4 giocatori per effetto di questa partita
+- [ ] Per partite `pending` o `disputed`, la sezione delta/data-conferma non viene mostrata (dato non esistente) invece di un valore vuoto o errato
+- [ ] La pagina rispetta la multi-tenancy: un utente non membro del circolo non può accedere al dettaglio (403/404)
+
+**Out of scope**
+- Modifica dei dati della partita dalla pagina di dettaglio (resta read-only)
+- Storico delle modifiche di rating per il giocatore nel tempo (grafico andamento) — eventuale storia futura
+- Sostituire `MatchConfirmComponent` (US-005): quello resta il flusso di conferma per partite `pending`, questa è una vista di sola lettura aggiuntiva
+
+**Open questions**
+- (risolta in `/eq-plan`: derivabile da `MatchConfirmation`, `Match.ForceConfirmedById/At` e `Match.DeltaTeamXPlayerY` — nessuna nuova persistenza richiesta. Vedi `docs/planning/US-037.md`)
+
+---
