@@ -156,4 +156,74 @@ public class PushNotificationServiceTests
         // Non deve lanciare: fire-and-forget, partita già persistita
         await service.SendConfirmationRequestAsync(Guid.NewGuid(), Guid.NewGuid(), [user.Id]);
     }
+
+    [Fact]
+    public async Task SendTestNotification_NoTokensRegistered_ReturnsFalseAndDoesNotCallFcm()
+    {
+        using var db = CreateDb();
+        var fcm = new Mock<IFcmSender>();
+        var service = CreateService(db, fcm);
+
+        var result = await service.SendTestNotificationAsync(Guid.NewGuid());
+
+        Assert.False(result);
+        fcm.Verify(f => f.SendAsync(
+            It.IsAny<IReadOnlyList<string>>(),
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<IReadOnlyDictionary<string, string>>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SendTestNotification_TokenRegistered_ReturnsTrueAndSendsToUserTokensOnly()
+    {
+        using var db = CreateDb();
+        var user = CreateUser();
+        var other = CreateUser();
+        db.Users.AddRange(user, other);
+        db.FcmTokens.AddRange(
+            new FcmToken { UserId = user.Id, Token = "tok-mine", DeviceId = "d1" },
+            new FcmToken { UserId = other.Id, Token = "tok-other", DeviceId = "d2" });
+        await db.SaveChangesAsync();
+
+        IReadOnlyList<string>? sentTokens = null;
+        var fcm = new Mock<IFcmSender>();
+        fcm.Setup(f => f.SendAsync(
+                It.IsAny<IReadOnlyList<string>>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyDictionary<string, string>>()))
+            .Callback<IReadOnlyList<string>, string, string, IReadOnlyDictionary<string, string>>(
+                (tokens, _, _, _) => sentTokens = tokens)
+            .ReturnsAsync([new FcmSendResult("tok-mine", true, false)]);
+
+        var service = CreateService(db, fcm);
+        var result = await service.SendTestNotificationAsync(user.Id);
+
+        Assert.True(result);
+        Assert.Equal(["tok-mine"], sentTokens);
+    }
+
+    [Fact]
+    public async Task SendTestNotification_FcmThrows_ReturnsFalseInsteadOfPropagating()
+    {
+        using var db = CreateDb();
+        var user = CreateUser();
+        db.Users.Add(user);
+        db.FcmTokens.Add(new FcmToken { UserId = user.Id, Token = "tok-1", DeviceId = "d1" });
+        await db.SaveChangesAsync();
+
+        var fcm = new Mock<IFcmSender>();
+        fcm.Setup(f => f.SendAsync(
+                It.IsAny<IReadOnlyList<string>>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyDictionary<string, string>>()))
+            .ThrowsAsync(new InvalidOperationException("FCM unreachable"));
+
+        var service = CreateService(db, fcm);
+        var result = await service.SendTestNotificationAsync(user.Id);
+
+        Assert.False(result);
+    }
 }

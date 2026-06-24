@@ -107,6 +107,29 @@ public class PushEndpointsIntegrationTests : IClassFixture<PushTestFactory>
         Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 
+    // POST test → 404 se nessun token registrato per l'utente
+    [Fact]
+    public async Task SendTest_NoTokenRegistered_Returns404()
+    {
+        var (_, token) = await RegisterUserAsync();
+        SetAuth(token);
+
+        var resp = await _client.PostAsync("/api/push/test", null);
+
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+    }
+
+    // POST test non-autenticato → 401
+    [Fact]
+    public async Task SendTest_NoAuth_Returns401()
+    {
+        _client.DefaultRequestHeaders.Authorization = null;
+
+        var resp = await _client.PostAsync("/api/push/test", null);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+    }
+
     // ─── helpers ──────────────────────────────────────────────────────────────
 
     private async Task<(Guid UserId, string Token)> RegisterUserAsync()

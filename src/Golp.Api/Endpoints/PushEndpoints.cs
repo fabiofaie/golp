@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Golp.Api.Data;
 using Golp.Api.Data.Entities;
+using Golp.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +15,7 @@ public static class PushEndpoints
         push.MapPost("/token", RegisterTokenAsync).RequireAuthorization();
         push.MapDelete("/token", UnregisterTokenAsync).RequireAuthorization();
         push.MapGet("/vapid-public-key", GetVapidPublicKey);
+        push.MapPost("/test", SendTestNotificationAsync).RequireAuthorization();
         return app;
     }
 
@@ -78,6 +80,20 @@ public static class PushEndpoints
         }
 
         return Results.NoContent();
+    }
+
+    // ─── POST /test ───────────────────────────────────────────────────────────
+
+    private static async Task<IResult> SendTestNotificationAsync(
+        ClaimsPrincipal user,
+        IPushNotificationService pushService)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
+            return Results.Unauthorized();
+
+        var sent = await pushService.SendTestNotificationAsync(userId);
+        return sent ? Results.NoContent() : Results.NotFound(new { error = "Nessun token push registrato" });
     }
 
     // ─── GET /vapid-public-key ────────────────────────────────────────────────

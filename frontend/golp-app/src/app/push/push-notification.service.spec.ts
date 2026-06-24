@@ -96,4 +96,51 @@ describe('PushNotificationService', () => {
     await expectAsync(promise).toBeResolved();
     expect(localStorage.getItem('golp_fcm_token')).toBeNull();
   });
+
+  it('isSupported: messaging presente + vapidKey configurata → true', () => {
+    expect(service.isSupported()).toBeTrue();
+  });
+
+  it('isSupported: vapidKey assente → false', () => {
+    environment.vapidKey = '';
+    expect(service.isSupported()).toBeFalse();
+  });
+
+  it('permissionState: rispecchia Notification.permission', () => {
+    spyOnProperty(Notification, 'permission').and.returnValue('granted');
+    expect(service.permissionState()).toBe('granted');
+  });
+
+  it('isActive: permesso granted + token in localStorage → true', () => {
+    spyOnProperty(Notification, 'permission').and.returnValue('granted');
+    localStorage.setItem('golp_fcm_token', 'fcm-token-123');
+    expect(service.isActive()).toBeTrue();
+  });
+
+  it('isActive: permesso granted ma nessun token → false', () => {
+    spyOnProperty(Notification, 'permission').and.returnValue('granted');
+    expect(service.isActive()).toBeFalse();
+  });
+
+  it('isActive: permesso non granted → false anche con token presente', () => {
+    spyOnProperty(Notification, 'permission').and.returnValue('default');
+    localStorage.setItem('golp_fcm_token', 'fcm-token-123');
+    expect(service.isActive()).toBeFalse();
+  });
+
+  it('sendTestNotification: POST riuscito → true', async () => {
+    const promise = service.sendTestNotification();
+    const req = httpMock.expectOne(`${environment.apiUrl}/api/push/test`);
+    expect(req.request.method).toBe('POST');
+    req.flush(null);
+
+    expect(await promise).toBeTrue();
+  });
+
+  it('sendTestNotification: POST fallito (404 nessun token) → false, nessuna eccezione', async () => {
+    const promise = service.sendTestNotification();
+    httpMock.expectOne(`${environment.apiUrl}/api/push/test`).flush(null, { status: 404, statusText: 'Not Found' });
+
+    expect(await promise).toBeFalse();
+  });
 });

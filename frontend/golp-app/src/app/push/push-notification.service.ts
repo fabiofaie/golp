@@ -76,4 +76,33 @@ export class PushNotificationService {
     }
     return id;
   }
+
+  /** Il browser supporta le notifiche push (Notification API + Firebase Messaging inizializzato). */
+  isSupported(): boolean {
+    return typeof Notification !== 'undefined' && !!this.messaging && !!environment.vapidKey;
+  }
+
+  /** Stato corrente del permesso browser ('granted' | 'denied' | 'default'). */
+  permissionState(): NotificationPermission | 'unsupported' {
+    if (typeof Notification === 'undefined') {
+      return 'unsupported';
+    }
+    return Notification.permission;
+  }
+
+  /** Subscription attiva: permesso concesso + token registrato su questo device. */
+  isActive(): boolean {
+    return this.permissionState() === 'granted' && !!localStorage.getItem(FCM_TOKEN_KEY);
+  }
+
+  /** Invia una push di prova al device corrente. Ritorna false se nessun token registrato o invio fallito. */
+  async sendTestNotification(): Promise<boolean> {
+    try {
+      await firstValueFrom(this.http.post<void>(`${environment.apiUrl}/api/push/test`, {}));
+      return true;
+    } catch (err) {
+      console.debug('Test push notification failed:', err);
+      return false;
+    }
+  }
 }

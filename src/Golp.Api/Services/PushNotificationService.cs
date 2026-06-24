@@ -54,4 +54,48 @@ public class PushNotificationService(
             logger.LogWarning(ex, "Push notification failed for match {MatchId}", matchId);
         }
     }
+
+    public async Task<bool> SendTestNotificationAsync(Guid userId)
+    {
+        var tokens = await db.FcmTokens
+            .Where(t => t.UserId == userId)
+            .Select(t => t.Token)
+            .Distinct()
+            .ToListAsync();
+
+        if (tokens.Count == 0)
+            return false;
+
+        try
+        {
+            var results = await fcmSender.SendAsync(
+                tokens,
+                "Notifica di prova",
+                "Le notifiche push funzionano correttamente su questo dispositivo.",
+                new Dictionary<string, string>());
+
+            var deadTokens = results
+                .Where(r => r.IsUnregistered)
+                .Select(r => r.Token)
+                .ToList();
+
+            if (deadTokens.Count > 0)
+            {
+                var toRemove = await db.FcmTokens
+                    .Where(t => deadTokens.Contains(t.Token))
+                    .ToListAsync();
+                db.FcmTokens.RemoveRange(toRemove);
+                await db.SaveChangesAsync();
+                logger.LogInformation("Removed {Count} unregistered FCM tokens", deadTokens.Count);
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            // Senza credenziali Firebase configurate l'invio fallisce: coerente con SendConfirmationRequestAsync
+            logger.LogWarning(ex, "Test push notification failed for user {UserId}", userId);
+            return false;
+        }
+    }
 }

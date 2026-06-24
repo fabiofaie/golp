@@ -60,3 +60,8 @@
 
   Soluzione pratica: implementare US-031 prima di US-032, oppure se invertito, la prima storia implementata introduce
   SecurityStamp e l'altra lo riusa senza ripeterlo.
+
+  Storie con migration EF: US-016, US-031, US-032 (condivisa con US-031), US-021.
+
+  Senza migration: US-029, US-030, US-035, US-036, US-037, US-033 — solo logica applicativa/frontend, nessun cambio
+  schema.

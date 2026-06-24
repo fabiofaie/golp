@@ -486,6 +486,8 @@ public class RecordingPushNotificationService : IPushNotificationService
         throw new InvalidOperationException("FCM unreachable (simulato)");
     }
 
+    public Task<bool> SendTestNotificationAsync(Guid userId) => Task.FromResult(false);
+
     public async Task<PushCall> WaitForCallAsync(Guid matchId, TimeSpan timeout)
     {
         var deadline = DateTime.UtcNow + timeout;
