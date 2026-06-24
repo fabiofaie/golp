@@ -57,7 +57,8 @@
       "Bash(pkill -f \"ng serve\\\\|@angular/cli\")",
       "Bash(sort -t- -k2 -n)",
       "PowerShell(Get-Process *)",
-      "PowerShell(Stop-Process *)"
+      "PowerShell(Stop-Process *)",
+      "Bash(awk -F: '$1<118')"
     ]
   }
 }

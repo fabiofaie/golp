@@ -5,8 +5,8 @@
 ## Riepilogo
 
 - Epic totali: 5
-- Storie totali: 37
-- Storie TODO: 10 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 21
+- Storie totali: 38
+- Storie TODO: 11 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 21
 
 ---
 
@@ -112,6 +112,33 @@ Un utente si unisce a due circoli diversi e li vede entrambi nella propria lista
 **Open questions**
 
 - Il meccanismo di join dipende dalla risposta su invite-only vs libero (vedi US-002)
+
+---
+
+#### US-038: Notifica email allo staff per nuove registrazioni
+
+**Epic:** EP-001 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** TODO
+**Blocked by:** -
+
+**Story**
+Come gestore del progetto GOLP, voglio ricevere una email a `iscrizioni.golp@eqproject.it` ogni volta che un nuovo utente si registra o un nuovo circolo viene creato, così che possa monitorare la crescita della piattaforma senza dover controllare il database.
+
+**Demonstrates**
+Registrando un nuovo account giocatore (US-001) arriva una email a `iscrizioni.golp@eqproject.it` con i dati essenziali del nuovo utente. Creando un nuovo circolo (US-002) arriva una email separata con i dati essenziali del nuovo circolo.
+
+**Acceptance Criteria**
+- [ ] Al completamento con successo della registrazione di un nuovo utente (`POST /auth/register`), viene inviata una email a `iscrizioni.golp@eqproject.it` con almeno: email e nome utente registrato, data/ora
+- [ ] Al completamento con successo della creazione di un nuovo circolo (`POST /circles`), viene inviata una email a `iscrizioni.golp@eqproject.it` con almeno: nome circolo, sport configurato, utente creatore, data/ora
+- [ ] Un fallimento nell'invio dell'email non blocca né fa fallire la registrazione/creazione circolo (l'operazione principale resta sincrona e indipendente dalla notifica)
+- [ ] In ambiente di sviluppo l'invio reale è disattivabile/sostituibile da un log console (coerente con `DevelopmentEmailService` esistente), per non spammare la casella reale durante i test
+
+**Out of scope**
+- Email di benvenuto/conferma indirizzata al nuovo utente stesso (resta distinta da questa notifica interna)
+- Digest aggregato (es. riepilogo giornaliero) — questa storia è notifica immediata per singolo evento
+- Configurazione UI per disattivare la notifica — è un comportamento di sistema, non una preferenza utente
+
+**Open questions**
+- Provider SMTP/transazionale di produzione da usare (es. SMTP relay esistente, SendGrid, ecc.) — da chiarire in `/eq-plan`
 
 ---
 

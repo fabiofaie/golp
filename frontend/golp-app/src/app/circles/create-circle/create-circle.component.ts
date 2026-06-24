@@ -35,16 +35,6 @@ export class CreateCircleComponent implements OnInit {
     });
   }
 
-  sportLabel(sport: string): string {
-    const map: Record<string, string> = {
-      padel: 'Padel',
-      beachtennis: 'Beach Tennis',
-      basket2v2: 'Basket 2v2',
-      burraco: 'Burraco',
-    };
-    return map[sport] ?? sport;
-  }
-
   submit(): void {
     if (this.form.invalid || this.loading) return;
     this.loading = true;

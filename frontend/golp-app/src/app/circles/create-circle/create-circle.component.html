@@ -44,7 +44,7 @@
           <select id="circle-sport" formControlName="sport">
             <option value="">Scegli una disciplina…</option>
             @for (s of sports; track s.sport) {
-              <option [value]="s.sport">{{ sportLabel(s.sport) }}</option>
+              <option [value]="s.sport">{{ s.displayName }}</option>
             }
           </select>
           <svg class="select-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">

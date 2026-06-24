@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 
 export interface SportConfig {
   sport: string;
+  displayName: string;
   pointUnit: string;
   sets: boolean;
   teamSize: number;
