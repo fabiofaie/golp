@@ -54,7 +54,10 @@
       "PowerShell(dotnet user-secrets set *)",
       "PowerShell(dotnet user-secrets list *)",
       "Bash(pkill -f \"dotnet.*Golp.Api\")",
-      "Bash(pkill -f \"ng serve\\\\|@angular/cli\")"
+      "Bash(pkill -f \"ng serve\\\\|@angular/cli\")",
+      "Bash(sort -t- -k2 -n)",
+      "PowerShell(Get-Process *)",
+      "PowerShell(Stop-Process *)"
     ]
   }
 }

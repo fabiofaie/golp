@@ -5,8 +5,8 @@
 ## Riepilogo
 
 - Epic totali: 5
-- Storie totali: 32
-- Storie TODO: 7 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 19
+- Storie totali: 33
+- Storie TODO: 7 | PLANNED: 1 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 20
 
 ---
 
@@ -1134,4 +1134,40 @@ La pagina Profilo mostra un elenco dei circoli dell'utente con, per ciascuno, il
 
 ---
 
-> **PROSSIMO PASSO:** esegui `/eq-plan US-027` per pianificare la palette chiara, oppure `/eq-next` per il riepilogo dello stato corrente.
+---
+
+#### US-034: Margine corretto per partite pari su set o game
+
+**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-24):** Review umana OK.
+**Review note (2026-06-24):** `MatchEndpoints.cs` (validazione: pareggio set ammesso se i game decidono, 400 solo su vero pareggio totale), `RatingService.cs` (scoreRatio: peso set forzato a 0 se set pari, a 1 se game pari; floor ±1 in `ComputeDeltas` quando il margine reale arrotonderebbe a 0 — segno da `margin`, non da `isWinner`). Test: 3 integration (`MatchIntegrationTests`, `RatingServiceIntegrationTests`) + 3 unit (`RatingServiceTests`), suite completa 193/193 verde. Reviewer APPROVE. > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-034`.
+**Blocked by:** US-012
+
+**Story**
+Come Marco, voglio che il calcolo del rating riconosca correttamente le partite finite in pareggio a livello di set o di game, così che il delta assegnato rifletta il reale margine della vittoria invece di trattare un pareggio parziale come una vittoria netta.
+
+**Demonstrates**
+Per uno sport a set (es. padel), se una partita finisce 1-1 nei set ma con game totali diversi, la creazione partita è ora ammessa (il vincitore è deciso dai game) e il delta ELO viene calcolato usando solo la differenza di game (il contributo "set" del margine è azzerato). Se invece la partita finisce con lo stesso numero di game totali ma set diversi, il delta viene calcolato usando solo la differenza di reti/punti (point_unit dello sport). Un delta che arrotonderebbe a 0 per una partita con vincitore reale viene forzato a ±1. Il vero pareggio totale (set pari e game pari) resta bloccato in creazione come oggi, quindi non genera mai un delta.
+
+**Acceptance Criteria**
+- [ ] La creazione partita per sport a set ammette un pareggio di set (es. 1-1) quando i game totali decidono un vincitore: in questo caso il vincitore è la squadra con più game totali
+- [ ] La creazione partita resta bloccata con 400 solo per il vero pareggio totale (set pari E game totali pari) - invariato rispetto a oggi
+- [ ] Per sport a set: se i set vinti dalle due squadre sono uguali (ma i game decidono), il margine usato nella formula ELO si basa esclusivamente sulla differenza di game totali, ignorando la componente set
+- [ ] Per sport a set: se i game totali delle due squadre sono uguali (ma i set decidono), il margine usato nella formula ELO si basa esclusivamente sulla differenza di reti/punti (point_unit), ignorando la componente game
+- [ ] Se il margine calcolato produce un delta che arrotonderebbe a 0 per una partita con un vincitore reale (set o game non entrambi pari), il delta minimo applicato è ±1 (con segno coerente: +1 al team vincente, -1 al perdente) - mai 0 quando esiste un vincitore
+- [ ] Per sport senza set (es. burraco, basket2v2), il comportamento esistente non cambia: pareggio resta bloccato in creazione, formula basata solo su point_unit invariata
+- [ ] La formula esistente (amplifier 0.7, K 32/48, rating iniziale 1000) resta invariata nei casi non di pareggio parziale
+
+**Out of scope**
+- Ricalcolo retroattivo dei rating storici già applicati con la formula precedente
+- Modifica dei parametri amplifier/K/rating iniziale
+- Esposizione della formula o del criterio di pareggio all'utente (algoritmo resta opaco)
+- Ammissione del pareggio totale (per qualunque sport) — resta bloccato in creazione come oggi, quindi un delta esattamente 0 non si verifica mai in pratica
+- Estensione del concetto di pareggio parziale a sport senza set (burraco, basket2v2)
+
+**Open questions**
+- (nessuna — ambiguità risolte: pareggio di set ammesso solo se i game decidono il vincitore; pareggio totale resta bloccato per tutti gli sport)
+
+---
+
+> **PROSSIMO PASSO:** esegui `/eq-plan US-034` per pianificare la correzione del margine ELO, oppure `/eq-next` per il riepilogo dello stato corrente.

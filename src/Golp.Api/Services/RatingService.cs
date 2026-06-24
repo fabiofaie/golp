@@ -46,6 +46,10 @@ public class RatingService : IRatingService
         int DeltaFor(int k, bool isWinner)
         {
             var delta = (int)Math.Round(k * margin);
+            // US-034: un margine reale (la partita ha un vincitore) non deve mai arrotondare a 0.
+            // Il segno segue margin, non isWinner: un super-favorito che vince di poco può avere margin < 0.
+            if (delta == 0 && margin != 0)
+                delta = margin > 0 ? 1 : -1;
             return isWinner ? delta : -delta;
         }
 
@@ -109,7 +113,14 @@ public class RatingService : IRatingService
             int totalSets = match.Sets.Count(s => s.Team1Score != s.Team2Score);
             double setRatio  = totalSets > 0 ? (double)setsWonByWinner / totalSets : 0.5;
             double gameRatio = (double)winnerUnits / (totalTeam1 + totalTeam2);
-            scoreRatio = Math.Clamp(sport!.SetWeight * setRatio + (1 - sport.SetWeight) * gameRatio, 0.5, 1.0);
+
+            // US-034: set pari (vincitore deciso dai game) → margine solo da game, niente contributo set
+            bool setsTied = setsWonByWinner == totalSets - setsWonByWinner;
+            // US-034: game pari (vincitore deciso dai set) → margine solo da set, niente contributo game
+            bool gamesTied = totalTeam1 == totalTeam2;
+
+            double effectiveSetWeight = setsTied ? 0.0 : gamesTied ? 1.0 : sport!.SetWeight;
+            scoreRatio = Math.Clamp(effectiveSetWeight * setRatio + (1 - effectiveSetWeight) * gameRatio, 0.5, 1.0);
         }
         else
         {

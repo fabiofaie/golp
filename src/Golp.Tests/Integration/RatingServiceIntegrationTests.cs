@@ -163,4 +163,33 @@ public class RatingServiceIntegrationTests
         Assert.Equal(989, memberships[playerIds[2]].Rating);
         Assert.Equal(0, match.DeltaTeam1Player1!.Value + match.DeltaTeam2Player1!.Value);
     }
+
+    // US-034 — sets pari (1-1) ma game decidono (10 vs 8): margine solo da game_ratio, nessun delta a 0
+    [Fact]
+    public async Task SetSport_ConfirmedMatch_SetsTied_UsesGameRatioOnly_NoZeroDelta()
+    {
+        using var db = CreateDb();
+        var (matchId, circleId, playerIds) = await SeedConfirmedMatchAsync(db, createCircleWithSets: true);
+
+        // override dei set seedati col caso US-034: 6-2, 4-6 (1 set a testa, game 10 vs 8)
+        var existingSets = await db.MatchSets.Where(s => s.MatchId == matchId).ToListAsync();
+        db.MatchSets.RemoveRange(existingSets);
+        db.MatchSets.AddRange(
+            new MatchSet { MatchId = matchId, SetNumber = 1, Team1Score = 6, Team2Score = 2 },
+            new MatchSet { MatchId = matchId, SetNumber = 2, Team1Score = 4, Team2Score = 6 });
+        await db.SaveChangesAsync();
+
+        await new RatingService().CalculateAndApplyAsync(matchId, db);
+        await db.SaveChangesAsync();
+
+        var match = await db.Matches.AsNoTracking().SingleAsync(m => m.Id == matchId);
+        var memberships = await db.CircleMemberships.AsNoTracking()
+            .Where(m => m.CircleId == circleId)
+            .ToDictionaryAsync(m => m.UserId);
+
+        Assert.NotEqual(0, match.DeltaTeam1Player1);
+        Assert.True(memberships[playerIds[0]].Rating > 1000);
+        Assert.True(memberships[playerIds[2]].Rating < 1000);
+        Assert.Equal(0, match.DeltaTeam1Player1!.Value + match.DeltaTeam2Player1!.Value);
+    }
 }

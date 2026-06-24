@@ -81,8 +81,17 @@ public static class MatchEndpoints
         if (circle.Sets)
         {
             if (team1Wins == team2Wins)
-                return Results.BadRequest(new { error = "La partita deve avere un vincitore (set pari non ammessi)" });
-            winnerTeam = team1Wins > team2Wins ? 1 : 2;
+            {
+                int totalGamesTeam1 = req.Sets.Sum(s => s.Team1);
+                int totalGamesTeam2 = req.Sets.Sum(s => s.Team2);
+                if (totalGamesTeam1 == totalGamesTeam2)
+                    return Results.BadRequest(new { error = "La partita deve avere un vincitore (pareggio totale non ammesso)" });
+                winnerTeam = totalGamesTeam1 > totalGamesTeam2 ? 1 : 2;
+            }
+            else
+            {
+                winnerTeam = team1Wins > team2Wins ? 1 : 2;
+            }
         }
         else
         {

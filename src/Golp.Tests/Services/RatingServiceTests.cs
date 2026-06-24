@@ -303,4 +303,49 @@ public class RatingServiceTests
         Assert.Equal(1, f.Match.DeltaTeam1Player1);
         Assert.Equal(-1, f.Match.DeltaTeam2Player1);
     }
+
+    // US-034 — set pari (1-1), game decidono: margine solo da game_ratio (peso set forzato a 0)
+    // sets (6,4) (2,6): team1Wins=1, team2Wins=1 → tied. totalTeam1=8, totalTeam2=10... serve team1 in vantaggio nei game
+    // usiamo (6,2) (4,6): team1Wins=1 (6>2), team2Wins=1 (4<6) tied. totalTeam1=10, totalTeam2=8, gameRatio=10/18≈0.5556
+    // effective=0.5+0.0556×0.7≈0.5389, E_win=0.5, margin≈0.0389, K=48 → round(1.867)=2
+    [Fact]
+    public async Task SetSport_SetsTied_GamesDecide_UsesGameRatioOnly()
+    {
+        using var db = CreateDb();
+        var f = await SetupAsync(db, [(6, 2), (4, 6)], hasSets: true);
+
+        await new RatingService().CalculateAndApplyAsync(f.Match.Id, db);
+
+        Assert.Equal(2, f.Match.DeltaTeam1Player1);
+        Assert.Equal(-2, f.Match.DeltaTeam2Player1);
+    }
+
+    // US-034 — game pari (14-14) ma set 2-1: margine solo da set_ratio (peso set forzato a 1)
+    // sets (6,4) (2,6) (6,4): team1Wins=2, team2Wins=1, totalTeam1=14, totalTeam2=14 → tied
+    // setRatio=2/3≈0.6667, effective=0.5+0.1667×0.7≈0.6167, margin≈0.1167, K=48 → round(5.6)=6
+    [Fact]
+    public async Task SetSport_GamesTied_SetsDecide_UsesSetRatioOnly()
+    {
+        using var db = CreateDb();
+        var f = await SetupAsync(db, [(6, 4), (2, 6), (6, 4)], hasSets: true);
+
+        await new RatingService().CalculateAndApplyAsync(f.Match.Id, db);
+
+        Assert.Equal(6, f.Match.DeltaTeam1Player1);
+        Assert.Equal(-6, f.Match.DeltaTeam2Player1);
+    }
+
+    // US-034 — margine reale ma minuscolo (51-49, rating pari): arrotonderebbe a 0, va forzato a ±1
+    // ratio=0.51, effective=0.5+0.01×0.7=0.507, margin=0.007, K=48 → round(0.336)=0 → floor a 1
+    [Fact]
+    public async Task TinyRealMargin_RoundsToZero_FlooredToOne()
+    {
+        using var db = CreateDb();
+        var f = await SetupAsync(db, [(51, 49)]);
+
+        await new RatingService().CalculateAndApplyAsync(f.Match.Id, db);
+
+        Assert.Equal(1, f.Match.DeltaTeam1Player1);
+        Assert.Equal(-1, f.Match.DeltaTeam2Player1);
+    }
 }

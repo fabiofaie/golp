@@ -40,6 +40,35 @@ public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
         Assert.Equal(1, json.GetProperty("winnerTeam").GetInt32());
     }
 
+    // US-034 AC — set pari ma game diversi → 201, vincitore deciso dai game
+    [Fact]
+    public async Task CreateMatch_SetsTied_GamesDecide_Returns201()
+    {
+        var (circleId, ids, tokens) = await SetupAsync(useSets: true);
+        SetAuth(tokens[0]);
+
+        // 1 set a testa (6-2, 4-6), ma team1 totalizza più game (10 vs 8)
+        var resp = await PostMatchAsync(circleId, ids[0], ids[1], ids[2], ids[3],
+            new[] { new { team1 = 6, team2 = 2 }, new { team1 = 4, team2 = 6 } });
+
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        var json = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(1, json.GetProperty("winnerTeam").GetInt32());
+    }
+
+    // US-034 AC — set pari E game pari → vero pareggio, 400 invariato
+    [Fact]
+    public async Task CreateMatch_SetsTied_GamesAlsoTied_Returns400()
+    {
+        var (circleId, ids, tokens) = await SetupAsync(useSets: true);
+        SetAuth(tokens[0]);
+
+        var resp = await PostMatchAsync(circleId, ids[0], ids[1], ids[2], ids[3],
+            new[] { new { team1 = 6, team2 = 4 }, new { team1 = 4, team2 = 6 } });
+
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
     // AC2 — sets=false, punteggio singolo → 201
     [Fact]
     public async Task CreateMatch_SetsFalse_SingleScore_Returns201()
