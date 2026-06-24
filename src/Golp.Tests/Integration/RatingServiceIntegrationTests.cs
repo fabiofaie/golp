@@ -37,6 +37,15 @@ public class RatingServiceIntegrationTests
                 Sets      = true,
                 TeamSize  = 2,
             });
+
+            if (!await db.Sports.AnyAsync(s => s.Key == "padel"))
+            {
+                db.Sports.Add(new Sport
+                {
+                    Key = "padel", DisplayName = "Padel", PointUnit = "games",
+                    Sets = true, TeamSize = 2, IsActive = true, SetWeight = 0.4,
+                });
+            }
         }
 
         foreach (var pid in playerIds)

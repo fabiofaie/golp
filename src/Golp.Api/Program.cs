@@ -29,6 +29,9 @@ else
 // Rating service (US-007) — ELO alla conferma partita
 builder.Services.AddScoped<IRatingService, RatingService>();
 
+// Sports config da DB (US-016)
+builder.Services.AddScoped<ISportsService, SportsService>();
+
 // Push notifications (US-006) — Firebase init solo se credenziali configurate;
 // senza credenziali l'invio fallisce silenziosamente (gestito in PushNotificationService)
 var firebaseJson = builder.Configuration["Firebase:ServiceAccountJson"];

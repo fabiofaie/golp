@@ -11,7 +11,7 @@ public static class CircleEndpoints
 {
     public static IEndpointRouteBuilder MapCircleEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/sports", GetSports);
+        app.MapGet("/sports", GetSportsAsync);
         app.MapGet("/circles/invite/{token}", GetInviteInfoAsync);
 
         var circles = app.MapGroup("/circles").RequireAuthorization();
@@ -29,8 +29,8 @@ public static class CircleEndpoints
     }
 
     // GET /sports — public
-    private static IResult GetSports() =>
-        Results.Ok(SportsConfig.GetAll());
+    private static async Task<IResult> GetSportsAsync(ISportsService sportsService) =>
+        Results.Ok(await sportsService.GetAllAsync());
 
     // GET /circles — lista tutti i circoli con flag isAlreadyMember per l'utente corrente
     private static async Task<IResult> GetAllCirclesAsync(
@@ -66,7 +66,8 @@ public static class CircleEndpoints
     private static async Task<IResult> CreateCircleAsync(
         CreateCircleRequest req,
         ClaimsPrincipal user,
-        AppDbContext db)
+        AppDbContext db,
+        ISportsService sportsService)
     {
         var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
@@ -78,7 +79,7 @@ public static class CircleEndpoints
         if (req.Name.Length > 100)
             return Results.BadRequest(new { error = "Il nome non può superare i 100 caratteri" });
 
-        var sportConfig = SportsConfig.GetBySport(req.Sport);
+        var sportConfig = await sportsService.GetBySportAsync(req.Sport);
         if (sportConfig == null)
             return Results.BadRequest(new { error = "Sport non valido" });
 

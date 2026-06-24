@@ -15,6 +15,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<MatchConfirmation> MatchConfirmations => Set<MatchConfirmation>();
     public DbSet<FcmToken> FcmTokens => Set<FcmToken>();
     public DbSet<CircleAward> CircleAwards => Set<CircleAward>();
+    public DbSet<Sport> Sports => Set<Sport>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -138,6 +139,22 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasKey(a => a.Id);
             e.Property(a => a.PeriodType).HasMaxLength(10).IsRequired();
             e.HasIndex(a => new { a.CircleId, a.PeriodType, a.PeriodYear, a.PeriodMonth }).IsUnique();
+        });
+
+        modelBuilder.Entity<Sport>(e =>
+        {
+            e.HasKey(s => s.Id);
+            e.Property(s => s.Key).HasMaxLength(50).IsRequired();
+            e.Property(s => s.DisplayName).HasMaxLength(100).IsRequired();
+            e.Property(s => s.PointUnit).HasMaxLength(20).IsRequired();
+            e.HasIndex(s => s.Key).IsUnique();
+
+            e.HasData(
+                new Sport { Id = 1, Key = "padel", DisplayName = "Padel", PointUnit = "games", Sets = true, TeamSize = 2, IsActive = true, SetWeight = 0.4 },
+                new Sport { Id = 2, Key = "beachtennis", DisplayName = "Beach Tennis", PointUnit = "games", Sets = true, TeamSize = 2, IsActive = true, SetWeight = 0.4 },
+                new Sport { Id = 3, Key = "basket2v2", DisplayName = "Basket 2v2", PointUnit = "points", Sets = false, TeamSize = 2, IsActive = true, SetWeight = 0.0 },
+                new Sport { Id = 4, Key = "burraco", DisplayName = "Burraco", PointUnit = "score", Sets = false, TeamSize = 2, IsActive = true, SetWeight = 0.0 }
+            );
         });
     }
 }

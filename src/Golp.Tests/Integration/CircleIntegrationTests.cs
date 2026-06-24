@@ -8,15 +8,18 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Golp.Tests.Integration;
 
 public class CircleIntegrationTests : IClassFixture<CircleTestFactory>
 {
+    private readonly CircleTestFactory _factory;
     private readonly HttpClient _client;
 
     public CircleIntegrationTests(CircleTestFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
     }
 
@@ -35,6 +38,29 @@ public class CircleIntegrationTests : IClassFixture<CircleTestFactory>
         Assert.Contains("beachtennis", sports);
         Assert.Contains("basket2v2",   sports);
         Assert.Contains("burraco",     sports);
+    }
+
+    // AC2/AC4 — sport con IsActive=false non deve apparire in GET /sports
+    [Fact]
+    public async Task GetSports_InactiveSport_IsExcluded()
+    {
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Sports.Add(new Sport
+            {
+                Key = "inactive-sport-test", DisplayName = "Inactive", PointUnit = "points",
+                Sets = false, TeamSize = 2, IsActive = false, SetWeight = 0.0,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var response = await _client.GetAsync("/sports");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var sports = body.EnumerateArray().Select(s => s.GetProperty("sport").GetString()).ToList();
+        Assert.DoesNotContain("inactive-sport-test", sports);
     }
 
     // AC1 — crea circolo con nome+sport validi → 200 + body corretto
@@ -733,6 +759,13 @@ public class JoinCircleTestFactory : WebApplicationFactory<Program>
 
         builder.UseEnvironment("Testing");
     }
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        var host = base.CreateHost(builder);
+        using var scope = host.Services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.EnsureCreated();
+        return host;
+    }
 }
 
 public class CircleTestFactory : WebApplicationFactory<Program>
@@ -757,5 +790,12 @@ public class CircleTestFactory : WebApplicationFactory<Program>
         });
 
         builder.UseEnvironment("Testing");
+    }
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        var host = base.CreateHost(builder);
+        using var scope = host.Services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.EnsureCreated();
+        return host;
     }
 }

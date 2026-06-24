@@ -102,7 +102,8 @@ public class RatingService : IRatingService
         bool team1Won   = match.WinnerTeam == 1;
         int winnerUnits = team1Won ? totalTeam1 : totalTeam2;
 
-        var sport     = SportsConfig.GetBySport(circle?.Sport ?? "");
+        var circleSport = circle?.Sport ?? "";
+        var sport     = await db.Sports.FirstOrDefaultAsync(s => s.IsActive && s.Key == circleSport);
         bool useBlended = (circle?.Sets == true) && (sport?.SetWeight > 0);
 
         double scoreRatio;

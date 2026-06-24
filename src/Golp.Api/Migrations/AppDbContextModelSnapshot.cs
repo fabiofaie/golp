@@ -365,6 +365,95 @@ namespace Golp.Api.Migrations
                     b.ToTable("RefreshTokens");
                 });
 
+            modelBuilder.Entity("Golp.Api.Data.Entities.Sport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PointUnit")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<double>("SetWeight")
+                        .HasColumnType("float");
+
+                    b.Property<bool>("Sets")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("TeamSize")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("Sports");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            DisplayName = "Padel",
+                            IsActive = true,
+                            Key = "padel",
+                            PointUnit = "games",
+                            SetWeight = 0.40000000000000002,
+                            Sets = true,
+                            TeamSize = 2
+                        },
+                        new
+                        {
+                            Id = 2,
+                            DisplayName = "Beach Tennis",
+                            IsActive = true,
+                            Key = "beachtennis",
+                            PointUnit = "games",
+                            SetWeight = 0.40000000000000002,
+                            Sets = true,
+                            TeamSize = 2
+                        },
+                        new
+                        {
+                            Id = 3,
+                            DisplayName = "Basket 2v2",
+                            IsActive = true,
+                            Key = "basket2v2",
+                            PointUnit = "points",
+                            SetWeight = 0.0,
+                            Sets = false,
+                            TeamSize = 2
+                        },
+                        new
+                        {
+                            Id = 4,
+                            DisplayName = "Burraco",
+                            IsActive = true,
+                            Key = "burraco",
+                            PointUnit = "score",
+                            SetWeight = 0.0,
+                            Sets = false,
+                            TeamSize = 2
+                        });
+                });
+
             modelBuilder.Entity("Golp.Api.Data.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")

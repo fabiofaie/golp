@@ -541,7 +541,8 @@ _Funzionalità per gestire la piattaforma senza dover rilasciare nuove versioni:
 
 #### US-016: Sport configurabili da database
 
-**Epic:** EP-005 | **Priority:** HIGH | **Story Points:** 5 | **Status:** PLANNED
+**Epic:** EP-005 | **Priority:** HIGH | **Story Points:** 5 | **Status:** REVIEW
+**Review note (2026-06-24):** Codice in `src/Golp.Api/{Data/Entities/Sport.cs, Data/AppDbContext.cs, Services/{ISportsService,SportsService}.cs, Endpoints/CircleEndpoints.cs, Services/RatingService.cs}`, migration `20260624145528_AddSportsTable`, test in `src/Golp.Tests/{Services/SportsServiceTests.cs, Integration/CircleIntegrationTests.cs, +17 test factory fixes}`. Reviewer APPROVE. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-016` (o aggiorna manualmente lo status a `DONE`).
 **Blocked by:** -
 
 **Story**

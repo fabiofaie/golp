@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { PwaInstallService } from './pwa-install.service';
 import { PwaInstallGuideComponent } from './pwa-install-guide.component';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-pwa-install-banner',
@@ -103,19 +104,24 @@ import { PwaInstallGuideComponent } from './pwa-install-guide.component';
 })
 export class PwaInstallBannerComponent {
   private readonly installService = inject(PwaInstallService);
+  private readonly authService = inject(AuthService);
 
-  visible = this.installService.shouldShowBanner();
+  dismissed = false;
   showGuide = false;
 
+  get visible(): boolean {
+    return !this.dismissed && this.authService.isAuthenticated() && this.installService.shouldShowBanner();
+  }
+
   constructor() {
-    if (this.visible) {
-      document.body.classList.add('has-pwa-install-banner');
-    }
+    effect(() => {
+      document.body.classList.toggle('has-pwa-install-banner', this.visible);
+    });
   }
 
   onDismiss(): void {
     this.installService.dismiss();
-    this.visible = false;
+    this.dismissed = true;
     document.body.classList.remove('has-pwa-install-banner');
   }
 }

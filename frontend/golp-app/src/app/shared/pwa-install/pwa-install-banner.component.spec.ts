@@ -1,6 +1,8 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PwaInstallBannerComponent } from './pwa-install-banner.component';
 import { PwaInstallService } from './pwa-install.service';
+import { AuthService } from '../../auth/auth.service';
 
 describe('PwaInstallBannerComponent', () => {
   let fixture: ComponentFixture<PwaInstallBannerComponent>;
@@ -12,7 +14,10 @@ describe('PwaInstallBannerComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [PwaInstallBannerComponent],
-      providers: [{ provide: PwaInstallService, useValue: installServiceMock }]
+      providers: [
+        { provide: PwaInstallService, useValue: installServiceMock },
+        { provide: AuthService, useValue: { isAuthenticated: signal(true) } }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(PwaInstallBannerComponent);
@@ -54,7 +59,29 @@ describe('PwaInstallBannerComponent (banner non mostrato)', () => {
 
     await TestBed.configureTestingModule({
       imports: [PwaInstallBannerComponent],
-      providers: [{ provide: PwaInstallService, useValue: installServiceMock }]
+      providers: [
+        { provide: PwaInstallService, useValue: installServiceMock },
+        { provide: AuthService, useValue: { isAuthenticated: signal(true) } }
+      ]
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(PwaInstallBannerComponent);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.install-banner')).toBeFalsy();
+  });
+});
+
+describe('PwaInstallBannerComponent (utente non autenticato)', () => {
+  it('non mostra il banner se l\'utente non ha fatto login, anche con shouldShowBanner true', async () => {
+    const installServiceMock = jasmine.createSpyObj<PwaInstallService>('PwaInstallService', ['shouldShowBanner', 'dismiss', 'hasNativePrompt', 'triggerNativePrompt']);
+    installServiceMock.shouldShowBanner.and.returnValue(true);
+
+    await TestBed.configureTestingModule({
+      imports: [PwaInstallBannerComponent],
+      providers: [
+        { provide: PwaInstallService, useValue: installServiceMock },
+        { provide: AuthService, useValue: { isAuthenticated: signal(false) } }
+      ]
     }).compileComponents();
 
     const fixture = TestBed.createComponent(PwaInstallBannerComponent);
