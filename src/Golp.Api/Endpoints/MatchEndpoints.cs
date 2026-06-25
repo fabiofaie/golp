@@ -298,6 +298,10 @@ public static class MatchEndpoints
         if (match == null || match.CircleId != circleId)
             return Results.NotFound(new { error = "Partita non trovata" });
 
+        var isMember = await db.CircleMemberships.AnyAsync(m => m.CircleId == circleId && m.UserId == userId);
+        if (!isMember)
+            return Results.Json(new { error = "Non sei membro del circolo" }, statusCode: 403);
+
         var playerIds = new[] { match.Team1Player1Id, match.Team1Player2Id, match.Team2Player1Id, match.Team2Player2Id };
         var userNames = await db.Users
             .Where(u => playerIds.Contains(u.Id))
@@ -313,6 +317,44 @@ public static class MatchEndpoints
         var confirmationsCount = await db.MatchConfirmations.CountAsync(c => c.MatchId == matchId);
         var hasCurrentUserConfirmed = await db.MatchConfirmations.AnyAsync(c => c.MatchId == matchId && c.UserId == userId);
 
+        DateTimeOffset? confirmedAt = null;
+        string? confirmedByName = null;
+        bool? isForced = null;
+        object? deltas = null;
+
+        if (match.Status == "confirmed")
+        {
+            if (match.ForceConfirmedById is { } forcedById)
+            {
+                confirmedAt = match.ForceConfirmedAt;
+                isForced = true;
+                confirmedByName = userNames.TryGetValue(forcedById, out var forcedName)
+                    ? forcedName
+                    : await db.Users.Where(u => u.Id == forcedById).Select(u => u.Name).FirstOrDefaultAsync();
+            }
+            else
+            {
+                var decisive = await db.MatchConfirmations
+                    .Where(c => c.MatchId == matchId)
+                    .OrderByDescending(c => c.ConfirmedAt)
+                    .FirstOrDefaultAsync();
+                if (decisive != null)
+                {
+                    confirmedAt = decisive.ConfirmedAt;
+                    confirmedByName = userNames.GetValueOrDefault(decisive.UserId, "");
+                    isForced = false;
+                }
+            }
+
+            deltas = new[]
+            {
+                new { userId = match.Team1Player1Id, delta = match.DeltaTeam1Player1 },
+                new { userId = match.Team1Player2Id, delta = match.DeltaTeam1Player2 },
+                new { userId = match.Team2Player1Id, delta = match.DeltaTeam2Player1 },
+                new { userId = match.Team2Player2Id, delta = match.DeltaTeam2Player2 },
+            };
+        }
+
         return Results.Ok(new
         {
             id                      = match.Id,
@@ -322,6 +364,10 @@ public static class MatchEndpoints
             confirmationsCount,
             hasCurrentUserConfirmed,
             isParticipant           = playerIds.Contains(userId),
+            confirmedAt,
+            confirmedByName,
+            isForced,
+            deltas,
             sets,
             team1 = new[]
             {

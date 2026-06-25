@@ -60,6 +60,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'circles/:circleId/matches/:matchId/detail',
+    loadComponent: () => import('./circles/match-detail/match-detail.component').then(m => m.MatchDetailComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'circles/:circleId/awards',
     loadComponent: () => import('./circles/circle-awards/circle-awards.component').then(m => m.CircleAwardsComponent),
     canActivate: [authGuard]

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOLP — Dettaglio partita</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+  <div class="page">
+    <div class="bg-deco">i</div>
+
+    <!-- HEADER -->
+    <header class="auth-header">
+      <span class="brand">GOLP</span>
+      <a href="#" class="back-nav">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Storico partite
+      </a>
+    </header>
+
+    <!-- SPORT + STATUS -->
+    <div style="display:flex; align-items:center; gap: var(--sp-3); margin-bottom: var(--sp-5);">
+      <span class="sport-badge sport-badge--padel">Padel</span>
+      <span class="status-badge status-badge--confirmed" id="statusBadge">Confermata</span>
+    </div>
+
+    <!-- SCORE HERO -->
+    <div class="score-hero">
+      <div class="score-hero-meta">
+        <span class="match-date" id="createdAtLabel">Registrata: 22 giu 2026, 19:30</span>
+      </div>
+      <div class="teams-display">
+        <div class="team-row team-row--team1 team-row--winner">
+          <span class="team-row-names">Marco<span class="you-tag">Tu</span> &amp; Luca <span class="win-tag">✓ Vince</span></span>
+          <span class="team-score">2</span>
+        </div>
+        <div class="team-row team-row--team2">
+          <span class="team-row-names">Sara &amp; Giorgio</span>
+          <span class="team-score team-score--loser">1</span>
+        </div>
+      </div>
+      <div class="score-sets">6-4 &nbsp;·&nbsp; 3-6 &nbsp;·&nbsp; 7-5</div>
+    </div>
+
+    <!-- DECISION STRIP: confermata da 4° giocatore -->
+    <div class="decision-strip" id="decisionByPlayer">
+      <div class="decision-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="decision-text">
+        <div class="decision-title">Confermata da Giorgio</div>
+        <div class="decision-subtitle">4° conferma · 22 giu 2026, 20:12</div>
+      </div>
+    </div>
+
+    <!-- DECISION STRIP: confermata per forzatura -->
+    <div class="decision-strip" id="decisionForced" style="display:none;">
+      <div class="decision-icon decision-icon--forced">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 2v8m0 0l-3-3m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="decision-text">
+        <div class="decision-title">Confermata da Marco (proprietario)</div>
+        <div class="decision-subtitle">23 giu 2026, 09:00</div>
+      </div>
+      <span class="forced-badge">Forzata</span>
+    </div>
+
+    <!-- STATUS STRIP: pending -->
+    <div class="status-strip status-strip--pending" id="stripPending" style="display:none;">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span class="status-strip-text" id="pendingCount">In attesa di conferma — 2 di 4</span>
+    </div>
+
+    <!-- STATUS STRIP: disputed -->
+    <div class="status-strip status-strip--disputed" id="stripDisputed" style="display:none;">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2L2 13h12L8 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 6.5v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span class="status-strip-text">Contestata — esclusa dalla classifica</span>
+    </div>
+
+    <!-- DELTA SECTION -->
+    <div id="deltaSection">
+      <div class="section-heading">Variazione rating</div>
+      <div class="delta-list">
+        <div class="player-delta-row">
+          <span class="player-name">Marco <span class="you-tag" style="margin-left:6px;">Tu</span></span>
+          <span class="rating-arrow">1024 →</span>
+          <span class="delta-chip delta-chip--positive">+18</span>
+        </div>
+        <div class="player-delta-row">
+          <span class="player-name">Luca</span>
+          <span class="rating-arrow">1056 →</span>
+          <span class="delta-chip delta-chip--positive">+15</span>
+        </div>
+        <div class="player-delta-row">
+          <span class="player-name">Sara</span>
+          <span class="rating-arrow">998 →</span>
+          <span class="delta-chip delta-chip--negative">-16</span>
+        </div>
+        <div class="player-delta-row">
+          <span class="player-name">Giorgio</span>
+          <span class="rating-arrow">972 →</span>
+          <span class="delta-chip delta-chip--negative">-17</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- NO DELTA (pending/disputed) -->
+    <div class="muted-info" id="noDelta" style="display:none;">
+      Il rating verrà aggiornato solo a conferma avvenuta.
+    </div>
+
+    <!-- DEMO TOGGLE -->
+    <div class="demo-toggle">
+      <button class="demo-btn active" onclick="setState('confirmed-player', this)">Confermata (giocatore)</button>
+      <button class="demo-btn" onclick="setState('confirmed-forced', this)">Confermata (forzatura)</button>
+      <button class="demo-btn" onclick="setState('pending', this)">Pending</button>
+      <button class="demo-btn" onclick="setState('disputed', this)">Disputed</button>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

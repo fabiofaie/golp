@@ -307,6 +307,20 @@ describe('CircleMatchHistoryComponent', () => {
     expect(el.querySelector('.delta-badge')).toBeNull();
   });
 
+  // US-037 — link al dettaglio partita
+
+  it('match-date link navigates to detail route with circleId/matchId', () => {
+    const m = makeMatch();
+    matchSvc.getMatches.and.returnValue(of([m]));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+
+    const link: HTMLAnchorElement = fixture.nativeElement.querySelector('.match-date');
+    expect(link).toBeTruthy();
+    expect(link.getAttribute('href')).toBe(`/circles/${CIRCLE_ID}/matches/${m.id}/detail`);
+  });
+
   it('shows loading state while matches are loading', () => {
     const pending$ = new Subject<MatchSummary[]>();
     matchSvc.getMatches.and.returnValue(pending$.asObservable());

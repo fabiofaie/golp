@@ -44,9 +44,18 @@ export interface MatchSetScore {
   team2Score: number;
 }
 
+export interface PlayerDelta {
+  userId: string;
+  delta: number | null;
+}
+
 export interface MatchDetail extends MatchSummary {
   isParticipant: boolean;
   sets: MatchSetScore[];
+  confirmedAt: string | null;
+  confirmedByName: string | null;
+  isForced: boolean | null;
+  deltas: PlayerDelta[] | null;
 }
 
 export interface ConfirmDisputeResponse {

@@ -1,0 +1,106 @@
+<div class="page">
+  <div class="bg-deco" aria-hidden="true">i</div>
+
+  <header class="auth-header">
+    <a [routerLink]="['/circles', circleId, 'matches']" class="back-nav">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Storico partite
+    </a>
+    <span class="brand">GOLP</span>
+  </header>
+
+  @if (state === 'loading') {
+    <p style="color:var(--color-text-secondary); font-size:13px; margin-top:32px;">Caricamento…</p>
+  }
+
+  @if (state === 'error') {
+    <div class="form-error" style="margin-top:32px;">{{ errorMessage }}</div>
+  }
+
+  @if (state === 'ready' && match) {
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:20px;">
+      <span class="status-badge"
+        [class.status-badge--pending]="match.status === 'pending'"
+        [class.status-badge--confirmed]="match.status === 'confirmed'"
+        [class.status-badge--disputed]="match.status === 'disputed'">
+        {{ match.status === 'confirmed' ? 'Confermata' : (match.status === 'disputed' ? 'Contestata' : 'In attesa') }}
+      </span>
+    </div>
+
+    <!-- score hero -->
+    <div class="match-card" style="margin-bottom:20px;">
+      <div class="match-date">Registrata: {{ match.createdAt | date:'dd/MM/yyyy, HH:mm' }}</div>
+      <div class="teams-display">
+        <div class="team-row" [class.team-row--winner]="match.winnerTeam === 1">
+          <span class="team-names">{{ teamNames(match.team1) }}</span>
+          @if (match.winnerTeam === 1) { <span class="win-tag">✓ Vince</span> }
+        </div>
+        <div class="team-row" [class.team-row--winner]="match.winnerTeam === 2">
+          <span class="team-names">{{ teamNames(match.team2) }}</span>
+          @if (match.winnerTeam === 2) { <span class="win-tag">✓ Vince</span> }
+        </div>
+      </div>
+      <div class="score-hero">{{ scoreLabel() }}</div>
+    </div>
+
+    <!-- decision strip: confermata -->
+    @if (match.status === 'confirmed') {
+      <div class="decision-strip" style="margin-bottom:20px;">
+        <div class="decision-icon" [class.decision-icon--forced]="match.isForced">
+          @if (match.isForced) {
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 2v8m0 0l-3-3m3 3l3-3M3 13h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          } @else {
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          }
+        </div>
+        <div class="decision-text">
+          <div class="decision-title">Confermata da {{ match.confirmedByName }}</div>
+          <div class="decision-subtitle">{{ match.confirmedAt | date:'dd/MM/yyyy, HH:mm' }}</div>
+        </div>
+        @if (match.isForced) {
+          <span class="forced-badge">Forzata</span>
+        }
+      </div>
+    }
+
+    <!-- status strip: pending -->
+    @if (match.status === 'pending') {
+      <div class="status-strip status-strip--pending" style="margin-bottom:20px;">
+        <span class="status-strip-text">In attesa di conferma — {{ match.confirmationsCount }} di 4</span>
+      </div>
+    }
+
+    <!-- status strip: disputed -->
+    @if (match.status === 'disputed') {
+      <div class="status-strip status-strip--disputed" style="margin-bottom:20px;">
+        <span class="status-strip-text">Contestata — esclusa dalla classifica</span>
+      </div>
+    }
+
+    <!-- delta section -->
+    @if (match.status === 'confirmed' && match.deltas) {
+      <div class="section-heading">Variazione rating</div>
+      <div class="delta-list">
+        @for (d of match.deltas; track d.userId) {
+          <div class="player-delta-row">
+            <span class="player-name">{{ playerName(d.userId) }}</span>
+            <span class="delta-badge"
+              [class.delta-badge--positive]="(d.delta ?? 0) > 0"
+              [class.delta-badge--negative]="(d.delta ?? 0) < 0"
+              [class.delta-badge--zero]="(d.delta ?? 0) === 0">
+              {{ (d.delta ?? 0) >= 0 ? '+' : '' }}{{ d.delta }}
+            </span>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="muted-info">Il rating verrà aggiornato solo a conferma avvenuta.</div>
+    }
+  }
+</div>

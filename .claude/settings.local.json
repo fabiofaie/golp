@@ -58,7 +58,8 @@
       "Bash(sort -t- -k2 -n)",
       "PowerShell(Get-Process *)",
       "PowerShell(Stop-Process *)",
-      "Bash(awk -F: '$1<118')"
+      "Bash(awk -F: '$1<118')",
+      "Bash(taskkill *)"
     ]
   }
 }

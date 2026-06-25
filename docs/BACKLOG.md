@@ -1271,8 +1271,10 @@ Quando il proprietario preme "Forza conferma" su una partita `pending`, prima de
 
 #### US-037: Pagina di dettaglio partita
 
-**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** PLANNED
+**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
 **Blocked by:** US-005
+**Approved (2026-06-25):** Review umana OK.
+**Review note (2026-06-25):** Backend in `src/Golp.Api/Endpoints/MatchEndpoints.cs` (membership check + campi dettaglio), frontend in `src/app/circles/match-detail/`, route in `app.routes.ts`, link in `circle-match-history.component.html`. Mockup in `docs/mockups/US-037/`. Test: 6 integration backend, 6 unit frontend, 22 spec storico, 3 e2e. Reviewer APPROVE. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-037` (o aggiorna manualmente lo status a `DONE`).
 
 **Story**
 Come giocatore, voglio poter cliccare su una partita nell'elenco e vedere una pagina di dettaglio con risultati, date e variazione di rating, così che possa capire esattamente come e quando una partita ha influito sul mio punteggio.

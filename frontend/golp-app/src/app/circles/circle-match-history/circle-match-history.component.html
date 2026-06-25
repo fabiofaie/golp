@@ -36,7 +36,9 @@
 
           <!-- header -->
           <div class="match-card-header">
-            <span class="match-date">{{ m.createdAt | date:'dd/MM, HH:mm' }}</span>
+            <a [routerLink]="['/circles', circleId, 'matches', m.id, 'detail']" class="match-date" style="text-decoration:underline;">
+              {{ m.createdAt | date:'dd/MM, HH:mm' }}
+            </a>
             <div style="display:flex; align-items:center; gap:6px;">
               @if (m.status !== 'confirmed') {
                 <span class="status-badge"
