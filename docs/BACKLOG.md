@@ -1088,7 +1088,9 @@ Nella pagina Profilo (introdotta in US-028) appare un campo con il nome visualiz
 
 #### US-031: Logout da tutti i device dal Profilo
 
-**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** PLANNED
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-25):** Review umana OK.
+**Review note (2026-06-25):** Backend: `User.SecurityStamp` (Guid) + migration; claim `security_stamp` nel JWT (`JwtService.GenerateToken`); validato in `Program.cs` (`OnTokenValidated`) contro DB. `POST /auth/logout-all` autenticato in `AuthEndpoints.cs`: rigenera stamp + `RevokeAllForUserAsync`. Frontend: `auth.service.ts` `logoutAllDevices()`, `profile.component.ts` con conferma inline a due step (nessun dialog riusabile esistente in progetto) + redirect login. Test: backend 207/207 verdi (5 nuovi unit/integration); frontend unit `profile.component` 16/16 verdi; `auth.service` 2 nuovi test falliscono per bug pre-esistente env (`environment.apiUrl`, stesso noto da US-029), logica corretta; e2e `profile-logout-all.spec.ts` 1/1 verde + regressione auth/profile-theme/profile-push 10/10 verdi. Reviewer APPROVE — no Critical. 1 nota non bloccante: query DB extra per ogni richiesta autenticata (validazione stamp), accettabile per MVP. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-031` (o aggiorna manualmente lo status a `DONE`).
 **Blocked by:** US-028
 
 **Story**
@@ -1116,7 +1118,9 @@ Nella pagina Profilo appare un'azione "Esci da tutti i device". Attivandola, tut
 
 #### US-032: Eliminazione account dal Profilo
 
-**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 8 | **Status:** PLANNED
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 8 | **Status:** DONE
+**Approved (2026-06-25):** Review umana OK.
+**Review note (2026-06-25):** Backend: `POST /auth/me/delete` in `AuthEndpoints.cs` — verifica password (BCrypt), anonimizza `User` (nome/email/password), rimuove `CircleMembership`, annulla `Match` pending con l'utente, rigenera `SecurityStamp` + revoca refresh token (riuso US-031). Match confirmed storici intatti per costruzione. Frontend: `auth.service.ts` `deleteAccount(password)`, `profile.component.ts` con conferma a due step + password. Bug reale trovato e fixato in `auth.interceptor.ts`: il 401 di password-errata veniva trattato come token scaduto (refresh+retry+logout spurio) — escluso `/auth/me/delete` dal flusso refresh, con test di regressione. Test: backend 213/213 verdi (6 nuovi `AccountDeletionIntegrationTests`); frontend unit `profile.component` 21/21, `auth.interceptor` 5/5 verdi; e2e `profile-delete-account` 1/1 + regressione 10/10 verdi (8 fail in suite scollegate add-member/circle-awards/circle-match-history/invite, pre-esistenti, nessun file di quelle aree toccato). Reviewer APPROVE — no Critical. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-032` (o aggiorna manualmente lo status a `DONE`).
 **Blocked by:** US-028
 
 **Story**

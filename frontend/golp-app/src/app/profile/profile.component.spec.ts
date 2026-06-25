@@ -1,9 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
+import { of, throwError } from 'rxjs';
 import { ProfileComponent } from './profile.component';
 import { ThemeService } from '../theme/theme.service';
 import { PushNotificationService } from '../push/push-notification.service';
 import { PwaPlatformService } from '../shared/pwa-install/pwa-platform.service';
+import { AuthService } from '../auth/auth.service';
 
 class FakePushNotificationService {
   supported = true;
@@ -50,20 +52,28 @@ describe('ProfileComponent', () => {
   let theme: ThemeService;
   let push: FakePushNotificationService;
   let platform: FakePwaPlatformService;
+  let authMock: jasmine.SpyObj<AuthService>;
+  let router: Router;
 
   function setup(): void {
+    authMock = jasmine.createSpyObj('AuthService', ['logoutAllDevices', 'deleteAccount']);
+    authMock.logoutAllDevices.and.returnValue(of(undefined));
+    authMock.deleteAccount.and.returnValue(of(undefined));
+
     TestBed.configureTestingModule({
       imports: [ProfileComponent],
       providers: [
         provideRouter([]),
         { provide: PushNotificationService, useClass: FakePushNotificationService },
         { provide: PwaPlatformService, useClass: FakePwaPlatformService },
+        { provide: AuthService, useValue: authMock },
       ]
     });
     fixture = TestBed.createComponent(ProfileComponent);
     theme = TestBed.inject(ThemeService);
     push = TestBed.inject(PushNotificationService) as unknown as FakePushNotificationService;
     platform = TestBed.inject(PwaPlatformService) as unknown as FakePwaPlatformService;
+    router = TestBed.inject(Router);
   }
 
   beforeEach(() => {
@@ -217,6 +227,139 @@ describe('ProfileComponent', () => {
       fixture.detectChanges();
 
       expect(fixture.nativeElement.querySelector('app-pwa-install-guide')).not.toBeNull();
+    });
+  });
+
+  describe('logout da tutti i device', () => {
+    function logoutAllButton(): HTMLButtonElement | null {
+      return fixture.nativeElement.querySelector('.btn-danger');
+    }
+
+    it('click su "Esci da tutti i device" mostra la conferma senza chiamare l\'API', () => {
+      logoutAllButton()!.click();
+      fixture.detectChanges();
+
+      expect(authMock.logoutAllDevices).not.toHaveBeenCalled();
+      expect(fixture.nativeElement.textContent).toContain('Confermi?');
+    });
+
+    it('annullare la conferma non chiama l\'API e ripristina il pulsante iniziale', () => {
+      logoutAllButton()!.click();
+      fixture.detectChanges();
+
+      const cancelBtn: HTMLButtonElement = fixture.nativeElement.querySelector('.logout-all-actions .btn-test');
+      cancelBtn.click();
+      fixture.detectChanges();
+
+      expect(authMock.logoutAllDevices).not.toHaveBeenCalled();
+      expect(fixture.nativeElement.textContent).not.toContain('Confermi?');
+    });
+
+    it('confermare chiama logoutAllDevices() e reindirizza al login', () => {
+      const navigateSpy = spyOn(router, 'navigate');
+      logoutAllButton()!.click();
+      fixture.detectChanges();
+
+      const confirmBtn: HTMLButtonElement = fixture.nativeElement.querySelector('.logout-all-actions .btn-danger');
+      confirmBtn.click();
+      fixture.detectChanges();
+
+      expect(authMock.logoutAllDevices).toHaveBeenCalled();
+      expect(navigateSpy).toHaveBeenCalledWith(['/login']);
+    });
+
+    it('errore API mostra messaggio e non naviga', () => {
+      authMock.logoutAllDevices.and.returnValue(throwError(() => new Error('fail')));
+      const navigateSpy = spyOn(router, 'navigate');
+      logoutAllButton()!.click();
+      fixture.detectChanges();
+
+      const confirmBtn: HTMLButtonElement = fixture.nativeElement.querySelector('.logout-all-actions .btn-danger');
+      confirmBtn.click();
+      fixture.detectChanges();
+
+      expect(navigateSpy).not.toHaveBeenCalled();
+      expect(fixture.nativeElement.textContent).toContain('non riuscita');
+    });
+  });
+
+  describe('eliminazione account', () => {
+    function deleteAccountButton(): HTMLButtonElement | null {
+      return fixture.nativeElement.querySelector('.btn-delete-account');
+    }
+
+    function passwordInput(): HTMLInputElement | null {
+      return fixture.nativeElement.querySelector('.delete-password-input');
+    }
+
+    function confirmDeleteButton(): HTMLButtonElement | null {
+      return fixture.nativeElement.querySelectorAll('.logout-all-actions .btn-danger')[0] as HTMLButtonElement;
+    }
+
+    it('click su "Elimina account" mostra il campo password senza chiamare l\'API', () => {
+      deleteAccountButton()!.click();
+      fixture.detectChanges();
+
+      expect(authMock.deleteAccount).not.toHaveBeenCalled();
+      expect(passwordInput()).not.toBeNull();
+    });
+
+    it('pulsante di conferma resta disabilitato finché la password è vuota', () => {
+      deleteAccountButton()!.click();
+      fixture.detectChanges();
+
+      expect(confirmDeleteButton()!.disabled).toBeTrue();
+
+      passwordInput()!.value = 'mypassword';
+      passwordInput()!.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+
+      expect(confirmDeleteButton()!.disabled).toBeFalse();
+    });
+
+    it('annullare non chiama l\'API e ripristina il pulsante iniziale', () => {
+      deleteAccountButton()!.click();
+      fixture.detectChanges();
+
+      const cancelBtn: HTMLButtonElement = fixture.nativeElement.querySelector('.logout-all-actions .btn-test');
+      cancelBtn.click();
+      fixture.detectChanges();
+
+      expect(authMock.deleteAccount).not.toHaveBeenCalled();
+      expect(passwordInput()).toBeNull();
+    });
+
+    it('confermare con password corretta chiama deleteAccount() e reindirizza al login', () => {
+      const navigateSpy = spyOn(router, 'navigate');
+      deleteAccountButton()!.click();
+      fixture.detectChanges();
+
+      passwordInput()!.value = 'mypassword';
+      passwordInput()!.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+
+      confirmDeleteButton()!.click();
+      fixture.detectChanges();
+
+      expect(authMock.deleteAccount).toHaveBeenCalledWith('mypassword');
+      expect(navigateSpy).toHaveBeenCalledWith(['/login']);
+    });
+
+    it('password errata (401) mostra messaggio esplicito e non naviga', () => {
+      authMock.deleteAccount.and.returnValue(throwError(() => ({ status: 401 })));
+      const navigateSpy = spyOn(router, 'navigate');
+      deleteAccountButton()!.click();
+      fixture.detectChanges();
+
+      passwordInput()!.value = 'wrongpassword';
+      passwordInput()!.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+
+      confirmDeleteButton()!.click();
+      fixture.detectChanges();
+
+      expect(navigateSpy).not.toHaveBeenCalled();
+      expect(fixture.nativeElement.textContent).toContain('Password non valida');
     });
   });
 });

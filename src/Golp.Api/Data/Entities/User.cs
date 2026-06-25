@@ -8,6 +8,7 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
+    public Guid SecurityStamp { get; set; } = Guid.NewGuid();
 
     public ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = [];
 }

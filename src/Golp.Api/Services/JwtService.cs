@@ -12,7 +12,7 @@ public class JwtService(IConfiguration configuration) : IJwtService
     private readonly string _audience = configuration["Jwt:Audience"]!;
     private readonly int _expiryMinutes = int.Parse(configuration["Jwt:ExpiryMinutes"] ?? "60");
 
-    public string GenerateToken(Guid userId, string email)
+    public string GenerateToken(Guid userId, string email, Guid securityStamp)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -21,7 +21,8 @@ public class JwtService(IConfiguration configuration) : IJwtService
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim("security_stamp", securityStamp.ToString())
         };
 
         var token = new JwtSecurityToken(

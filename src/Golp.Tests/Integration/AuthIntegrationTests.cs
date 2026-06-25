@@ -319,6 +319,61 @@ public class AuthIntegrationTests : IClassFixture<IntegrationTestFactory>
         return emailCapture.GetLastToken(email);
     }
 
+    // US-031 AC1/AC3 — logout-all invalida l'access token corrente (incluso quello che ha eseguito l'azione)
+    [Fact]
+    public async Task LogoutAll_InvalidatesCurrentAccessToken()
+    {
+        var email = UniqueEmail();
+        var registerResp = await _client.PostAsJsonAsync("/auth/register",
+            new { name = "Marco", email, password = "password123" });
+        var registerBody = await registerResp.Content.ReadFromJsonAsync<JsonElement>();
+        var accessToken = registerBody.GetProperty("accessToken").GetString()!;
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/auth/logout-all");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        var logoutAllResponse = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.OK, logoutAllResponse.StatusCode);
+
+        // stesso token, riusato sulla stessa rotta protetta -> 401 (stamp non corrisponde più)
+        using var reusedRequest = new HttpRequestMessage(HttpMethod.Post, "/auth/logout-all");
+        reusedRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        var reusedResponse = await _client.SendAsync(reusedRequest);
+        Assert.Equal(HttpStatusCode.Unauthorized, reusedResponse.StatusCode);
+    }
+
+    // US-031 AC3 — logout-all senza token -> 401
+    [Fact]
+    public async Task LogoutAll_NoToken_Returns401()
+    {
+        var response = await _client.PostAsync("/auth/logout-all", null);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    // US-031 AC3 — dopo logout-all il refresh token esistente è revocato
+    // US-031 AC5 — un nuovo login dopo la revoca funziona normalmente
+    [Fact]
+    public async Task LogoutAll_RevokesRefreshToken_AndNewLoginWorks()
+    {
+        var email = UniqueEmail();
+        var registerResp = await _client.PostAsJsonAsync("/auth/register",
+            new { name = "Marco", email, password = "password123" });
+        var registerBody = await registerResp.Content.ReadFromJsonAsync<JsonElement>();
+        var accessToken = registerBody.GetProperty("accessToken").GetString()!;
+        var refreshToken = registerBody.GetProperty("refreshToken").GetString()!;
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/auth/logout-all");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        await _client.SendAsync(request);
+
+        var refreshAfterLogoutAll = await _client.PostAsJsonAsync("/auth/refresh", new { refreshToken });
+        Assert.Equal(HttpStatusCode.Unauthorized, refreshAfterLogoutAll.StatusCode);
+
+        var newLogin = await _client.PostAsJsonAsync("/auth/login", new { email, password = "password123" });
+        Assert.Equal(HttpStatusCode.OK, newLogin.StatusCode);
+        var newLoginBody = await newLogin.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.NotEmpty(newLoginBody.GetProperty("accessToken").GetString()!);
+    }
+
     private static string UniqueEmail() => $"user_{Guid.NewGuid():N}@test.com";
 }
 

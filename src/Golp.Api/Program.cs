@@ -1,3 +1,5 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using FirebaseAdmin;
 using Golp.Api.Data;
@@ -67,6 +69,31 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
             ClockSkew = TimeSpan.Zero
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var sub = context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                       ?? context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                var stampClaim = context.Principal?.FindFirstValue("security_stamp");
+
+                if (sub == null || stampClaim == null || !Guid.TryParse(sub, out var userId) || !Guid.TryParse(stampClaim, out var stamp))
+                {
+                    context.Fail("Token non valido");
+                    return;
+                }
+
+                var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                var currentStamp = await db.Users
+                    .Where(u => u.Id == userId)
+                    .Select(u => u.SecurityStamp)
+                    .FirstOrDefaultAsync();
+
+                if (currentStamp != stamp)
+                    context.Fail("Token revocato");
+            }
         };
     });
 

@@ -81,4 +81,22 @@ describe('authInterceptor', () => {
 
     expect(authService.refresh).not.toHaveBeenCalled();
   });
+
+  // US-032: il 401 di /auth/me/delete è "password errata", non token scaduto —
+  // non deve scatenare refresh+retry+logout
+  it('does not attempt refresh for /auth/me/delete requests, propagates 401 as-is', () => {
+    authService.getToken.and.returnValue('access-1');
+
+    let errorStatus: number | undefined;
+    http.post('/auth/me/delete', { password: 'wrong' }).subscribe({
+      error: (err) => (errorStatus = err.status),
+    });
+
+    const req = httpMock.expectOne('/auth/me/delete');
+    req.flush({ error: 'Password non valida' }, { status: 401, statusText: 'Unauthorized' });
+
+    expect(authService.refresh).not.toHaveBeenCalled();
+    expect(authService.logout).not.toHaveBeenCalled();
+    expect(errorStatus).toBe(401);
+  });
 });

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using Golp.Api.Data;
 using Golp.Api.Data.Entities;
 using Golp.Api.Services;
@@ -16,6 +17,8 @@ public static class AuthEndpoints
         group.MapPost("/login", LoginAsync);
         group.MapPost("/refresh", RefreshAsync);
         group.MapPost("/logout", LogoutAsync);
+        group.MapPost("/logout-all", LogoutAllAsync).RequireAuthorization();
+        group.MapPost("/me/delete", DeleteAccountAsync).RequireAuthorization();
         group.MapPost("/password-reset/request", RequestPasswordResetAsync);
         group.MapPost("/password-reset/confirm", ConfirmPasswordResetAsync);
 
@@ -52,7 +55,7 @@ public static class AuthEndpoints
         db.Users.Add(user);
         await db.SaveChangesAsync();
 
-        var accessToken = jwtService.GenerateToken(user.Id, user.Email);
+        var accessToken = jwtService.GenerateToken(user.Id, user.Email, user.SecurityStamp);
         var userAgent = httpContext.Request.Headers.UserAgent.ToString();
         var refreshToken = await refreshTokenService.IssueAsync(user.Id, userAgent);
 
@@ -71,7 +74,7 @@ public static class AuthEndpoints
         if (user == null || string.IsNullOrEmpty(user.PasswordHash) || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
             return Results.Json(new { error = "Credenziali non valide" }, statusCode: 401);
 
-        var accessToken = jwtService.GenerateToken(user.Id, user.Email);
+        var accessToken = jwtService.GenerateToken(user.Id, user.Email, user.SecurityStamp);
         var userAgent = httpContext.Request.Headers.UserAgent.ToString();
         var refreshToken = await refreshTokenService.IssueAsync(user.Id, userAgent);
 
@@ -96,7 +99,7 @@ public static class AuthEndpoints
         if (user == null)
             return Results.Json(new { error = "Refresh token non valido o scaduto" }, statusCode: 401);
 
-        var accessToken = jwtService.GenerateToken(user.Id, user.Email);
+        var accessToken = jwtService.GenerateToken(user.Id, user.Email, user.SecurityStamp);
         return Results.Ok(new { accessToken, refreshToken = result.NewPlainToken });
     }
 
@@ -106,6 +109,64 @@ public static class AuthEndpoints
         IRefreshTokenService refreshTokenService)
     {
         await refreshTokenService.RevokeAsync(req.RefreshToken);
+        return Results.Ok();
+    }
+
+    // POST /auth/logout-all
+    private static async Task<IResult> LogoutAllAsync(
+        ClaimsPrincipal user,
+        AppDbContext db,
+        IRefreshTokenService refreshTokenService)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
+            return Results.Unauthorized();
+
+        var dbUser = await db.Users.FindAsync(userId);
+        if (dbUser == null)
+            return Results.Unauthorized();
+
+        dbUser.SecurityStamp = Guid.NewGuid();
+        await refreshTokenService.RevokeAllForUserAsync(userId);
+        await db.SaveChangesAsync();
+
+        return Results.Ok();
+    }
+
+    // POST /auth/me/delete
+    private static async Task<IResult> DeleteAccountAsync(
+        DeleteAccountRequest req,
+        ClaimsPrincipal user,
+        AppDbContext db,
+        IRefreshTokenService refreshTokenService)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
+            return Results.Unauthorized();
+
+        var dbUser = await db.Users.FindAsync(userId);
+        if (dbUser == null || string.IsNullOrEmpty(dbUser.PasswordHash) || !BCrypt.Net.BCrypt.Verify(req.Password, dbUser.PasswordHash))
+            return Results.Json(new { error = "Password non valida" }, statusCode: 401);
+
+        dbUser.Name = "Utente eliminato";
+        dbUser.Email = $"deleted-{userId}@golp.invalid";
+        dbUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString());
+        dbUser.SecurityStamp = Guid.NewGuid();
+
+        var memberships = await db.CircleMemberships.Where(m => m.UserId == userId).ToListAsync();
+        db.CircleMemberships.RemoveRange(memberships);
+
+        var pendingMatches = await db.Matches
+            .Where(m => m.Status == "pending" &&
+                (m.Team1Player1Id == userId || m.Team1Player2Id == userId ||
+                 m.Team2Player1Id == userId || m.Team2Player2Id == userId))
+            .ToListAsync();
+        foreach (var match in pendingMatches)
+            match.Status = "cancelled";
+
+        await refreshTokenService.RevokeAllForUserAsync(userId);
+        await db.SaveChangesAsync();
+
         return Results.Ok();
     }
 
@@ -172,5 +233,6 @@ public static class AuthEndpoints
 record RegisterRequest(string Name, string Email, string Password);
 record LoginRequest(string Email, string Password);
 record RefreshRequest(string RefreshToken);
+record DeleteAccountRequest(string Password);
 record PasswordResetRequestRequest(string Email);
 record PasswordResetConfirmRequest(string Token, string NewPassword);

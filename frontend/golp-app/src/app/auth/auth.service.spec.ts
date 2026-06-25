@@ -76,6 +76,57 @@ describe('AuthService — integrazione push (US-006)', () => {
     expect(service.isAuthenticated()).toBeFalse();
   });
 
+  it('logoutAllDevices → push unregister chiamato e token rimosso', () => {
+    localStorage.setItem('golp_token', fakeJwt);
+    localStorage.setItem('golp_refresh_token', 'refresh-1');
+
+    service.logoutAllDevices().subscribe();
+    httpMock.expectOne('/auth/logout-all').flush({});
+
+    expect(pushMock.unregister).toHaveBeenCalled();
+    expect(localStorage.getItem('golp_token')).toBeNull();
+    expect(localStorage.getItem('golp_refresh_token')).toBeNull();
+    expect(service.isAuthenticated()).toBeFalse();
+  });
+
+  it('logoutAllDevices fallito → token NON rimosso, errore propagato', () => {
+    localStorage.setItem('golp_token', fakeJwt);
+    localStorage.setItem('golp_refresh_token', 'refresh-1');
+
+    service.logoutAllDevices().subscribe({ error: () => {} });
+    httpMock.expectOne('/auth/logout-all').flush(
+      { error: 'server error' }, { status: 500, statusText: 'Internal Server Error' });
+
+    expect(localStorage.getItem('golp_token')).toBe(fakeJwt);
+  });
+
+  it('deleteAccount con successo → push unregister chiamato e token rimosso', () => {
+    localStorage.setItem('golp_token', fakeJwt);
+    localStorage.setItem('golp_refresh_token', 'refresh-1');
+
+    service.deleteAccount('mypassword').subscribe();
+    const req = httpMock.expectOne('/auth/me/delete');
+    expect(req.request.body).toEqual({ password: 'mypassword' });
+    req.flush({});
+
+    expect(pushMock.unregister).toHaveBeenCalled();
+    expect(localStorage.getItem('golp_token')).toBeNull();
+    expect(localStorage.getItem('golp_refresh_token')).toBeNull();
+    expect(service.isAuthenticated()).toBeFalse();
+  });
+
+  it('deleteAccount con password errata → 401, token NON rimosso', () => {
+    localStorage.setItem('golp_token', fakeJwt);
+    localStorage.setItem('golp_refresh_token', 'refresh-1');
+
+    service.deleteAccount('wrongpassword').subscribe({ error: () => {} });
+    httpMock.expectOne('/auth/me/delete').flush(
+      { error: 'invalid' }, { status: 401, statusText: 'Unauthorized' });
+
+    expect(localStorage.getItem('golp_token')).toBe(fakeJwt);
+    expect(service.isAuthenticated()).toBeTrue();
+  });
+
   it('refresh → memorizza nuova coppia di token', () => {
     localStorage.setItem('golp_refresh_token', 'old-refresh');
 

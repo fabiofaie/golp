@@ -61,6 +61,28 @@ export class AuthService {
     }
     // Prima della rimozione del JWT: la DELETE del token push parte con auth valida
     void this.pushService.unregister();
+    this.clearLocalSession();
+  }
+
+  logoutAllDevices(): Observable<void> {
+    return this.http.post<void>(`${this.api}/logout-all`, {}).pipe(
+      tap(() => {
+        void this.pushService.unregister();
+        this.clearLocalSession();
+      })
+    );
+  }
+
+  deleteAccount(password: string): Observable<void> {
+    return this.http.post<void>(`${this.api}/me/delete`, { password }).pipe(
+      tap(() => {
+        void this.pushService.unregister();
+        this.clearLocalSession();
+      })
+    );
+  }
+
+  private clearLocalSession(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     this.isAuthenticated.set(false);

@@ -28,7 +28,7 @@ public class JwtServiceTests
         var userId = Guid.NewGuid();
         var email = "test@example.com";
 
-        var token = service.GenerateToken(userId, email);
+        var token = service.GenerateToken(userId, email, Guid.NewGuid());
 
         Assert.NotEmpty(token);
 
@@ -40,10 +40,24 @@ public class JwtServiceTests
     }
 
     [Fact]
+    public void GenerateToken_IncludesSecurityStampClaim()
+    {
+        var service = CreateService();
+        var securityStamp = Guid.NewGuid();
+
+        var token = service.GenerateToken(Guid.NewGuid(), "test@example.com", securityStamp);
+
+        var handler = new JwtSecurityTokenHandler();
+        var jwt = handler.ReadJwtToken(token);
+
+        Assert.Equal(securityStamp.ToString(), jwt.Claims.First(c => c.Type == "security_stamp").Value);
+    }
+
+    [Fact]
     public void GenerateToken_ExpiresAtConfiguredTime()
     {
         var service = CreateService(expiryMinutes: 60);
-        var token = service.GenerateToken(Guid.NewGuid(), "test@example.com");
+        var token = service.GenerateToken(Guid.NewGuid(), "test@example.com", Guid.NewGuid());
 
         var handler = new JwtSecurityTokenHandler();
         var jwt = handler.ReadJwtToken(token);
@@ -60,7 +74,7 @@ public class JwtServiceTests
         var userId = Guid.NewGuid();
         var email = "user@example.com";
 
-        var token = service.GenerateToken(userId, email);
+        var token = service.GenerateToken(userId, email, Guid.NewGuid());
         var result = service.ValidateToken(token, out var parsedId, out var parsedEmail);
 
         Assert.True(result);
@@ -72,7 +86,7 @@ public class JwtServiceTests
     public void ValidateToken_ExpiredToken_ReturnsFalse()
     {
         var service = CreateService(expiryMinutes: -1);
-        var token = service.GenerateToken(Guid.NewGuid(), "test@example.com");
+        var token = service.GenerateToken(Guid.NewGuid(), "test@example.com", Guid.NewGuid());
 
         var result = service.ValidateToken(token, out _, out _);
 
@@ -83,7 +97,7 @@ public class JwtServiceTests
     public void ValidateToken_TamperedToken_ReturnsFalse()
     {
         var service = CreateService();
-        var token = service.GenerateToken(Guid.NewGuid(), "test@example.com");
+        var token = service.GenerateToken(Guid.NewGuid(), "test@example.com", Guid.NewGuid());
         var tampered = token[..^5] + "XXXXX";
 
         var result = service.ValidateToken(tampered, out _, out _);

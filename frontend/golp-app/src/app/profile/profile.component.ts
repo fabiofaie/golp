@@ -1,9 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ThemeService, Theme } from '../theme/theme.service';
 import { PushNotificationService } from '../push/push-notification.service';
 import { PwaPlatformService } from '../shared/pwa-install/pwa-platform.service';
 import { PwaInstallGuideComponent } from '../shared/pwa-install/pwa-install-guide.component';
+import { AuthService } from '../auth/auth.service';
 
 @Component({
   selector: 'app-profile',
@@ -84,6 +85,63 @@ import { PwaInstallGuideComponent } from '../shared/pwa-install/pwa-install-guid
             }
           }
         </div>
+        <div class="field">
+          <label>Sicurezza</label>
+
+          @if (!confirmingLogoutAll()) {
+            <button type="button" class="btn-danger" (click)="confirmingLogoutAll.set(true)">
+              Esci da tutti i device
+            </button>
+          } @else {
+            <p class="push-hint push-hint--warn">
+              Verrai disconnesso da tutti i device, incluso questo. Confermi?
+            </p>
+            <div class="logout-all-actions">
+              <button type="button" class="btn-test" [disabled]="logoutAllBusy()" (click)="confirmingLogoutAll.set(false)">
+                Annulla
+              </button>
+              <button type="button" class="btn-danger" [disabled]="logoutAllBusy()" (click)="logoutAllDevices()">
+                Conferma
+              </button>
+            </div>
+          }
+
+          @if (logoutAllError()) {
+            <p class="push-hint push-hint--warn">{{ logoutAllError() }}</p>
+          }
+
+          @if (!confirmingDeleteAccount()) {
+            <button type="button" class="btn-danger btn-delete-account" (click)="confirmingDeleteAccount.set(true)">
+              Elimina account
+            </button>
+          } @else {
+            <p class="push-hint push-hint--warn">
+              Questa azione è irreversibile. Inserisci la password per confermare l'eliminazione dell'account.
+            </p>
+            <input
+              type="password"
+              class="delete-password-input"
+              placeholder="Password"
+              [disabled]="deleteAccountBusy()"
+              (input)="deletePassword.set($any($event.target).value)" />
+            <div class="logout-all-actions">
+              <button type="button" class="btn-test" [disabled]="deleteAccountBusy()" (click)="cancelDeleteAccount()">
+                Annulla
+              </button>
+              <button
+                type="button"
+                class="btn-danger"
+                [disabled]="deleteAccountBusy() || !deletePassword()"
+                (click)="deleteAccount()">
+                Elimina definitivamente
+              </button>
+            </div>
+          }
+
+          @if (deleteAccountError()) {
+            <p class="push-hint push-hint--warn">{{ deleteAccountError() }}</p>
+          }
+        </div>
       </main>
 
       @if (showInstallGuide()) {
@@ -162,12 +220,53 @@ import { PwaInstallGuideComponent } from '../shared/pwa-install/pwa-install-guid
       opacity: 0.6;
       cursor: not-allowed;
     }
+    .btn-danger {
+      background: var(--color-surface);
+      border: 1px solid var(--color-accent);
+      border-radius: var(--r-md);
+      color: var(--color-accent);
+      cursor: pointer;
+      font-family: var(--font-family);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-med);
+      padding: var(--sp-3) var(--sp-4);
+      width: 100%;
+    }
+    .btn-danger:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .logout-all-actions {
+      display: flex;
+      gap: var(--sp-3);
+      margin-top: var(--sp-2);
+    }
+    .logout-all-actions .btn-danger,
+    .logout-all-actions .btn-test {
+      flex: 1;
+    }
+    .btn-delete-account {
+      margin-top: var(--sp-3);
+    }
+    .delete-password-input {
+      width: 100%;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--r-md);
+      color: var(--color-text-primary);
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+      padding: var(--sp-3) var(--sp-4);
+      margin-top: var(--sp-2);
+    }
   `]
 })
 export class ProfileComponent {
   readonly theme = inject(ThemeService);
   readonly push = inject(PushNotificationService);
   private readonly platform = inject(PwaPlatformService);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
 
   readonly isInstalled = signal(this.platform.isStandalone());
   readonly showInstallGuide = signal(false);
@@ -176,6 +275,13 @@ export class ProfileComponent {
   readonly pushDeniedMessage = signal<string | null>(null);
   readonly testBusy = signal(false);
   readonly testResultMessage = signal<string | null>(null);
+  readonly confirmingLogoutAll = signal(false);
+  readonly logoutAllBusy = signal(false);
+  readonly logoutAllError = signal<string | null>(null);
+  readonly confirmingDeleteAccount = signal(false);
+  readonly deletePassword = signal('');
+  readonly deleteAccountBusy = signal(false);
+  readonly deleteAccountError = signal<string | null>(null);
 
   select(t: Theme): void {
     this.theme.setTheme(t);
@@ -212,5 +318,43 @@ export class ProfileComponent {
     } finally {
       this.testBusy.set(false);
     }
+  }
+
+  logoutAllDevices(): void {
+    this.logoutAllError.set(null);
+    this.logoutAllBusy.set(true);
+    this.auth.logoutAllDevices().subscribe({
+      next: () => {
+        this.router.navigate(['/login']);
+      },
+      error: () => {
+        this.logoutAllBusy.set(false);
+        this.logoutAllError.set('Operazione non riuscita. Riprova più tardi.');
+      },
+    });
+  }
+
+  cancelDeleteAccount(): void {
+    this.confirmingDeleteAccount.set(false);
+    this.deletePassword.set('');
+    this.deleteAccountError.set(null);
+  }
+
+  deleteAccount(): void {
+    this.deleteAccountError.set(null);
+    this.deleteAccountBusy.set(true);
+    this.auth.deleteAccount(this.deletePassword()).subscribe({
+      next: () => {
+        this.router.navigate(['/login']);
+      },
+      error: (err: { status?: number }) => {
+        this.deleteAccountBusy.set(false);
+        this.deleteAccountError.set(
+          err.status === 401
+            ? 'Password non valida.'
+            : 'Operazione non riuscita. Riprova più tardi.'
+        );
+      },
+    });
   }
 }

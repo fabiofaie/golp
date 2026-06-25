@@ -3,13 +3,13 @@
   ┌────────┬──────────────────────────────────────────┬──────────────┐
   │ Storia │                  Piano                   │    Status    │
   ├────────┼──────────────────────────────────────────┼──────────────┤
-  │ US-029 │ Toggle notifiche push Profilo            │ TODO→PLANNED │
+  │ US-029 │ Toggle notifiche push Profilo            │ fatto        │
   ├────────┼──────────────────────────────────────────┼──────────────┤
   │ US-030 │ Modifica nome Profilo                    │ TODO→PLANNED │
   ├────────┼──────────────────────────────────────────┼──────────────┤
-  │ US-031 │ Logout tutti i device                    │ TODO→PLANNED │
+  │ US-031 │ Logout tutti i device                    │ fatto        │
   ├────────┼──────────────────────────────────────────┼──────────────┤
-  │ US-032 │ Eliminazione account                     │ TODO→PLANNED │
+  │ US-032 │ Eliminazione account                     │ in corso     │
   ├────────┼──────────────────────────────────────────┼──────────────┤
   │ US-035 │ Notifica variazione posizione classifica │ TODO→PLANNED │
   ├────────┼──────────────────────────────────────────┼──────────────┤
