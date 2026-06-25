@@ -1,38 +1,27 @@
-/* eslint-disable no-undef */
 // Service worker FCM — gestisce le push in background e il tap sulla notifica.
-// I valori firebaseConfig sono pubblici: compilali da Firebase Console
-// seguendo docs/firebase-setup.md (stessi valori di src/environments/environment.ts).
-
-importScripts('https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/11.10.0/firebase-messaging-compat.js');
-
-const firebaseConfig = {
-  apiKey: '',
-  authDomain: '',
-  projectId: '',
-  messagingSenderId: '',
-  appId: '',
-};
-
-try {
-  firebase.initializeApp(firebaseConfig);
-  const messaging = firebase.messaging();
-
-  // Messaggi data-only in background: mostra la notifica manualmente.
-  // (I messaggi con payload "notification" vengono mostrati in automatico dall'SDK.)
-  messaging.onBackgroundMessage((payload) => {
-    if (payload.notification) {
-      return; // già mostrata dall'SDK
-    }
-    const { matchId, circleId } = payload.data || {};
-    self.registration.showNotification('Partita da confermare', {
-      body: 'Una nuova partita ti aspetta: conferma il risultato!',
+// Niente SDK Firebase qui: getToken() lato app si occupa della subscription,
+// questo SW legge l'evento push raw e mostra la notifica direttamente
+// (la SDK compat non invoca onBackgroundMessage per payload con campo "notification").
+self.addEventListener('push', (event) => {
+  if (!event.data) {
+    return;
+  }
+  let payload;
+  try {
+    payload = event.data.json();
+  } catch (e) {
+    return;
+  }
+  const { matchId, circleId } = payload.data || {};
+  const title = payload.notification?.title ?? 'Partita da confermare';
+  const body = payload.notification?.body ?? 'Una nuova partita ti aspetta: conferma il risultato!';
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
       data: { matchId, circleId },
-    });
-  });
-} catch (e) {
-  // Config mancante: il SW resta attivo solo per il notificationclick
-}
+    })
+  );
+});
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();

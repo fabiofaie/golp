@@ -1023,7 +1023,8 @@ Una nuova pagina "Profilo" (raggiungibile dall'area autenticata) mostra un contr
 
 #### US-029: Attivazione/disattivazione notifiche push dalla pagina Profilo
 
-**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** REVIEW
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-06-25):** Review umana OK.
 **Review note (2026-06-24):** Backend: `POST /api/push/test` autenticato in `PushEndpoints.cs` + `SendTestNotificationAsync` in `PushNotificationService.cs` (riusa `FcmTokens`/`IFcmSender` esistenti, isolamento per `userId` da claim JWT). Frontend: `profile.component.ts` con sezione "Notifiche push" (toggle on/off, test-send, guida installazione condizionale riusando `PwaInstallGuideComponent` di US-024). Test: backend 198/198 verdi (5 nuovi); frontend unit 129/140 (11 fail pre-esistenti non toccati, causa nota: `environment.apiUrl` assoluto non sostituito dal target `test` in `angular.json`); e2e `profile-push.spec.ts` 2/2 verdi + regressione `profile-theme`/`pwa-install` 3/3 verdi. Reviewer APPROVE — no Critical. 2 note non bloccanti: (1) test-send ritorna 404 sia per "nessun token" sia per "invio FCM fallito"; (2) nessun rate limiting su `/api/push/test`. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-029` (o aggiorna manualmente lo status a `DONE`).
 **Blocked by:** US-028
 

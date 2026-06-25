@@ -89,7 +89,7 @@ public class PushNotificationService(
                 logger.LogInformation("Removed {Count} unregistered FCM tokens", deadTokens.Count);
             }
 
-            return true;
+            return results.Any(r => r.IsSuccess);
         }
         catch (Exception ex)
         {
