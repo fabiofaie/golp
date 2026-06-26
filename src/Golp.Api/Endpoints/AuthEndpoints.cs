@@ -18,6 +18,8 @@ public static class AuthEndpoints
         group.MapPost("/refresh", RefreshAsync);
         group.MapPost("/logout", LogoutAsync);
         group.MapPost("/logout-all", LogoutAllAsync).RequireAuthorization();
+        group.MapGet("/me", GetMeAsync).RequireAuthorization();
+        group.MapPut("/me", UpdateMeAsync).RequireAuthorization();
         group.MapPost("/me/delete", DeleteAccountAsync).RequireAuthorization();
         group.MapPost("/password-reset/request", RequestPasswordResetAsync);
         group.MapPost("/password-reset/confirm", ConfirmPasswordResetAsync);
@@ -35,6 +37,9 @@ public static class AuthEndpoints
     {
         if (string.IsNullOrWhiteSpace(req.Name))
             return Results.BadRequest(new { error = "Il nome è obbligatorio" });
+
+        if (req.Name.Trim().Length > 100)
+            return Results.BadRequest(new { error = "Il nome non può superare i 100 caratteri" });
 
         if (!IsValidEmail(req.Email))
             return Results.BadRequest(new { error = "Formato email non valido" });
@@ -110,6 +115,48 @@ public static class AuthEndpoints
     {
         await refreshTokenService.RevokeAsync(req.RefreshToken);
         return Results.Ok();
+    }
+
+    // GET /auth/me
+    private static async Task<IResult> GetMeAsync(ClaimsPrincipal user, AppDbContext db)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
+            return Results.Unauthorized();
+
+        var dbUser = await db.Users.FindAsync(userId);
+        if (dbUser == null)
+            return Results.Unauthorized();
+
+        return Results.Ok(new { id = dbUser.Id, name = dbUser.Name, email = dbUser.Email });
+    }
+
+    // PUT /auth/me
+    private static async Task<IResult> UpdateMeAsync(
+        UpdateMeRequest req,
+        ClaimsPrincipal user,
+        AppDbContext db)
+    {
+        if (string.IsNullOrWhiteSpace(req.Name))
+            return Results.BadRequest(new { error = "Il nome è obbligatorio" });
+
+        var trimmed = req.Name.Trim();
+        if (trimmed.Length > 100)
+            return Results.BadRequest(new { error = "Il nome non può superare i 100 caratteri" });
+
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
+            return Results.Unauthorized();
+
+        var dbUser = await db.Users.FindAsync(userId);
+        if (dbUser == null)
+            return Results.Unauthorized();
+
+        dbUser.Name = trimmed;
+        dbUser.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new { id = dbUser.Id, name = dbUser.Name, email = dbUser.Email });
     }
 
     // POST /auth/logout-all
@@ -236,3 +283,4 @@ record RefreshRequest(string RefreshToken);
 record DeleteAccountRequest(string Password);
 record PasswordResetRequestRequest(string Email);
 record PasswordResetConfirmRequest(string Token, string NewPassword);
+record UpdateMeRequest(string Name);

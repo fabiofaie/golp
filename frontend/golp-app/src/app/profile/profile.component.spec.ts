@@ -1,11 +1,27 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { signal } from '@angular/core';
 import { ProfileComponent } from './profile.component';
 import { ThemeService } from '../theme/theme.service';
 import { PushNotificationService } from '../push/push-notification.service';
 import { PwaPlatformService } from '../shared/pwa-install/pwa-platform.service';
 import { AuthService } from '../auth/auth.service';
+import { CurrentUserService, CurrentUser } from '../auth/current-user.service';
+
+const MOCK_USER: CurrentUser = { id: '1', name: 'Mario', email: 'mario@test.com' };
+
+function makeFakeCurrentUserService(user: CurrentUser | null = MOCK_USER) {
+  const userSignal = signal(user);
+  return {
+    currentUser: userSignal,
+    load: jasmine.createSpy('load').and.callFake(async () => { userSignal.set(MOCK_USER); }),
+    updateName: jasmine.createSpy('updateName').and.callFake(async (name: string) => {
+      userSignal.set({ ...MOCK_USER, name });
+    }),
+    clear: jasmine.createSpy('clear'),
+  };
+}
 
 class FakePushNotificationService {
   supported = true;
@@ -53,12 +69,14 @@ describe('ProfileComponent', () => {
   let push: FakePushNotificationService;
   let platform: FakePwaPlatformService;
   let authMock: jasmine.SpyObj<AuthService>;
+  let currentUserMock: ReturnType<typeof makeFakeCurrentUserService>;
   let router: Router;
 
   function setup(): void {
     authMock = jasmine.createSpyObj('AuthService', ['logoutAllDevices', 'deleteAccount']);
     authMock.logoutAllDevices.and.returnValue(of(undefined));
     authMock.deleteAccount.and.returnValue(of(undefined));
+    currentUserMock = makeFakeCurrentUserService();
 
     TestBed.configureTestingModule({
       imports: [ProfileComponent],
@@ -67,6 +85,7 @@ describe('ProfileComponent', () => {
         { provide: PushNotificationService, useClass: FakePushNotificationService },
         { provide: PwaPlatformService, useClass: FakePwaPlatformService },
         { provide: AuthService, useValue: authMock },
+        { provide: CurrentUserService, useValue: currentUserMock },
       ]
     });
     fixture = TestBed.createComponent(ProfileComponent);
@@ -280,6 +299,43 @@ describe('ProfileComponent', () => {
 
       expect(navigateSpy).not.toHaveBeenCalled();
       expect(fixture.nativeElement.textContent).toContain('non riuscita');
+    });
+  });
+
+  describe('nome visualizzato', () => {
+    it('precompila il campo dopo ngOnInit', async () => {
+      await fixture.componentInstance.ngOnInit();
+      expect(fixture.componentInstance.displayName).toBe('Mario');
+    });
+
+    it('nome vuoto imposta nameError senza chiamare updateName', async () => {
+      fixture.componentInstance.displayName = '   ';
+      await fixture.componentInstance.saveName();
+      expect(currentUserMock.updateName).not.toHaveBeenCalled();
+      expect(fixture.componentInstance.nameError()).toBeTruthy();
+    });
+
+    it('nome >100 char imposta nameError senza chiamare updateName', async () => {
+      fixture.componentInstance.displayName = 'a'.repeat(101);
+      await fixture.componentInstance.saveName();
+      expect(currentUserMock.updateName).not.toHaveBeenCalled();
+      expect(fixture.componentInstance.nameError()).toBeTruthy();
+    });
+
+    it('nome valido chiama updateName e mostra conferma', async () => {
+      fixture.componentInstance.displayName = 'Luigi';
+      await fixture.componentInstance.saveName();
+      expect(currentUserMock.updateName).toHaveBeenCalledWith('Luigi');
+      expect(fixture.componentInstance.nameSaved()).toBeTrue();
+      expect(fixture.componentInstance.nameError()).toBeNull();
+    });
+
+    it('errore API imposta nameError', async () => {
+      currentUserMock.updateName.and.rejectWith(new Error('network'));
+      fixture.componentInstance.displayName = 'Luigi';
+      await fixture.componentInstance.saveName();
+      expect(fixture.componentInstance.nameError()).toBeTruthy();
+      expect(fixture.componentInstance.nameSaved()).toBeFalse();
     });
   });
 

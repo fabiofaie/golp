@@ -1059,8 +1059,10 @@ Nella pagina Profilo (introdotta in US-028) appare un toggle "Notifiche push" ol
 
 #### US-030: Modifica nome visualizzato dalla pagina Profilo
 
-**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** PLANNED
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
 **Blocked by:** US-028
+**Review note (2026-06-26):** Codice in `src/Golp.Api/Endpoints/AuthEndpoints.cs`, `frontend/golp-app/src/app/auth/current-user.service.ts`, `frontend/golp-app/src/app/profile/profile.component.ts`. Test in `src/Golp.Tests/Integration/AuthIntegrationTests.cs` (+6 test), `frontend/golp-app/src/app/auth/current-user.service.spec.ts` (4), `frontend/golp-app/src/app/profile/profile.component.spec.ts` (+5), `frontend/golp-app/e2e/profile-name.spec.ts` (2 e2e). Reviewer APPROVE.
+**Approved (2026-06-26):** Review umana OK.
 
 **Story**
 Come utente dell'app, voglio poter modificare il mio nome visualizzato dalla pagina Profilo, così che non resti fissato a quello scelto in fase di registrazione se cambia o lo sbaglio.

@@ -1,15 +1,17 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { ThemeService, Theme } from '../theme/theme.service';
 import { PushNotificationService } from '../push/push-notification.service';
 import { PwaPlatformService } from '../shared/pwa-install/pwa-platform.service';
 import { PwaInstallGuideComponent } from '../shared/pwa-install/pwa-install-guide.component';
 import { AuthService } from '../auth/auth.service';
+import { CurrentUserService } from '../auth/current-user.service';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [RouterLink, PwaInstallGuideComponent],
+  imports: [RouterLink, PwaInstallGuideComponent, FormsModule],
   template: `
     <div class="page">
       <header class="auth-header">
@@ -20,6 +22,40 @@ import { AuthService } from '../auth/auth.service';
       <main class="auth-main">
         <h1 class="auth-title">Profilo</h1>
         <p class="auth-subtitle">Le tue preferenze su questo dispositivo.</p>
+
+        <div class="field">
+          <label>Nome visualizzato</label>
+          @if (!editingName()) {
+            <p class="name-display">{{ currentUserService.currentUser()?.name ?? '…' }}</p>
+            @if (nameSaved()) {
+              <p class="push-hint push-hint--ok">Nome aggiornato.</p>
+            }
+            <button type="button" class="btn-change-name" (click)="startEditName()">
+              Cambia nome
+            </button>
+          } @else {
+            <p class="push-hint">Il nuovo nome sarà visibile a tutti i membri dei tuoi circoli.</p>
+            <input
+              id="displayName"
+              type="text"
+              class="name-input"
+              maxlength="100"
+              [(ngModel)]="displayName"
+              (ngModelChange)="nameError.set(null)"
+              placeholder="Il tuo nome" />
+            @if (nameError()) {
+              <p class="push-hint push-hint--warn">{{ nameError() }}</p>
+            }
+            <div class="logout-all-actions">
+              <button type="button" class="btn-test" [disabled]="nameBusy()" (click)="cancelEditName()">
+                Annulla
+              </button>
+              <button type="button" class="btn-save-name" [disabled]="nameBusy()" (click)="saveName()">
+                Salva
+              </button>
+            </div>
+          }
+        </div>
 
         <div class="field">
           <label>Tema</label>
@@ -150,6 +186,53 @@ import { AuthService } from '../auth/auth.service';
     </div>
   `,
   styles: [`
+    .name-display {
+      font-size: var(--font-size-base);
+      color: var(--color-text-primary);
+      font-weight: var(--font-weight-med);
+      margin: var(--sp-1) 0 var(--sp-3);
+    }
+    .name-input {
+      width: 100%;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--r-md);
+      color: var(--color-text-primary);
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+      padding: var(--sp-3) var(--sp-4);
+      margin-bottom: var(--sp-2);
+      box-sizing: border-box;
+    }
+    .btn-save-name {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--r-md);
+      color: var(--color-text-primary);
+      cursor: pointer;
+      font-family: var(--font-family);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-med);
+      padding: var(--sp-3) var(--sp-4);
+    }
+    .btn-save-name:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .btn-change-name {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--r-md);
+      color: var(--color-text-primary);
+      cursor: pointer;
+      font-family: var(--font-family);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-med);
+      padding: var(--sp-3) var(--sp-4);
+    }
+    .push-hint--ok {
+      color: var(--color-success, #4caf50);
+    }
     .theme-toggle {
       display: flex;
       gap: var(--sp-3);
@@ -261,12 +344,19 @@ import { AuthService } from '../auth/auth.service';
     }
   `]
 })
-export class ProfileComponent {
+export class ProfileComponent implements OnInit {
   readonly theme = inject(ThemeService);
   readonly push = inject(PushNotificationService);
   private readonly platform = inject(PwaPlatformService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  readonly currentUserService = inject(CurrentUserService);
+
+  displayName = '';
+  readonly editingName = signal(false);
+  readonly nameError = signal<string | null>(null);
+  readonly nameSaved = signal(false);
+  readonly nameBusy = signal(false);
 
   readonly isInstalled = signal(this.platform.isStandalone());
   readonly showInstallGuide = signal(false);
@@ -282,6 +372,48 @@ export class ProfileComponent {
   readonly deletePassword = signal('');
   readonly deleteAccountBusy = signal(false);
   readonly deleteAccountError = signal<string | null>(null);
+
+  async ngOnInit(): Promise<void> {
+    await this.currentUserService.load();
+    this.displayName = this.currentUserService.currentUser()?.name ?? '';
+  }
+
+  startEditName(): void {
+    this.displayName = this.currentUserService.currentUser()?.name ?? '';
+    this.nameError.set(null);
+    this.nameSaved.set(false);
+    this.editingName.set(true);
+  }
+
+  cancelEditName(): void {
+    this.editingName.set(false);
+    this.nameError.set(null);
+  }
+
+  async saveName(): Promise<void> {
+    this.nameError.set(null);
+    this.nameSaved.set(false);
+    const trimmed = this.displayName.trim();
+    if (!trimmed) {
+      this.nameError.set('Il nome non può essere vuoto.');
+      return;
+    }
+    if (trimmed.length > 100) {
+      this.nameError.set('Il nome non può superare i 100 caratteri.');
+      return;
+    }
+    this.nameBusy.set(true);
+    try {
+      await this.currentUserService.updateName(trimmed);
+      this.displayName = trimmed;
+      this.editingName.set(false);
+      this.nameSaved.set(true);
+    } catch {
+      this.nameError.set('Salvataggio non riuscito. Riprova più tardi.');
+    } finally {
+      this.nameBusy.set(false);
+    }
+  }
 
   select(t: Theme): void {
     this.theme.setTheme(t);

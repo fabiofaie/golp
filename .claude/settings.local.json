@@ -59,7 +59,8 @@
       "PowerShell(Get-Process *)",
       "PowerShell(Stop-Process *)",
       "Bash(awk -F: '$1<118')",
-      "Bash(taskkill *)"
+      "Bash(taskkill *)",
+      "Bash(npx karma *)"
     ]
   }
 }

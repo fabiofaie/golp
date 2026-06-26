@@ -91,14 +91,12 @@ public class AuthIntegrationTests : IClassFixture<IntegrationTestFactory>
         Assert.Equal(HttpStatusCode.Unauthorized, wrongEmail.StatusCode);
     }
 
-    // AC5 — Token scaduto → 401 su route protetta
+    // AC5 — Nessun token → 401 su route protetta
     [Fact]
     public async Task ProtectedRoute_NoToken_Returns401()
     {
         var response = await _client.GetAsync("/auth/me");
-        // /auth/me doesn't exist yet but any protected route returns 401
-        Assert.True(response.StatusCode == HttpStatusCode.Unauthorized
-                 || response.StatusCode == HttpStatusCode.NotFound);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     // AC6 — Reset flow: request → confirm → login nuova password
@@ -372,6 +370,104 @@ public class AuthIntegrationTests : IClassFixture<IntegrationTestFactory>
         Assert.Equal(HttpStatusCode.OK, newLogin.StatusCode);
         var newLoginBody = await newLogin.Content.ReadFromJsonAsync<JsonElement>();
         Assert.NotEmpty(newLoginBody.GetProperty("accessToken").GetString()!);
+    }
+
+    // US-030 TASK-2 — GET /auth/me: 200 autenticato, 401 senza token
+    [Fact]
+    public async Task GetMe_Authenticated_Returns200WithUserData()
+    {
+        var email = UniqueEmail();
+        var registerResp = await _client.PostAsJsonAsync("/auth/register",
+            new { name = "Mario", email, password = "password123" });
+        var body = await registerResp.Content.ReadFromJsonAsync<JsonElement>();
+        var token = body.GetProperty("accessToken").GetString()!;
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/auth/me");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var me = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("Mario", me.GetProperty("name").GetString());
+        Assert.Equal(email.ToLowerInvariant(), me.GetProperty("email").GetString());
+        Assert.NotEqual(Guid.Empty, me.GetProperty("id").GetGuid());
+    }
+
+    [Fact]
+    public async Task GetMe_NoToken_Returns401()
+    {
+        var response = await _client.GetAsync("/auth/me");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    // US-030 TASK-4 — PUT /auth/me: nome valido, vuoto, >100 char
+    [Fact]
+    public async Task UpdateMe_ValidName_Returns200WithUpdatedName()
+    {
+        var email = UniqueEmail();
+        var registerResp = await _client.PostAsJsonAsync("/auth/register",
+            new { name = "Vecchio Nome", email, password = "password123" });
+        var registerBody = await registerResp.Content.ReadFromJsonAsync<JsonElement>();
+        var token = registerBody.GetProperty("accessToken").GetString()!;
+
+        using var request = new HttpRequestMessage(HttpMethod.Put, "/auth/me");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        request.Content = JsonContent.Create(new { name = "Nuovo Nome" });
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("Nuovo Nome", body.GetProperty("name").GetString());
+
+        // Verifica persistenza in DB
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var dbUser = await db.Users.FirstAsync(u => u.Email == email.ToLowerInvariant());
+        Assert.Equal("Nuovo Nome", dbUser.Name);
+    }
+
+    [Fact]
+    public async Task UpdateMe_EmptyName_Returns400()
+    {
+        var email = UniqueEmail();
+        var registerResp = await _client.PostAsJsonAsync("/auth/register",
+            new { name = "Mario", email, password = "password123" });
+        var body = await registerResp.Content.ReadFromJsonAsync<JsonElement>();
+        var token = body.GetProperty("accessToken").GetString()!;
+
+        using var request = new HttpRequestMessage(HttpMethod.Put, "/auth/me");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        request.Content = JsonContent.Create(new { name = "   " });
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateMe_NameTooLong_Returns400()
+    {
+        var email = UniqueEmail();
+        var registerResp = await _client.PostAsJsonAsync("/auth/register",
+            new { name = "Mario", email, password = "password123" });
+        var body = await registerResp.Content.ReadFromJsonAsync<JsonElement>();
+        var token = body.GetProperty("accessToken").GetString()!;
+
+        using var request = new HttpRequestMessage(HttpMethod.Put, "/auth/me");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        request.Content = JsonContent.Create(new { name = new string('a', 101) });
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    // US-030 TASK-5 — Register con nome >100 char → 400
+    [Fact]
+    public async Task Register_NameTooLong_Returns400()
+    {
+        var response = await _client.PostAsJsonAsync("/auth/register",
+            new { name = new string('a', 101), email = UniqueEmail(), password = "password123" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     private static string UniqueEmail() => $"user_{Guid.NewGuid():N}@test.com";
