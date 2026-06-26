@@ -13,9 +13,9 @@
   ├────────┼──────────────────────────────────────────┼──────────────┤
   │ US-035 │ Notifica variazione posizione classifica │ TODO→PLANNED │
   ├────────┼──────────────────────────────────────────┼──────────────┤
-  │ US-036 │ Conferma irreversibilità forzatura       │ TODO→PLANNED │
+  │ US-036 │ Conferma irreversibilità forzatura       │ fatto        │
   ├────────┼──────────────────────────────────────────┼──────────────┤
-  │ US-037 │ Pagina dettaglio partita                 │ TODO→PLANNED │
+  │ US-037 │ Pagina dettaglio partita                 │ fatto        │
   ├────────┼──────────────────────────────────────────┼──────────────┤
   │ US-021 │ Email giocatore mese/anno                │ TODO→PLANNED │
   ├────────┼──────────────────────────────────────────┼──────────────┤

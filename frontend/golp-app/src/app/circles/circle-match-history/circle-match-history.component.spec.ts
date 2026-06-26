@@ -130,7 +130,40 @@ describe('CircleMatchHistoryComponent', () => {
     expect(fixture.nativeElement.querySelector('.btn-force-confirm')).toBeNull();
   });
 
-  it('calls forceConfirm() on service and reloads on button click', () => {
+  it('first click on "Forza conferma" shows warning — does NOT call forceConfirm', () => {
+    circleSvc.getMyCircles.and.returnValue(of([makeCircleSummary(OWNER_ID)]));
+    matchSvc.getMatches.and.returnValue(of([makeMatch()]));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('.btn-force-confirm') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(matchSvc.forceConfirm).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('.force-confirm-warning')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('irreversibile');
+  });
+
+  it('"Annulla" dismisses warning without calling forceConfirm', () => {
+    circleSvc.getMyCircles.and.returnValue(of([makeCircleSummary(OWNER_ID)]));
+    matchSvc.getMatches.and.returnValue(of([makeMatch()]));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('.btn-force-confirm') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('.btn-cancel-force') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(matchSvc.forceConfirm).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('.force-confirm-warning')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.btn-force-confirm')).toBeTruthy();
+  });
+
+  it('"Confermo" button calls forceConfirm() on service and reloads', () => {
     circleSvc.getMyCircles.and.returnValue(of([makeCircleSummary(OWNER_ID)]));
     const m = makeMatch();
     matchSvc.getMatches.and.returnValue(of([m]));
@@ -140,6 +173,9 @@ describe('CircleMatchHistoryComponent', () => {
     fixture.detectChanges();
 
     (fixture.nativeElement.querySelector('.btn-force-confirm') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('.btn-confirm-force') as HTMLButtonElement).click();
     expect(matchSvc.forceConfirm).toHaveBeenCalledWith(CIRCLE_ID, m.id);
     expect(matchSvc.getMatches).toHaveBeenCalledTimes(2); // init + reload
   });

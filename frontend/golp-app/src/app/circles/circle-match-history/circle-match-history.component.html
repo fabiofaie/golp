@@ -113,11 +113,31 @@
           <!-- owner force-confirm -->
           @if (m.status === 'pending' && isOwner) {
             <div style="margin-top:8px; text-align:center;">
-              <button class="btn-force-confirm"
-                [disabled]="forceConfirming === m.id"
-                (click)="forceConfirm(m.id)">
-                {{ forceConfirming === m.id ? '…' : 'Forza conferma' }}
-              </button>
+              @if (confirmingMatchId === m.id) {
+                <div class="force-confirm-warning" style="background:var(--color-error-bg, #fff3f3); border:1px solid var(--color-error, #d32f2f); border-radius:8px; padding:12px 16px; text-align:left;">
+                  <p style="font-size:13px; font-weight:600; color:var(--color-error, #d32f2f); margin:0 0 4px;">Azione irreversibile</p>
+                  <p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 12px;">La partita verrà confermata definitivamente e non potrà più essere modificata.</p>
+                  <div style="display:flex; gap:8px; justify-content:flex-end;">
+                    <button class="btn-cancel-force"
+                      style="padding:6px 14px; border:1px solid var(--color-border); border-radius:6px; background:var(--color-surface, #fff); color:var(--color-text-primary); font-size:12px; cursor:pointer;"
+                      (click)="cancelForceConfirm()">
+                      Annulla
+                    </button>
+                    <button class="btn-confirm-force"
+                      [disabled]="forceConfirming === m.id"
+                      style="padding:6px 14px; border:none; border-radius:6px; background:var(--color-error, #d32f2f); color:#fff; font-size:12px; font-weight:600; cursor:pointer;"
+                      (click)="confirmForceConfirm(m.id)">
+                      {{ forceConfirming === m.id ? '…' : 'Confermo, forza il risultato' }}
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <button class="btn-force-confirm"
+                  [disabled]="forceConfirming === m.id"
+                  (click)="requestForceConfirm(m.id)">
+                  Forza conferma
+                </button>
+              }
             </div>
           }
 

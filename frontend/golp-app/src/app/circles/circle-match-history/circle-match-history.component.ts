@@ -85,8 +85,20 @@ export class CircleMatchHistoryComponent implements OnInit {
     });
   }
 
-  forceConfirm(matchId: string): void {
+  confirmingMatchId: string | null = null;
+
+  requestForceConfirm(matchId: string): void {
+    this.confirmingMatchId = matchId;
+    this.actionError = '';
+  }
+
+  cancelForceConfirm(): void {
+    this.confirmingMatchId = null;
+  }
+
+  confirmForceConfirm(matchId: string): void {
     this.forceConfirming = matchId;
+    this.confirmingMatchId = null;
     this.actionError = '';
     this.matchSvc.forceConfirm(this.circleId, matchId).subscribe({
       next: () => { this.forceConfirming = null; this.loadMatches(); },

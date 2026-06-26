@@ -138,6 +138,107 @@ test.describe('CircleMatchHistory — US-009', () => {
   });
 });
 
+test.describe('CircleMatchHistory — US-036 force-confirm warning', () => {
+  test('clicking "Forza conferma" shows irreversibility warning without calling API', async ({ page }) => {
+    const t1 = uniqueEmail('fc1'); const t1token = await registerUser(t1, 'FC1');
+    const t2 = uniqueEmail('fc2'); const t2token = await registerUser(t2, 'FC2');
+    const t3 = uniqueEmail('fc3'); const t3token = await registerUser(t3, 'FC3');
+    const t4 = uniqueEmail('fc4'); const t4token = await registerUser(t4, 'FC4');
+
+    const circleId = await createCircleAndGetId(t1token);
+    await joinCircle(t2token, circleId);
+    await joinCircle(t3token, circleId);
+    await joinCircle(t4token, circleId);
+
+    const [id1, id2, id3, id4] = await Promise.all([
+      decodeUserId(t1token), decodeUserId(t2token),
+      decodeUserId(t3token), decodeUserId(t4token),
+    ]);
+    await createMatch(t1token, circleId, [id1, id2], [id3, id4]);
+
+    await page.goto('/login');
+    await page.fill('#email', t1);
+    await page.fill('#password', 'testpass123');
+    await page.click('button[type="submit"]');
+    await expect(page).toHaveURL(/dashboard/);
+
+    await page.goto(`/circles/${circleId}/matches`);
+    await expect(page.locator('.btn-force-confirm')).toBeVisible();
+
+    await page.click('.btn-force-confirm');
+
+    await expect(page.locator('.force-confirm-warning')).toBeVisible();
+    await expect(page.locator('.force-confirm-warning')).toContainText('irreversibile');
+    await expect(page.locator('.btn-force-confirm')).not.toBeVisible();
+  });
+
+  test('"Annulla" closes warning and match stays pending', async ({ page }) => {
+    const t1 = uniqueEmail('fa1'); const t1token = await registerUser(t1, 'FA1');
+    const t2 = uniqueEmail('fa2'); const t2token = await registerUser(t2, 'FA2');
+    const t3 = uniqueEmail('fa3'); const t3token = await registerUser(t3, 'FA3');
+    const t4 = uniqueEmail('fa4'); const t4token = await registerUser(t4, 'FA4');
+
+    const circleId = await createCircleAndGetId(t1token);
+    await joinCircle(t2token, circleId);
+    await joinCircle(t3token, circleId);
+    await joinCircle(t4token, circleId);
+
+    const [id1, id2, id3, id4] = await Promise.all([
+      decodeUserId(t1token), decodeUserId(t2token),
+      decodeUserId(t3token), decodeUserId(t4token),
+    ]);
+    await createMatch(t1token, circleId, [id1, id2], [id3, id4]);
+
+    await page.goto('/login');
+    await page.fill('#email', t1);
+    await page.fill('#password', 'testpass123');
+    await page.click('button[type="submit"]');
+
+    await page.goto(`/circles/${circleId}/matches`);
+    await page.click('.btn-force-confirm');
+    await expect(page.locator('.force-confirm-warning')).toBeVisible();
+
+    await page.click('.btn-cancel-force');
+
+    await expect(page.locator('.force-confirm-warning')).not.toBeVisible();
+    await expect(page.locator('.btn-force-confirm')).toBeVisible();
+    await expect(page.locator('.status-badge--pending')).toBeVisible();
+  });
+
+  test('"Confermo" button force-confirms match and shows it as confirmed', async ({ page }) => {
+    const t1 = uniqueEmail('ff1'); const t1token = await registerUser(t1, 'FF1');
+    const t2 = uniqueEmail('ff2'); const t2token = await registerUser(t2, 'FF2');
+    const t3 = uniqueEmail('ff3'); const t3token = await registerUser(t3, 'FF3');
+    const t4 = uniqueEmail('ff4'); const t4token = await registerUser(t4, 'FF4');
+
+    const circleId = await createCircleAndGetId(t1token);
+    await joinCircle(t2token, circleId);
+    await joinCircle(t3token, circleId);
+    await joinCircle(t4token, circleId);
+
+    const [id1, id2, id3, id4] = await Promise.all([
+      decodeUserId(t1token), decodeUserId(t2token),
+      decodeUserId(t3token), decodeUserId(t4token),
+    ]);
+    await createMatch(t1token, circleId, [id1, id2], [id3, id4]);
+
+    await page.goto('/login');
+    await page.fill('#email', t1);
+    await page.fill('#password', 'testpass123');
+    await page.click('button[type="submit"]');
+
+    await page.goto(`/circles/${circleId}/matches`);
+    await page.click('.btn-force-confirm');
+    await expect(page.locator('.force-confirm-warning')).toBeVisible();
+
+    await page.click('.btn-confirm-force');
+
+    await expect(page.locator('.force-confirm-warning')).not.toBeVisible();
+    await expect(page.locator('.match-card--confirmed')).toBeVisible();
+    await expect(page.locator('.status-badge--pending')).not.toBeVisible();
+  });
+});
+
 test.describe('CircleMatchHistory — US-005', () => {
   test('pending match shows Conferma and Contesta buttons for current user', async ({ page }) => {
     const t1 = uniqueEmail('t1'); const t1token = await registerUser(t1, 'T1P1');

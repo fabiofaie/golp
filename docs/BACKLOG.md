@@ -1246,8 +1246,10 @@ Quando una partita `confirmed` aggiorna il rating di un giocatore e questo aggio
 
 #### US-036: Conferma esplicita di irreversibilità prima della forzatura del risultato
 
-**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 2 | **Status:** PLANNED
+**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 2 | **Status:** DONE
 **Blocked by:** US-013
+**Review note (2026-06-26):** Stato inline a due step in `circle-match-history.component.ts/html`. Test unit in `.spec.ts`, e2e in `e2e/circle-match-history.spec.ts`. Reviewer APPROVE. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-036`.
+**Approved (2026-06-26):** Review umana OK.
 
 **Story**
 Come proprietario del circolo, voglio una conferma esplicita con avviso di irreversibilità prima di forzare il risultato di una partita, così che non forzi una conferma per errore senza capire che l'azione non sarà più modificabile.
