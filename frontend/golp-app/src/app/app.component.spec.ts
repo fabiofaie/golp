@@ -1,23 +1,33 @@
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter, Router } from '@angular/router';
 import { AppComponent } from './app.component';
 import { AppUpdateService } from './shared/update/app-update.service';
+import { PushNotificationService } from './push/push-notification.service';
 
 @Component({ selector: 'app-dummy', standalone: true, template: '' })
 class DummyComponent {}
 
 describe('AppComponent', () => {
   let updateServiceMock: { triggerCheck: jasmine.Spy };
+  let pushMock: jasmine.SpyObj<PushNotificationService>;
 
   beforeEach(async () => {
     updateServiceMock = { triggerCheck: jasmine.createSpy('triggerCheck') };
+    pushMock = jasmine.createSpyObj('PushNotificationService', ['register', 'unregister', 'isSupported', 'permissionState', 'isActive']);
+    pushMock.isSupported.and.returnValue(false);
+    pushMock.isActive.and.returnValue(false);
 
     await TestBed.configureTestingModule({
       imports: [AppComponent],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         provideRouter([{ path: '**', component: DummyComponent }]),
-        { provide: AppUpdateService, useValue: updateServiceMock }
+        { provide: AppUpdateService, useValue: updateServiceMock },
+        { provide: PushNotificationService, useValue: pushMock },
       ]
     }).compileComponents();
   });
@@ -34,11 +44,11 @@ describe('AppComponent', () => {
     expect(app.title).toEqual('golp-app');
   });
 
-  it('should render title', () => {
+  it('should render router-outlet', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, golp-app');
+    expect(compiled.querySelector('router-outlet')).toBeTruthy();
   });
 
   it('chiama triggerCheck quando il documento torna visibile', () => {

@@ -28,6 +28,7 @@ describe('AuthService — integrazione push (US-006)', () => {
 
   afterEach(() => {
     localStorage.removeItem('golp_token');
+    localStorage.removeItem('golp_refresh_token');
     httpMock.verify();
   });
 
@@ -116,8 +117,9 @@ describe('AuthService — integrazione push (US-006)', () => {
   });
 
   it('deleteAccount con password errata → 401, token NON rimosso', () => {
-    localStorage.setItem('golp_token', fakeJwt);
-    localStorage.setItem('golp_refresh_token', 'refresh-1');
+    // Usa login() per aggiornare il signal isAuthenticated correttamente
+    service.login({ email: 'a@b.com', password: 'pw' }).subscribe();
+    httpMock.expectOne('/auth/login').flush({ accessToken: fakeJwt, refreshToken: 'refresh-1' });
 
     service.deleteAccount('wrongpassword').subscribe({ error: () => {} });
     httpMock.expectOne('/auth/me/delete').flush(
