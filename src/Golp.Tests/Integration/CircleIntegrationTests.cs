@@ -730,6 +730,65 @@ public class AddMemberEndpointTests : IClassFixture<JoinCircleTestFactory>
             new AuthenticationHeaderValue("Bearer", token);
 }
 
+// US-038 — test notifiche staff per creazione circolo (usa IntegrationTestFactory che ha TestEmailCapture)
+public class CircleStaffNotificationTests : IClassFixture<IntegrationTestFactory>
+{
+    private readonly IntegrationTestFactory _factory;
+    private readonly HttpClient _client;
+
+    public CircleStaffNotificationTests(IntegrationTestFactory factory)
+    {
+        _factory = factory;
+        _client = factory.CreateClient();
+    }
+
+    // US-038 AC2 — staff notification chiamata dopo create circle con successo
+    [Fact]
+    public async Task CreateCircle_StaffNotificationCalled()
+    {
+        var token = await RegisterAndGetTokenAsync();
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var capture = _factory.Services.GetRequiredService<TestEmailCapture>();
+        var beforeCount = capture.NewCircleNotificationsSent.Count;
+
+        var response = await _client.PostAsJsonAsync("/circles",
+            new { name = $"Staff_{Guid.NewGuid():N}", sport = "padel" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await capture.WaitUntilCountAsync(() => capture.NewCircleNotificationsSent.Count, beforeCount + 1, TimeSpan.FromSeconds(2));
+        Assert.Equal(beforeCount + 1, capture.NewCircleNotificationsSent.Count);
+    }
+
+    // US-038 AC3 — errore nella notifica staff non blocca la creazione circolo
+    [Fact]
+    public async Task CreateCircle_StaffNotificationFails_Returns200()
+    {
+        var token = await RegisterAndGetTokenAsync();
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var capture = _factory.Services.GetRequiredService<TestEmailCapture>();
+        capture.ShouldThrowOnStaffNotification = true;
+        try
+        {
+            var response = await _client.PostAsJsonAsync("/circles",
+                new { name = $"FailCircle_{Guid.NewGuid():N}", sport = "padel" });
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+        finally
+        {
+            capture.ShouldThrowOnStaffNotification = false;
+        }
+    }
+
+    private async Task<string> RegisterAndGetTokenAsync()
+    {
+        var r = await _client.PostAsJsonAsync("/auth/register",
+            new { name = "User", email = $"user_{Guid.NewGuid():N}@test.com", password = "password123" });
+        var body = await r.Content.ReadFromJsonAsync<JsonElement>();
+        return body.GetProperty("token").GetString()!;
+    }
+}
+
 public class JoinCircleTestFactory : WebApplicationFactory<Program>
 {
     public TestEmailCapture EmailCapture { get; } = new();

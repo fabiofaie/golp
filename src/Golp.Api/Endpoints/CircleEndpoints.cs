@@ -67,7 +67,9 @@ public static class CircleEndpoints
         CreateCircleRequest req,
         ClaimsPrincipal user,
         AppDbContext db,
-        ISportsService sportsService)
+        ISportsService sportsService,
+        IEmailService emailService,
+        ILoggerFactory loggerFactory)
     {
         var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
@@ -107,6 +109,12 @@ public static class CircleEndpoints
         db.Circles.Add(circle);
         db.CircleMemberships.Add(membership);
         await db.SaveChangesAsync();
+
+        var logger = loggerFactory.CreateLogger(nameof(CircleEndpoints));
+        var ownerEmail = user.FindFirstValue("email") ?? user.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+        _ = emailService.SendNewCircleNotificationAsync(circle.Name, circle.Sport, ownerEmail, DateTime.UtcNow)
+            .ContinueWith(t => logger.LogError(t.Exception, "Staff circle notification failed"),
+                          TaskContinuationOptions.OnlyOnFaulted);
 
         return Results.Ok(new
         {

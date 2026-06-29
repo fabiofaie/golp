@@ -8,4 +8,6 @@ public interface IEmailService
     Task SendMatchConfirmationRequestEmailAsync(string email, string circleName, string matchLink);
     Task SendMatchDisputedEmailAsync(string email, string circleName, string matchLink);
     Task SendAwardWinnerEmailAsync(string email, string winnerName, string circleName, string humanPeriodLabel, int netGain, int matchesPlayed);
+    Task SendNewUserNotificationAsync(string userEmail, string userName, DateTime registeredAt);
+    Task SendNewCircleNotificationAsync(string circleName, string sport, string ownerEmail, DateTime createdAt);
 }

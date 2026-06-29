@@ -16,6 +16,7 @@ public class SmtpEmailService(
     private readonly string _fromAddress = configuration["Smtp:From"] ?? configuration["Smtp:User"]!;
     private readonly string _fromName = configuration["Smtp:FromName"] ?? "GOLP";
     private readonly bool _useSsl = bool.Parse(configuration["Smtp:UseSsl"] ?? "true");
+    private readonly string? _staffEmail = configuration["Notifications:StaffEmail"];
 
     public Task SendPasswordResetEmailAsync(string email, string resetLink) =>
         SendAsync(email, "Reimposta la password GOLP", "password-reset", new Dictionary<string, string>
@@ -59,6 +60,37 @@ public class SmtpEmailService(
             ["NetGain"]          = netGain.ToString(),
             ["MatchesPlayed"]    = matchesPlayed.ToString(),
         });
+
+    public Task SendNewUserNotificationAsync(string userEmail, string userName, DateTime registeredAt)
+    {
+        if (string.IsNullOrEmpty(_staffEmail))
+        {
+            logger.LogWarning("Notifications:StaffEmail non configurato, skip notifica nuovo utente");
+            return Task.CompletedTask;
+        }
+        return SendAsync(_staffEmail, $"[GOLP] Nuovo utente: {userName}", "new-user-notification", new Dictionary<string, string>
+        {
+            ["UserEmail"]    = userEmail,
+            ["UserName"]     = userName,
+            ["RegisteredAt"] = registeredAt.ToString("yyyy-MM-dd HH:mm:ss") + " UTC",
+        });
+    }
+
+    public Task SendNewCircleNotificationAsync(string circleName, string sport, string ownerEmail, DateTime createdAt)
+    {
+        if (string.IsNullOrEmpty(_staffEmail))
+        {
+            logger.LogWarning("Notifications:StaffEmail non configurato, skip notifica nuovo circolo");
+            return Task.CompletedTask;
+        }
+        return SendAsync(_staffEmail, $"[GOLP] Nuovo circolo: {circleName}", "new-circle-notification", new Dictionary<string, string>
+        {
+            ["CircleName"] = circleName,
+            ["Sport"]      = sport,
+            ["OwnerEmail"] = ownerEmail,
+            ["CreatedAt"]  = createdAt.ToString("yyyy-MM-dd HH:mm:ss") + " UTC",
+        });
+    }
 
     private async Task SendAsync(string toEmail, string subject, string templateName, Dictionary<string, string> values)
     {

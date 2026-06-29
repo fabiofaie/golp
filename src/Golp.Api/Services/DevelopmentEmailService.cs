@@ -41,6 +41,23 @@ public class DevelopmentEmailService(
             ["MatchesPlayed"]    = matchesPlayed.ToString(),
         });
 
+    public Task SendNewUserNotificationAsync(string userEmail, string userName, DateTime registeredAt) =>
+        LogAsync(userEmail, "new-user-notification", new Dictionary<string, string>
+        {
+            ["UserEmail"]    = userEmail,
+            ["UserName"]     = userName,
+            ["RegisteredAt"] = registeredAt.ToString("yyyy-MM-dd HH:mm:ss") + " UTC",
+        });
+
+    public Task SendNewCircleNotificationAsync(string circleName, string sport, string ownerEmail, DateTime createdAt) =>
+        LogAsync(ownerEmail, "new-circle-notification", new Dictionary<string, string>
+        {
+            ["CircleName"] = circleName,
+            ["Sport"]      = sport,
+            ["OwnerEmail"] = ownerEmail,
+            ["CreatedAt"]  = createdAt.ToString("yyyy-MM-dd HH:mm:ss") + " UTC",
+        });
+
     private Task LogAsync(string email, string templateName, Dictionary<string, string> values)
     {
         var html = renderer.Render(templateName, values);

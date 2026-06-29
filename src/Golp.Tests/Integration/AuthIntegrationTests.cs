@@ -470,6 +470,42 @@ public class AuthIntegrationTests : IClassFixture<IntegrationTestFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    // US-038 AC1 — staff notification chiamata dopo register con successo
+    [Fact]
+    public async Task Register_ValidData_StaffNotificationCalled()
+    {
+        var email = UniqueEmail();
+        var capture = _factory.Services.GetRequiredService<TestEmailCapture>();
+        var beforeCount = capture.NewUserNotificationsSent.Count;
+
+        var response = await _client.PostAsJsonAsync("/auth/register",
+            new { name = "Marco Staff", email, password = "password123" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await capture.WaitUntilCountAsync(() => capture.NewUserNotificationsSent.Count, beforeCount + 1, TimeSpan.FromSeconds(2));
+        Assert.Equal(beforeCount + 1, capture.NewUserNotificationsSent.Count);
+        Assert.Contains(capture.NewUserNotificationsSent, n => n.UserEmail == email && n.UserName == "Marco Staff");
+    }
+
+    // US-038 AC3 — errore nella notifica staff non blocca la registrazione
+    [Fact]
+    public async Task Register_StaffNotificationFails_Returns200()
+    {
+        var capture = _factory.Services.GetRequiredService<TestEmailCapture>();
+        capture.ShouldThrowOnStaffNotification = true;
+        try
+        {
+            var response = await _client.PostAsJsonAsync("/auth/register",
+                new { name = "Fail Test", email = UniqueEmail(), password = "password123" });
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+        finally
+        {
+            capture.ShouldThrowOnStaffNotification = false;
+        }
+    }
+
     private static string UniqueEmail() => $"user_{Guid.NewGuid():N}@test.com";
 }
 
@@ -523,6 +559,27 @@ public class TestEmailCapture : Golp.Api.Services.IEmailService
 
     public Task SendAwardWinnerEmailAsync(string email, string winnerName, string circleName, string humanPeriodLabel, int netGain, int matchesPlayed)
         => Task.CompletedTask;
+
+    public bool ShouldThrowOnStaffNotification { get; set; }
+
+    public System.Collections.Concurrent.ConcurrentBag<(string UserEmail, string UserName)> NewUserNotificationsSent { get; } = new();
+    public System.Collections.Concurrent.ConcurrentBag<(string CircleName, string Sport, string OwnerEmail)> NewCircleNotificationsSent { get; } = new();
+
+    public Task SendNewUserNotificationAsync(string userEmail, string userName, DateTime registeredAt)
+    {
+        NewUserNotificationsSent.Add((userEmail, userName));
+        if (ShouldThrowOnStaffNotification)
+            return Task.FromException(new InvalidOperationException("Simulated SMTP failure on staff notification"));
+        return Task.CompletedTask;
+    }
+
+    public Task SendNewCircleNotificationAsync(string circleName, string sport, string ownerEmail, DateTime createdAt)
+    {
+        NewCircleNotificationsSent.Add((circleName, sport, ownerEmail));
+        if (ShouldThrowOnStaffNotification)
+            return Task.FromException(new InvalidOperationException("Simulated SMTP failure on staff notification"));
+        return Task.CompletedTask;
+    }
 
     /// <summary>Polling helper: il dispatch email è fire-and-forget, serve attendere senza sleep fisso.</summary>
     public async Task WaitUntilCountAsync(Func<int> countSelector, int expectedCount, TimeSpan timeout)

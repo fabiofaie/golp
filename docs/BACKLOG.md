@@ -61,8 +61,10 @@ _Fondamenta multi-tenant: account giocatore, creazione circolo, appartenenza a p
 
 #### US-038: Notifica email allo staff per nuove registrazioni
 
-**Epic:** EP-001 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** TODO
+**Epic:** EP-001 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
 **Blocked by:** -
+**Review note (2026-06-29):** Codice in `src/Golp.Api/` (IEmailService, SmtpEmailService, DevelopmentEmailService, AuthEndpoints, CircleEndpoints, 2 template HTML), test in `src/Golp.Tests/Integration/` (4 nuovi test, 243/243 verde). Reviewer APPROVE.
+**Approved (2026-06-29):** Review umana OK.
 
 **Story**
 Come gestore del progetto GOLP, voglio ricevere una email a `iscrizioni.golp@eqproject.it` ogni volta che un nuovo utente si registra o un nuovo circolo viene creato, così che possa monitorare la crescita della piattaforma senza dover controllare il database.
@@ -221,7 +223,9 @@ _Il valore core: trasformare partite confermate in una classifica oggettiva, agg
 
 #### US-035: Notifica variazione posizione in classifica
 
-**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** IN_PROGRESS
+**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-06-29):** Review umana OK.
+**Review note (2026-06-29):** `IRatingService.CalculateAndApplyAsync` restituisce `IReadOnlyList<(Guid UserId, int NewPosition)>` giocatori saliti di posizione. `RatingService`: snapshot pre-update (query DB tutti i membri del circolo) + post-update (stesso snapshot con rating modificati in memoria) → confronto posizione 1-based. `PushNotificationService.SendRankingImprovedAsync`: fire-and-forget, pattern dead-token identico a `SendConfirmationRequestAsync`. `MatchEndpoints.ConfirmMatchAsync`: dopo `SaveChanges`, per ogni migliorato lancia push con nome circolo. Test: 4 nuovi integration `RatingServiceIntegrationTests` (pre/post ranking, losers, multiple, position reflect) + 4 unit `PushNotificationServiceTests` (no token, payload, dead token, no-propagate) + 1 integration E2E `MatchIntegrationTests.ConfirmFourth_PlayerRises_ReceivesRankingPush`. Suite: 239/239 verde. Reviewer APPROVE. > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-035`.
 **Blocked by:** US-029
 
 **Story**

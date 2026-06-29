@@ -33,6 +33,8 @@ public static class AuthEndpoints
         AppDbContext db,
         IJwtService jwtService,
         IRefreshTokenService refreshTokenService,
+        IEmailService emailService,
+        ILoggerFactory loggerFactory,
         HttpContext httpContext)
     {
         if (string.IsNullOrWhiteSpace(req.Name))
@@ -63,6 +65,11 @@ public static class AuthEndpoints
         var accessToken = jwtService.GenerateToken(user.Id, user.Email, user.SecurityStamp);
         var userAgent = httpContext.Request.Headers.UserAgent.ToString();
         var refreshToken = await refreshTokenService.IssueAsync(user.Id, userAgent);
+
+        var logger = loggerFactory.CreateLogger(nameof(AuthEndpoints));
+        _ = emailService.SendNewUserNotificationAsync(user.Email, user.Name, DateTime.UtcNow)
+            .ContinueWith(t => logger.LogError(t.Exception, "Staff user notification failed"),
+                          TaskContinuationOptions.OnlyOnFaulted);
 
         return Results.Ok(new { accessToken, refreshToken, token = accessToken });
     }
