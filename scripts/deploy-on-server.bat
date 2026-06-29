@@ -5,6 +5,21 @@ set ZIPDIR=K:\TempDeploy
 set SITESDIR=K:\_SITI_ISS
 set BACKUPDIR=K:\TempDeploy\Backup
 
+rem Accetta argomento: deploy-on-server.bat Production | Testing
+rem Se nessun argomento, mostra menu interattivo
+if /i "%~1"=="Production" (
+    set ENVNAME=Production
+    set API_SITE=golpapi
+    set FE_SITE=golp
+    goto :deploy
+)
+if /i "%~1"=="Testing" (
+    set ENVNAME=Testing
+    set API_SITE=golpapitest
+    set FE_SITE=golptest
+    goto :deploy
+)
+
 echo Cosa vuoi distribuire?
 echo   1) Produzione  (golp + golpapi)
 echo   2) Test        (golptest + golpapitest)
@@ -23,6 +38,8 @@ if "%CHOICE%"=="1" (
     echo Annullato.
     goto :eof
 )
+
+:deploy
 
 if not exist "%BACKUPDIR%" mkdir "%BACKUPDIR%"
 
@@ -81,4 +98,3 @@ echo === Riavvio Frontend (%FE_SITE%) ===
 
 echo.
 echo Fatto. Backup salvati in %BACKUPDIR%
-pause

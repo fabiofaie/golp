@@ -157,7 +157,7 @@ docs/
       README.md
       ... (4 more files)
   planning/
-    ... (37 more files)
+    ... (38 more files)
   requirements/
     ... (1 more files)
   test-results/
@@ -285,7 +285,7 @@ src/
       Entities/
       ... (1 more files)
     EmailTemplates/
-      ... (7 more files)
+      ... (9 more files)
     Endpoints/
       ... (7 more files)
     Migrations/
