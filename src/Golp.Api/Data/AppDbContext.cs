@@ -16,6 +16,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<FcmToken> FcmTokens => Set<FcmToken>();
     public DbSet<CircleAward> CircleAwards => Set<CircleAward>();
     public DbSet<Sport> Sports => Set<Sport>();
+    public DbSet<AwardNotificationSent> AwardNotificationsSent => Set<AwardNotificationSent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -139,6 +140,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasKey(a => a.Id);
             e.Property(a => a.PeriodType).HasMaxLength(10).IsRequired();
             e.HasIndex(a => new { a.CircleId, a.PeriodType, a.PeriodYear, a.PeriodMonth }).IsUnique();
+        });
+
+        modelBuilder.Entity<AwardNotificationSent>(e =>
+        {
+            e.HasKey(a => a.Id);
+            e.Property(a => a.PeriodType).HasMaxLength(10).IsRequired();
+            e.Property(a => a.PeriodLabel).HasMaxLength(20).IsRequired();
+            e.HasIndex(a => new { a.CircleId, a.PeriodType, a.PeriodLabel }).IsUnique();
         });
 
         modelBuilder.Entity<Sport>(e =>

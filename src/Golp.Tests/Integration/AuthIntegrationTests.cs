@@ -521,6 +521,9 @@ public class TestEmailCapture : Golp.Api.Services.IEmailService
         return Task.CompletedTask;
     }
 
+    public Task SendAwardWinnerEmailAsync(string email, string winnerName, string circleName, string humanPeriodLabel, int netGain, int matchesPlayed)
+        => Task.CompletedTask;
+
     /// <summary>Polling helper: il dispatch email è fire-and-forget, serve attendere senza sleep fisso.</summary>
     public async Task WaitUntilCountAsync(Func<int> countSelector, int expectedCount, TimeSpan timeout)
     {

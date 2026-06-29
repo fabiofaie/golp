@@ -265,7 +265,9 @@ _Gamification leggera e insight personali: giocatore del mese/anno e statistiche
 
 #### US-021: Notifica email automatica giocatore del mese/anno
 
-**Epic:** EP-004 | **Priority:** LOW | **Story Points:** 5 | **Status:** PLANNED
+**Epic:** EP-004 | **Priority:** LOW | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-29):** Review umana OK.
+**Review note (2026-06-29):** Codice in `src/Golp.Api/Data/Entities/AwardNotificationSent.cs` (entità idempotenza), `Services/{IAwardsCalculator,AwardsCalculator}.cs` (logica periodo estratta da AwardsEndpoints), `Services/{IEmailService,SmtpEmailService,DevelopmentEmailService}.cs` (nuovo `SendAwardWinnerEmailAsync`), `EmailTemplates/award-winner.html`, `Services/{IAwardNotificationProcessor,AwardNotificationProcessor,AwardNotificationBackgroundService}.cs`, `Program.cs` (+HostedService), `appsettings.json` (+Awards:NotificationCheckHourUtc). Migration `AddAwardNotificationsSent`. Test: 4 integration in `AwardNotificationProcessorTests.cs` + 1 unit in `EmailTemplateRendererTests.cs` + 8 AwardsEndpointTests verdi dopo refactor. Suite completa: 230/230 verde. Reviewer APPROVE. > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-021`.
 **Blocked by:** US-020
 
 **Story**

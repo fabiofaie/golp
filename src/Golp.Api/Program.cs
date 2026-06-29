@@ -34,6 +34,11 @@ builder.Services.AddScoped<IRatingService, RatingService>();
 // Sports config da DB (US-016)
 builder.Services.AddScoped<ISportsService, SportsService>();
 
+// Awards calculator + notification job (US-021)
+builder.Services.AddScoped<IAwardsCalculator, AwardsCalculator>();
+builder.Services.AddScoped<IAwardNotificationProcessor, AwardNotificationProcessor>();
+builder.Services.AddHostedService<AwardNotificationBackgroundService>();
+
 // Push notifications (US-006) — Firebase init solo se credenziali configurate;
 // senza credenziali l'invio fallisce silenziosamente (gestito in PushNotificationService)
 var firebaseJson = builder.Configuration["Firebase:ServiceAccountJson"];

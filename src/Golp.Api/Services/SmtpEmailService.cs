@@ -50,6 +50,16 @@ public class SmtpEmailService(
             ["MatchLink"] = matchLink,
         });
 
+    public Task SendAwardWinnerEmailAsync(string email, string winnerName, string circleName, string humanPeriodLabel, int netGain, int matchesPlayed) =>
+        SendAsync(email, $"Sei il giocatore del {humanPeriodLabel} in {circleName}!", "award-winner", new Dictionary<string, string>
+        {
+            ["WinnerName"]       = winnerName,
+            ["CircleName"]       = circleName,
+            ["HumanPeriodLabel"] = humanPeriodLabel,
+            ["NetGain"]          = netGain.ToString(),
+            ["MatchesPlayed"]    = matchesPlayed.ToString(),
+        });
+
     private async Task SendAsync(string toEmail, string subject, string templateName, Dictionary<string, string> values)
     {
         var htmlBody = renderer.Render(templateName, values);

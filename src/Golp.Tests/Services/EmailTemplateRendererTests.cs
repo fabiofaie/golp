@@ -53,4 +53,28 @@ public class EmailTemplateRendererTests : IDisposable
         Assert.Throws<FileNotFoundException>(() =>
             renderer.Render("does-not-exist", new Dictionary<string, string>()));
     }
+
+    [Fact]
+    public void Render_AwardWinnerTemplate_ContainsAllValues()
+    {
+        File.WriteAllText(Path.Combine(_tempDir, "award-winner.html"),
+            "<p>Ciao {{WinnerName}}! Hai vinto il {{HumanPeriodLabel}} in {{CircleName}}. Gain: {{NetGain}}, Partite: {{MatchesPlayed}}.</p>");
+
+        var renderer = new EmailTemplateRenderer(_tempDir);
+
+        var html = renderer.Render("award-winner", new Dictionary<string, string>
+        {
+            ["WinnerName"]       = "Marco",
+            ["HumanPeriodLabel"] = "Giugno 2026",
+            ["CircleName"]       = "Padel Club Roma",
+            ["NetGain"]          = "42",
+            ["MatchesPlayed"]    = "7",
+        });
+
+        Assert.Contains("Marco", html);
+        Assert.Contains("Giugno 2026", html);
+        Assert.Contains("Padel Club Roma", html);
+        Assert.Contains("42", html);
+        Assert.Contains("7", html);
+    }
 }

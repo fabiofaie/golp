@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using Golp.Api.Data;
-using Golp.Api.Data.Entities;
+using Golp.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Golp.Api.Endpoints;
@@ -17,7 +17,8 @@ public static class AwardsEndpoints
     private static async Task<IResult> GetAwardsAsync(
         Guid circleId,
         ClaimsPrincipal user,
-        AppDbContext db)
+        AppDbContext db,
+        IAwardsCalculator calculator)
     {
         var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userIdStr == null || !Guid.TryParse(userIdStr, out _))
@@ -28,70 +29,25 @@ public static class AwardsEndpoints
             return Results.NotFound(new { error = "Circolo non trovato" });
 
         var now = DateTimeOffset.UtcNow;
-        var currentMonth = await ComputePeriodAsync(db, circleId, "month", now.Year, now.Month);
-        var currentYear  = await ComputePeriodAsync(db, circleId, "year",  now.Year, null);
+        var currentMonth = await calculator.ComputePeriodAsync(circleId, "month", now.Year, now.Month);
+        var currentYear  = await calculator.ComputePeriodAsync(circleId, "year",  now.Year, null);
 
-        return Results.Ok(new { currentMonth, currentYear });
-    }
-
-    private static async Task<object> ComputePeriodAsync(
-        AppDbContext db, Guid circleId, string periodType, int year, int? month)
-    {
-        var periodStart = month.HasValue
-            ? new DateTimeOffset(year, month.Value, 1, 0, 0, 0, TimeSpan.Zero)
-            : new DateTimeOffset(year, 1, 1, 0, 0, 0, TimeSpan.Zero);
-
-        var periodEnd = month.HasValue
-            ? periodStart.AddMonths(1)
-            : new DateTimeOffset(year + 1, 1, 1, 0, 0, 0, TimeSpan.Zero);
-
-        var periodLabel = month.HasValue ? $"{year}-{month.Value:D2}" : $"{year}";
-
-        var matches = await db.Matches
-            .Where(m => m.CircleId == circleId
-                     && m.Status == "confirmed"
-                     && m.CreatedAt >= periodStart
-                     && m.CreatedAt < periodEnd)
-            .ToListAsync();
-
-        if (matches.Count == 0)
-            return new { period = periodLabel, winner = (object?)null };
-
-        var top = matches
-            .SelectMany(m => new[]
-            {
-                (UserId: m.Team1Player1Id, Delta: m.DeltaTeam1Player1 ?? 0),
-                (UserId: m.Team1Player2Id, Delta: m.DeltaTeam1Player2 ?? 0),
-                (UserId: m.Team2Player1Id, Delta: m.DeltaTeam2Player1 ?? 0),
-                (UserId: m.Team2Player2Id, Delta: m.DeltaTeam2Player2 ?? 0),
-            })
-            .GroupBy(x => x.UserId)
-            .Select(g => new
-            {
-                UserId       = g.Key,
-                NetGain      = g.Sum(x => x.Delta),
-                MatchesPlayed = g.Count(),
-            })
-            .OrderByDescending(x => x.NetGain)
-            .ThenByDescending(x => x.MatchesPlayed)
-            .ThenBy(x => x.UserId)
-            .First();
-
-        var winnerName = await db.Users
-            .Where(u => u.Id == top.UserId)
-            .Select(u => u.Name)
-            .FirstOrDefaultAsync() ?? "";
-
-        return new
+        return Results.Ok(new
         {
-            period = periodLabel,
-            winner = new
-            {
-                userId        = top.UserId,
-                name          = winnerName,
-                netGain       = top.NetGain,
-                matchesPlayed = top.MatchesPlayed,
-            },
-        };
+            currentMonth = ToResponse(currentMonth),
+            currentYear  = ToResponse(currentYear),
+        });
     }
+
+    private static object ToResponse(AwardPeriodResult r) => new
+    {
+        period = r.Period,
+        winner = r.Winner == null ? null : (object)new
+        {
+            userId        = r.Winner.UserId,
+            name          = r.Winner.Name,
+            netGain       = r.Winner.NetGain,
+            matchesPlayed = r.Winner.MatchesPlayed,
+        },
+    };
 }

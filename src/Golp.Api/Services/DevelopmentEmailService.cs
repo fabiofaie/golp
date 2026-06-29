@@ -31,6 +31,16 @@ public class DevelopmentEmailService(
             ["MatchLink"] = matchLink,
         });
 
+    public Task SendAwardWinnerEmailAsync(string email, string winnerName, string circleName, string humanPeriodLabel, int netGain, int matchesPlayed) =>
+        LogAsync(email, "award-winner", new Dictionary<string, string>
+        {
+            ["WinnerName"]       = winnerName,
+            ["CircleName"]       = circleName,
+            ["HumanPeriodLabel"] = humanPeriodLabel,
+            ["NetGain"]          = netGain.ToString(),
+            ["MatchesPlayed"]    = matchesPlayed.ToString(),
+        });
+
     private Task LogAsync(string email, string templateName, Dictionary<string, string> values)
     {
         var html = renderer.Render(templateName, values);
