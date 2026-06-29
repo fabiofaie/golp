@@ -1,2 +1,2 @@
-export const APP_VERSION = 'v55';
-export const APP_BUILD_HASH = '2c60910';
+export const APP_VERSION = 'v66';
+export const APP_BUILD_HASH = '0e67559';
