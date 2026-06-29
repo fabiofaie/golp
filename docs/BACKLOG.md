@@ -341,7 +341,8 @@ _Funzionalità per gestire la piattaforma senza dover rilasciare nuove versioni:
 
 #### US-033: Riepilogo rating per circolo nel Profilo
 
-**Epic:** EP-005 | **Priority:** LOW | **Story Points:** 2 | **Status:** REVIEW
+**Epic:** EP-005 | **Priority:** LOW | **Story Points:** 2 | **Status:** DONE
+**Approved (2026-06-29):** Review umana OK.
 **Review note (2026-06-29):** Codice in `frontend/golp-app/src/app/profile/profile.component.ts` (sezione "I tuoi circoli" con `circleService.getMyCircles()`, signal `myCircles`/`circlesLoading`, metodo `goToCircle()`). Test unit in `profile.component.spec.ts` (3 nuovi, 29/29 verdi), e2e in `e2e/profile-circles-summary.spec.ts` (2/2 verdi). Suite completa: 185/185 unit. Reviewer APPROVE — no Critical aperti. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-033`.
 **Blocked by:** US-028
 
@@ -369,8 +370,9 @@ La pagina Profilo mostra un elenco dei circoli dell'utente con, per ciascuno, il
 
 #### US-016: Sport configurabili da database
 
-**Epic:** EP-005 | **Priority:** HIGH | **Story Points:** 5 | **Status:** REVIEW
-**Review note (2026-06-24):** Codice in `src/Golp.Api/{Data/Entities/Sport.cs, Data/AppDbContext.cs, Services/{ISportsService,SportsService}.cs, Endpoints/CircleEndpoints.cs, Services/RatingService.cs}`, migration `20260624145528_AddSportsTable`, test in `src/Golp.Tests/{Services/SportsServiceTests.cs, Integration/CircleIntegrationTests.cs, +17 test factory fixes}`. Reviewer APPROVE. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-016` (o aggiorna manualmente lo status a `DONE`).
+**Epic:** EP-005 | **Priority:** HIGH | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-29):** Review umana OK.
+**Review note (2026-06-24):** Codice in `src/Golp.Api/{Data/Entities/Sport.cs, Data/AppDbContext.cs, Services/{ISportsService,SportsService}.cs, Endpoints/CircleEndpoints.cs, Services/RatingService.cs}`, migration `20260624145528_AddSportsTable`, test in `src/Golp.Tests/{Services/SportsServiceTests.cs, Integration/CircleIntegrationTests.cs, +17 test factory fixes}`. Reviewer APPROVE.
 **Blocked by:** -
 
 **Story**
