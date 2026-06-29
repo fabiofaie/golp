@@ -113,6 +113,8 @@ export class AuthService {
   }
 
   private hasValidToken(): boolean {
+    // Refresh token present = session alive; interceptor handles 401+refresh on first API call
+    if (localStorage.getItem(REFRESH_TOKEN_KEY)) return true;
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return false;
     try {
