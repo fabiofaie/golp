@@ -33,7 +33,7 @@ WHERE Id = @MatchId;
 
 IF @CircleId IS NULL
 BEGIN
-    RAISERROR('Partita non trovata: %s', 16, 1, CAST(@MatchId AS NVARCHAR(36)));
+    RAISERROR('Partita non trovata: %s', 16, 1);
     ROLLBACK TRAN; RETURN;
 END
 
