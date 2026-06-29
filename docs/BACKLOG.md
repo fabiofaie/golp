@@ -221,7 +221,7 @@ _Il valore core: trasformare partite confermate in una classifica oggettiva, agg
 
 #### US-035: Notifica variazione posizione in classifica
 
-**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** PLANNED
+**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** IN_PROGRESS
 **Blocked by:** US-029
 
 **Story**

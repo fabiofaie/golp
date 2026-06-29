@@ -173,6 +173,141 @@ public class RatingServiceIntegrationTests
         Assert.Equal(0, match.DeltaTeam1Player1!.Value + match.DeltaTeam2Player1!.Value);
     }
 
+    // US-035 — partita che fa salire team1: entrambi i giocatori vincitori devono comparire nella lista
+    // team1 parte a 999, team2 a 1001 → differenza minima → delta ≈ 10 pts basta a sorpassare
+    [Fact]
+    public async Task ConfirmedMatch_WinnersSalirono_ReturnedInImprovedList()
+    {
+        using var db = CreateDb();
+        var circleId = Guid.NewGuid();
+        var playerIds = Enumerable.Range(0, 4).Select(_ => Guid.NewGuid()).ToArray();
+
+        db.CircleMemberships.Add(new CircleMembership { CircleId = circleId, UserId = playerIds[0], Rating = 999 });
+        db.CircleMemberships.Add(new CircleMembership { CircleId = circleId, UserId = playerIds[1], Rating = 999 });
+        db.CircleMemberships.Add(new CircleMembership { CircleId = circleId, UserId = playerIds[2], Rating = 1001 });
+        db.CircleMemberships.Add(new CircleMembership { CircleId = circleId, UserId = playerIds[3], Rating = 1001 });
+
+        var match = new Match
+        {
+            CircleId = circleId, CreatedById = playerIds[0], Status = "confirmed", WinnerTeam = 1,
+            Team1Player1Id = playerIds[0], Team1Player2Id = playerIds[1],
+            Team2Player1Id = playerIds[2], Team2Player2Id = playerIds[3],
+        };
+        db.Matches.Add(match);
+        db.MatchSets.AddRange(
+            new MatchSet { MatchId = match.Id, SetNumber = 1, Team1Score = 6, Team2Score = 0 },
+            new MatchSet { MatchId = match.Id, SetNumber = 2, Team1Score = 6, Team2Score = 0 });
+        await db.SaveChangesAsync();
+
+        var improved = await new RatingService().CalculateAndApplyAsync(match.Id, db);
+        await db.SaveChangesAsync();
+
+        // team1 (999) wins over team2 (1001) → team1 surpasses team2 in ranking
+        var improvedIds = improved.Select(x => x.UserId).ToHashSet();
+        Assert.Contains(playerIds[0], improvedIds);
+        Assert.Contains(playerIds[1], improvedIds);
+    }
+
+    // US-035 — giocatori che scendono (team2) non compaiono nella lista
+    [Fact]
+    public async Task ConfirmedMatch_LosersNotInImprovedList()
+    {
+        using var db = CreateDb();
+        var circleId = Guid.NewGuid();
+        var playerIds = Enumerable.Range(0, 4).Select(_ => Guid.NewGuid()).ToArray();
+        db.CircleMemberships.Add(new CircleMembership { CircleId = circleId, UserId = playerIds[0], Rating = 999 });
+        db.CircleMemberships.Add(new CircleMembership { CircleId = circleId, UserId = playerIds[1], Rating = 999 });
+        db.CircleMemberships.Add(new CircleMembership { CircleId = circleId, UserId = playerIds[2], Rating = 1001 });
+        db.CircleMemberships.Add(new CircleMembership { CircleId = circleId, UserId = playerIds[3], Rating = 1001 });
+
+        var match = new Match
+        {
+            CircleId = circleId, CreatedById = playerIds[0], Status = "confirmed", WinnerTeam = 1,
+            Team1Player1Id = playerIds[0], Team1Player2Id = playerIds[1],
+            Team2Player1Id = playerIds[2], Team2Player2Id = playerIds[3],
+        };
+        db.Matches.Add(match);
+        db.MatchSets.AddRange(
+            new MatchSet { MatchId = match.Id, SetNumber = 1, Team1Score = 6, Team2Score = 0 },
+            new MatchSet { MatchId = match.Id, SetNumber = 2, Team1Score = 6, Team2Score = 0 });
+        await db.SaveChangesAsync();
+
+        var improved = await new RatingService().CalculateAndApplyAsync(match.Id, db);
+        await db.SaveChangesAsync();
+
+        var improvedIds = improved.Select(x => x.UserId).ToHashSet();
+        Assert.DoesNotContain(playerIds[2], improvedIds);
+        Assert.DoesNotContain(playerIds[3], improvedIds);
+    }
+
+    // US-035 — più giocatori della stessa partita salgono: ciascuno compare con la propria posizione (AC6)
+    [Fact]
+    public async Task ConfirmedMatch_MultiplePlayersImproved_EachHasOwnPosition()
+    {
+        using var db = CreateDb();
+        var circleId = Guid.NewGuid();
+        var playerIds = Enumerable.Range(0, 4).Select(_ => Guid.NewGuid()).ToArray();
+        // team1=999, team2=1001: piccolo gap → team1 vince → entrambi i team1 players salgono
+        db.CircleMemberships.Add(new CircleMembership { CircleId = circleId, UserId = playerIds[0], Rating = 999 });
+        db.CircleMemberships.Add(new CircleMembership { CircleId = circleId, UserId = playerIds[1], Rating = 999 });
+        db.CircleMemberships.Add(new CircleMembership { CircleId = circleId, UserId = playerIds[2], Rating = 1001 });
+        db.CircleMemberships.Add(new CircleMembership { CircleId = circleId, UserId = playerIds[3], Rating = 1001 });
+
+        var match = new Match
+        {
+            CircleId = circleId, CreatedById = playerIds[0], Status = "confirmed", WinnerTeam = 1,
+            Team1Player1Id = playerIds[0], Team1Player2Id = playerIds[1],
+            Team2Player1Id = playerIds[2], Team2Player2Id = playerIds[3],
+        };
+        db.Matches.Add(match);
+        db.MatchSets.AddRange(
+            new MatchSet { MatchId = match.Id, SetNumber = 1, Team1Score = 6, Team2Score = 0 },
+            new MatchSet { MatchId = match.Id, SetNumber = 2, Team1Score = 6, Team2Score = 0 });
+        await db.SaveChangesAsync();
+
+        var improved = await new RatingService().CalculateAndApplyAsync(match.Id, db);
+        await db.SaveChangesAsync();
+
+        var improvedList = improved.Where(x => new[] { playerIds[0], playerIds[1] }.Contains(x.UserId)).ToList();
+        Assert.Equal(2, improvedList.Count);
+        Assert.All(improvedList, item => Assert.True(item.NewPosition >= 1));
+    }
+
+    // US-035 — posizione nella lista riflette il ranking del circolo (AC5)
+    [Fact]
+    public async Task ConfirmedMatch_ImprovedPosition_ReflectsCircleRanking()
+    {
+        using var db = CreateDb();
+        var circleId = Guid.NewGuid();
+        var playerIds = Enumerable.Range(0, 4).Select(_ => Guid.NewGuid()).ToArray();
+        // team1=999, team2=1001: piccolo gap garantisce che il delta ≈10 faccia sorpassare team1
+        db.CircleMemberships.AddRange(
+            new CircleMembership { CircleId = circleId, UserId = playerIds[0], Rating = 999 },
+            new CircleMembership { CircleId = circleId, UserId = playerIds[1], Rating = 999 },
+            new CircleMembership { CircleId = circleId, UserId = playerIds[2], Rating = 1001 },
+            new CircleMembership { CircleId = circleId, UserId = playerIds[3], Rating = 1001 });
+
+        var match = new Match
+        {
+            CircleId = circleId, CreatedById = playerIds[0], Status = "confirmed", WinnerTeam = 1,
+            Team1Player1Id = playerIds[0], Team1Player2Id = playerIds[1],
+            Team2Player1Id = playerIds[2], Team2Player2Id = playerIds[3],
+        };
+        db.Matches.Add(match);
+        db.MatchSets.AddRange(
+            new MatchSet { MatchId = match.Id, SetNumber = 1, Team1Score = 6, Team2Score = 0 },
+            new MatchSet { MatchId = match.Id, SetNumber = 2, Team1Score = 6, Team2Score = 0 });
+        await db.SaveChangesAsync();
+
+        var improved = await new RatingService().CalculateAndApplyAsync(match.Id, db);
+        await db.SaveChangesAsync();
+
+        var improvedIds = improved.Select(x => x.UserId).ToHashSet();
+        Assert.Contains(playerIds[0], improvedIds);
+        Assert.Contains(playerIds[1], improvedIds);
+        Assert.All(improved, item => Assert.InRange(item.NewPosition, 1, 4));
+    }
+
     // US-034 — sets pari (1-1) ma game decidono (10 vs 8): margine solo da game_ratio, nessun delta a 0
     [Fact]
     public async Task SetSport_ConfirmedMatch_SetsTied_UsesGameRatioOnly_NoZeroDelta()

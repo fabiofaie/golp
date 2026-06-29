@@ -17,3 +17,9 @@ publish/GolpApiTest.zip
 
 # Generato a build-time da scripts/generate-version.js — committato solo come placeholder iniziale
 frontend/golp-app/src/app/version.ts
+
+# PromptOps context snapshot
+.promptops/
+
+# PromptOps session assets
+.promptops-assets/

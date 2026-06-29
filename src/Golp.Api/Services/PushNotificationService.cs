@@ -55,6 +55,47 @@ public class PushNotificationService(
         }
     }
 
+    public async Task SendRankingImprovedAsync(Guid userId, int newPosition, string circleName)
+    {
+        try
+        {
+            var tokens = await db.FcmTokens
+                .Where(t => t.UserId == userId)
+                .Select(t => t.Token)
+                .Distinct()
+                .ToListAsync();
+
+            if (tokens.Count == 0)
+                return;
+
+            var ordinal = newPosition switch { 1 => "1°", 2 => "2°", 3 => "3°", _ => $"{newPosition}°" };
+            var results = await fcmSender.SendAsync(
+                tokens,
+                "Sei salito in classifica!",
+                $"Sei salito al {ordinal} posto nel circolo {circleName}",
+                new Dictionary<string, string>());
+
+            var deadTokens = results
+                .Where(r => r.IsUnregistered)
+                .Select(r => r.Token)
+                .ToList();
+
+            if (deadTokens.Count > 0)
+            {
+                var toRemove = await db.FcmTokens
+                    .Where(t => deadTokens.Contains(t.Token))
+                    .ToListAsync();
+                db.FcmTokens.RemoveRange(toRemove);
+                await db.SaveChangesAsync();
+                logger.LogInformation("Removed {Count} unregistered FCM tokens", deadTokens.Count);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Ranking improved push failed for user {UserId}", userId);
+        }
+    }
+
     public async Task<bool> SendTestNotificationAsync(Guid userId)
     {
         var tokens = await db.FcmTokens

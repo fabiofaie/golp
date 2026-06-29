@@ -61,25 +61,25 @@ public class RatingService : IRatingService
         ];
     }
 
-    public async Task CalculateAndApplyAsync(Guid matchId, AppDbContext db)
+    public async Task<IReadOnlyList<(Guid UserId, int NewPosition)>> CalculateAndApplyAsync(Guid matchId, AppDbContext db)
     {
         var match = await db.Matches
             .Include(m => m.Sets)
             .SingleOrDefaultAsync(m => m.Id == matchId);
 
         if (match == null || match.Status != "confirmed")
-            return;
+            return [];
 
         var circle = await db.Circles.FindAsync(match.CircleId);
 
         // Idempotenza: delta già presenti = match già processato
         if (match.DeltaTeam1Player1 != null)
-            return;
+            return [];
 
         int totalTeam1 = match.Sets.Sum(s => s.Team1Score);
         int totalTeam2 = match.Sets.Sum(s => s.Team2Score);
         if (totalTeam1 + totalTeam2 == 0)
-            return;
+            return [];
 
         var playerIds = new[]
         {
@@ -92,7 +92,7 @@ public class RatingService : IRatingService
             .ToDictionaryAsync(m => m.UserId);
 
         if (memberships.Count != 4)
-            return; // dati incoerenti: nessun aggiornamento parziale
+            return []; // dati incoerenti: nessun aggiornamento parziale
 
         double team1Rating = (memberships[match.Team1Player1Id].Rating
                             + memberships[match.Team1Player2Id].Rating) / 2.0;
@@ -157,11 +157,38 @@ public class RatingService : IRatingService
         match.DeltaTeam2Player1 = deltas[2];
         match.DeltaTeam2Player2 = deltas[3];
 
+        // Snapshot ranking pre-update: tutti i membri del circolo ordinati per Rating desc
+        var allRatings = await db.CircleMemberships
+            .Where(m => m.CircleId == match.CircleId)
+            .Select(m => new { m.UserId, m.Rating })
+            .ToListAsync();
+        var prePositions = allRatings
+            .OrderByDescending(m => m.Rating)
+            .Select((m, i) => (m.UserId, Position: i + 1))
+            .ToDictionary(x => x.UserId, x => x.Position);
+
         memberships[match.Team1Player1Id].Rating += match.DeltaTeam1Player1.Value;
         memberships[match.Team1Player2Id].Rating += match.DeltaTeam1Player2.Value;
         memberships[match.Team2Player1Id].Rating += match.DeltaTeam2Player1.Value;
         memberships[match.Team2Player2Id].Rating += match.DeltaTeam2Player2.Value;
 
+        // Post-update: applica i nuovi rating dei 4 giocatori per ricalcolare il ranking
+        var postRatings = allRatings
+            .Select(m => playerIds.Contains(m.UserId)
+                ? new { m.UserId, memberships[m.UserId].Rating }
+                : m)
+            .OrderByDescending(m => m.Rating)
+            .Select((m, i) => (m.UserId, Position: i + 1))
+            .ToDictionary(x => x.UserId, x => x.Position);
+
+        var improved = playerIds
+            .Where(id => postPositions(id) < prePositions.GetValueOrDefault(id, int.MaxValue))
+            .Select(id => (UserId: id, NewPosition: postPositions(id)))
+            .ToList();
+
+        int postPositions(Guid id) => postRatings.GetValueOrDefault(id, int.MaxValue);
+
         // SaveChangesAsync è responsabilità del caller: stessa transazione della conferma
+        return improved;
     }
 }

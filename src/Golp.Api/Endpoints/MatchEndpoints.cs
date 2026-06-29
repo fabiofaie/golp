@@ -389,7 +389,8 @@ public static class MatchEndpoints
         Guid matchId,
         ClaimsPrincipal user,
         AppDbContext db,
-        IRatingService ratingService)
+        IRatingService ratingService,
+        IPushNotificationService pushService)
     {
         var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
@@ -422,13 +423,23 @@ public static class MatchEndpoints
         var existingCount = await db.MatchConfirmations.CountAsync(c => c.MatchId == matchId);
         var totalCount = existingCount + (alreadyConfirmed ? 0 : 1);
 
+        IReadOnlyList<(Guid UserId, int NewPosition)> rankingImprovements = [];
         if (totalCount == 4 && !alreadyConfirmed)
         {
             match.Status = "confirmed";
-            await ratingService.CalculateAndApplyAsync(matchId, db);
+            rankingImprovements = await ratingService.CalculateAndApplyAsync(matchId, db);
         }
 
         await db.SaveChangesAsync();
+
+        // US-035: notifiche push fire-and-forget per chi sale in classifica
+        if (rankingImprovements.Count > 0)
+        {
+            var circle = await db.Circles.FindAsync(circleId);
+            var circleName = circle?.Name ?? "";
+            foreach (var (improvedUserId, newPos) in rankingImprovements)
+                _ = pushService.SendRankingImprovedAsync(improvedUserId, newPos, circleName);
+        }
 
         return Results.Ok(new { status = match.Status, confirmationsCount = totalCount });
     }
@@ -522,7 +533,7 @@ public static class MatchEndpoints
         match.ForceConfirmedById = userId;
         match.ForceConfirmedAt = DateTimeOffset.UtcNow;
 
-        await ratingService.CalculateAndApplyAsync(matchId, db);
+        _ = await ratingService.CalculateAndApplyAsync(matchId, db);
         await db.SaveChangesAsync();
 
         return Results.Ok(new { status = match.Status, forceConfirmedBy = userId });

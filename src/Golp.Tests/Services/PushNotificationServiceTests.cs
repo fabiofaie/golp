@@ -157,6 +157,96 @@ public class PushNotificationServiceTests
         await service.SendConfirmationRequestAsync(Guid.NewGuid(), Guid.NewGuid(), [user.Id]);
     }
 
+    // US-035 — SendRankingImprovedAsync
+
+    [Fact]
+    public async Task SendRankingImproved_NoToken_DoesNotCallFcm()
+    {
+        using var db = CreateDb();
+        var fcm = new Mock<IFcmSender>();
+        var service = CreateService(db, fcm);
+
+        await service.SendRankingImprovedAsync(Guid.NewGuid(), 2, "TestCircle");
+
+        fcm.Verify(f => f.SendAsync(
+            It.IsAny<IReadOnlyList<string>>(),
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<IReadOnlyDictionary<string, string>>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SendRankingImproved_TokenPresent_SendsWithCorrectBody()
+    {
+        using var db = CreateDb();
+        var user = CreateUser();
+        db.Users.Add(user);
+        db.FcmTokens.Add(new FcmToken { UserId = user.Id, Token = "tok-rank", DeviceId = "d1" });
+        await db.SaveChangesAsync();
+
+        string? sentBody = null;
+        var fcm = new Mock<IFcmSender>();
+        fcm.Setup(f => f.SendAsync(
+                It.IsAny<IReadOnlyList<string>>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyDictionary<string, string>>()))
+            .Callback<IReadOnlyList<string>, string, string, IReadOnlyDictionary<string, string>>(
+                (_, _, body, _) => sentBody = body)
+            .ReturnsAsync([new FcmSendResult("tok-rank", true, false)]);
+
+        var service = CreateService(db, fcm);
+        await service.SendRankingImprovedAsync(user.Id, 3, "CircleX");
+
+        Assert.NotNull(sentBody);
+        Assert.Contains("3°", sentBody);
+        Assert.Contains("CircleX", sentBody);
+    }
+
+    [Fact]
+    public async Task SendRankingImproved_UnregisteredToken_IsRemoved()
+    {
+        using var db = CreateDb();
+        var user = CreateUser();
+        db.Users.Add(user);
+        db.FcmTokens.Add(new FcmToken { UserId = user.Id, Token = "tok-dead", DeviceId = "d1" });
+        await db.SaveChangesAsync();
+
+        var fcm = new Mock<IFcmSender>();
+        fcm.Setup(f => f.SendAsync(
+                It.IsAny<IReadOnlyList<string>>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyDictionary<string, string>>()))
+            .ReturnsAsync([new FcmSendResult("tok-dead", false, true)]);
+
+        var service = CreateService(db, fcm);
+        await service.SendRankingImprovedAsync(user.Id, 1, "C");
+
+        Assert.Empty(await db.FcmTokens.ToListAsync());
+    }
+
+    [Fact]
+    public async Task SendRankingImproved_FcmThrows_DoesNotPropagate()
+    {
+        using var db = CreateDb();
+        var user = CreateUser();
+        db.Users.Add(user);
+        db.FcmTokens.Add(new FcmToken { UserId = user.Id, Token = "tok-1", DeviceId = "d1" });
+        await db.SaveChangesAsync();
+
+        var fcm = new Mock<IFcmSender>();
+        fcm.Setup(f => f.SendAsync(
+                It.IsAny<IReadOnlyList<string>>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyDictionary<string, string>>()))
+            .ThrowsAsync(new InvalidOperationException("FCM down"));
+
+        var service = CreateService(db, fcm);
+        await service.SendRankingImprovedAsync(user.Id, 2, "C"); // must not throw
+    }
+
     [Fact]
     public async Task SendTestNotification_NoTokensRegistered_ReturnsFalseAndDoesNotCallFcm()
     {

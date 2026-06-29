@@ -6,4 +6,6 @@ public interface IPushNotificationService
 
     /// <summary>Invia una push di prova ai token registrati dell'utente. Ritorna false se nessun token trovato.</summary>
     Task<bool> SendTestNotificationAsync(Guid userId);
+
+    Task SendRankingImprovedAsync(Guid userId, int newPosition, string circleName);
 }

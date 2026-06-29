@@ -364,6 +364,57 @@ public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
         }
     }
 
+    // US-035 — conferma 4/4: chi sale in classifica riceve ranking push; gli altri no
+    [Fact]
+    public async Task ConfirmFourth_PlayerRises_ReceivesRankingPush()
+    {
+        // Setup: 4 giocatori in un circolo
+        var (circleId, ids, tokens) = await SetupAsync(useSets: false);
+
+        // Imposta rating: team1=999, team2=1001 → gap minimo garantisce che il delta ELO sorpassi
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var memberships = await db.CircleMemberships
+                .Where(m => m.CircleId == circleId)
+                .ToListAsync();
+            foreach (var m in memberships)
+                m.Rating = (m.UserId == ids[0] || m.UserId == ids[1]) ? 999 : 1001;
+            await db.SaveChangesAsync();
+        }
+
+        // Crea partita: team1 (800) vs team2 (1000) — team1 vince
+        SetAuth(tokens[0]);
+        var matchResp = await PostMatchAsync(circleId, ids[0], ids[1], ids[2], ids[3],
+            new[] { new { team1 = 21, team2 = 5 } });
+        Assert.Equal(HttpStatusCode.Created, matchResp.StatusCode);
+        var matchJson = await matchResp.Content.ReadFromJsonAsync<JsonElement>();
+        var matchId = matchJson.GetProperty("id").GetString()!;
+
+        // Prima conferma è automatica dal creatore (ids[0]) → già 1 conferma
+        SetAuth(tokens[1]);
+        await _client.PostAsync($"/circles/{circleId}/matches/{matchId}/confirm", null);
+        SetAuth(tokens[2]);
+        await _client.PostAsync($"/circles/{circleId}/matches/{matchId}/confirm", null);
+        SetAuth(tokens[3]);
+        var lastConfirmResp = await _client.PostAsync($"/circles/{circleId}/matches/{matchId}/confirm", null);
+
+        var finalJson = await lastConfirmResp.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("confirmed", finalJson.GetProperty("status").GetString());
+
+        await Task.Delay(200); // push è fire-and-forget
+
+        var rankingCalls = _factory.PushRecorder.RankingCalls.ToList();
+        var rankingUserIds = rankingCalls.Select(c => c.UserId).ToHashSet();
+
+        // team2 scende → nessuna push per loro
+        Assert.DoesNotContain(ids[2], rankingUserIds);
+        Assert.DoesNotContain(ids[3], rankingUserIds);
+        // team1 vince partendo da 800 → superano il team2 (1000) → salgono
+        Assert.Contains(ids[0], rankingUserIds);
+        Assert.Contains(ids[1], rankingUserIds);
+    }
+
     // ─── helpers ──────────────────────────────────────────────────────────────
 
     private async Task<(Guid CircleId, Guid[] Ids, string[] Tokens)> SetupAsync(bool useSets = true)
@@ -495,6 +546,29 @@ public class RecordingPushNotificationService : IPushNotificationService
     }
 
     public Task<bool> SendTestNotificationAsync(Guid userId) => Task.FromResult(false);
+
+    public record RankingCall(Guid UserId, int NewPosition, string CircleName);
+    private readonly ConcurrentQueue<RankingCall> _rankingCalls = new();
+    public IEnumerable<RankingCall> RankingCalls => _rankingCalls;
+
+    public Task SendRankingImprovedAsync(Guid userId, int newPosition, string circleName)
+    {
+        _rankingCalls.Enqueue(new RankingCall(userId, newPosition, circleName));
+        return Task.CompletedTask;
+    }
+
+    public async Task<RankingCall> WaitForRankingCallAsync(Guid userId, TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            var call = _rankingCalls.FirstOrDefault(c => c.UserId == userId);
+            if (call != null)
+                return call;
+            await Task.Delay(25);
+        }
+        throw new TimeoutException($"Nessuna ranking push per user {userId} entro {timeout.TotalSeconds}s");
+    }
 
     public async Task<PushCall> WaitForCallAsync(Guid matchId, TimeSpan timeout)
     {

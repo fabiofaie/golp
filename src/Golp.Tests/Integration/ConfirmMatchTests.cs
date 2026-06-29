@@ -272,10 +272,10 @@ public class TestRatingService : IRatingService
 
     public bool WasCalledWith(Guid matchId) => _called.Contains(matchId);
 
-    public Task CalculateAndApplyAsync(Guid matchId, AppDbContext db)
+    public Task<IReadOnlyList<(Guid UserId, int NewPosition)>> CalculateAndApplyAsync(Guid matchId, AppDbContext db)
     {
         _called.Add(matchId);
-        return Task.CompletedTask;
+        return Task.FromResult<IReadOnlyList<(Guid, int)>>([]);
     }
 }
 
