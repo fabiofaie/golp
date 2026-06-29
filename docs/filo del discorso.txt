@@ -1,65 +1,31 @@
-● Tutte 10 storie pianificate. Riepilogo:
+REVIEW (3) — codice pronto, manca approvazione umana
 
-  ┌────────┬──────────────────────────────────────────┬──────────────┐
-  │ Storia │                  Piano                   │    Status    │
-  ├────────┼──────────────────────────────────────────┼──────────────┤
-  │ US-029 │ Toggle notifiche push Profilo            │ fatto        │
-  ├────────┼──────────────────────────────────────────┼──────────────┤
-  │ US-030 │ Modifica nome Profilo                    │ fatto        │
-  ├────────┼──────────────────────────────────────────┼──────────────┤
-  │ US-031 │ Logout tutti i device                    │ fatto        │
-  ├────────┼──────────────────────────────────────────┼──────────────┤
-  │ US-032 │ Eliminazione account                     │ fatto        │
-  ├────────┼──────────────────────────────────────────┼──────────────┤
-  │ US-035 │ Notifica variazione posizione classifica │ TODO→PLANNED │
-  ├────────┼──────────────────────────────────────────┼──────────────┤
-  │ US-036 │ Conferma irreversibilità forzatura       │ fatto        │
-  ├────────┼──────────────────────────────────────────┼──────────────┤
-  │ US-037 │ Pagina dettaglio partita                 │ fatto        │
-  ├────────┼──────────────────────────────────────────┼──────────────┤
-  │ US-021 │ Email giocatore mese/anno                │ TODO→PLANNED │
-  ├────────┼──────────────────────────────────────────┼──────────────┤
-  │ US-033 │ Riepilogo rating Profilo                 │ TODO→PLANNED │
-  └────────┴──────────────────────────────────────────┴──────────────┘
+┌────────┬───────────────────────────────────────────────────────────────┬────────────┐
+│ Storia │                            Titolo                             │ Blocked by │
+├────────┼───────────────────────────────────────────────────────────────┼────────────┤
+│ US-006 │ Notifica push di richiesta conferma                           │ US-005     │
+├────────┼───────────────────────────────────────────────────────────────┼────────────┤
+│ US-016 │ Sport configurabili da database                               │ —          │
+├────────┼───────────────────────────────────────────────────────────────┼────────────┤
+│ US-020 │ Email su template riutilizzabili + notifiche conferma/disputa │ —          │
+└────────┴───────────────────────────────────────────────────────────────┴────────────┘
 
-  Rischi notevoli flaggati nei piani: US-021 blocker US-020 ancora in REVIEW; US-035 blocker US-029 PLANNED non DONE;
-  US-032 condivide colonna SecurityStamp con US-031 (coordinare ordine implementazione). Tutti i 10 file in
-  docs/planning/ scritti, backlog aggiornato.
+---
+PLANNED (3) — pianificate, non implementate
 
-✻ Baked for 12m 33s
+┌────────┬───────────────────────────────────────────────────┬────────────┐
+│ Storia │                      Titolo                       │ Blocked by │
+├────────┼───────────────────────────────────────────────────┼────────────┤
+│ US-021 │ Notifica email automatica giocatore del mese/anno │ US-020     │
+├────────┼───────────────────────────────────────────────────┼────────────┤├────────┼───────────────────────────────────────────────────┼────────────┤
+│ US-035 │ Notifica variazione posizione in classifica       │ US-029 ✅  │
+└────────┴───────────────────────────────────────────────────┴────────────┘
 
-❯ spiegati meglio su questo punto: Rischi notevoli flaggati nei piani: US-021 blocker US-020 ancora in REVIEW; US-035
-  blocker US-029 PLANNED non DONE;
-    US-032 condivide colonna SecurityStamp con US-031 (coordinare ordine implementazione)
-  ⎿  ⧉ Selected 1 lines from docs\BACKLOG.md in Visual Studio Code
+---
+TODO (1) — backlog, non ancora pianificate
 
-● 3 rischi, dettaglio:
-
-  1. US-021 blocked by US-020 (status REVIEW, non DONE)
-  US-021 (email premio mese/anno) usa IEmailService e EmailTemplateRenderer introdotti da US-020 (email su template).
-  Codice esiste già in src/, quindi tecnicamente pianificabile/implementabile. Ma US-020 non è ancora approvata da
-  review umana — se la review chiede modifiche all'interfaccia IEmailService (firme metodi, struttura template), US-021
-  deve ribasarsi su quelle modifiche. Rischio: lavoro doppio se le due storie procedono in parallelo.
-
-  2. US-035 blocked by US-029 (status PLANNED, non DONE)
-  US-035 (notifica push su salita classifica) assume che "notifiche attive" = utente ha un token FCM registrato
-  (meccanismo già esistente oggi, indipendente da US-029). US-029 introduce un vero toggle ON/OFF in Profilo — se quel
-  toggle aggiunge un flag esplicito separato dalla sola presenza del token (es. IsPushEnabled su User/membership,
-  disattivabile senza rimuovere il token), US-035 deve leggere anche quel flag nel filtro destinatari. Oggi il piano
-  US-035 non lo fa perché US-029 non è ancora implementata: va riverificato quando US-029 passa a DONE.
-
-  3. US-032 condivide colonna SecurityStamp con US-031
-  Entrambe le storie (logout-da-tutti-i-device e elimina-account) richiedono lo stesso meccanismo di revoca: colonna
-  User.SecurityStamp (Guid) + validazione ad ogni richiesta JWT (OnTokenValidated) + riuso di RevokeAllForUserAsync. È
-  stato pianificato come introdotto da US-031. Se US-032 viene implementata prima (o in parallelo senza coordinamento),
-  rischia di:
-  - creare la stessa migration/colonna due volte (conflitto EF migration)
-  - duplicare la logica di validazione token
-
-  Soluzione pratica: implementare US-031 prima di US-032, oppure se invertito, la prima storia implementata introduce
-  SecurityStamp e l'altra lo riusa senza ripeterlo.
-
-  Storie con migration EF: US-016, US-031, US-032 (condivisa con US-031), US-021.
-
-  Senza migration: US-029, US-030, US-035, US-036, US-037, US-033 — solo logica applicativa/frontend, nessun cambio
-  schema.
+┌────────┬───────────────────────────────────────────────────┬────────────┐
+│ Storia │                      Titolo                       │ Blocked by │
+├────────┼───────────────────────────────────────────────────┼────────────┤
+│ US-038 │ Notifica email allo staff per nuove registrazioni │ —          │
+└────────┴───────────────────────────────────────────────────┴────────────┘

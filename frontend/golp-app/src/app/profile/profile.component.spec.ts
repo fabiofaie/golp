@@ -8,8 +8,14 @@ import { PushNotificationService } from '../push/push-notification.service';
 import { PwaPlatformService } from '../shared/pwa-install/pwa-platform.service';
 import { AuthService } from '../auth/auth.service';
 import { CurrentUserService, CurrentUser } from '../auth/current-user.service';
+import { CircleService, CircleSummary } from '../circles/circle.service';
 
 const MOCK_USER: CurrentUser = { id: '1', name: 'Mario', email: 'mario@test.com' };
+
+const MOCK_CIRCLES: CircleSummary[] = [
+  { id: 'c1', name: 'Padel Club', sport: 'padel', sets: true, pointUnit: 'game', ownerId: '1', memberCount: 4, myRating: 1050, myRank: 2 },
+  { id: 'c2', name: 'Burraco Roma', sport: 'burraco', sets: false, pointUnit: 'pt', ownerId: '2', memberCount: 6, myRating: 980, myRank: 3 },
+];
 
 function makeFakeCurrentUserService(user: CurrentUser | null = MOCK_USER) {
   const userSignal = signal(user);
@@ -70,13 +76,16 @@ describe('ProfileComponent', () => {
   let platform: FakePwaPlatformService;
   let authMock: jasmine.SpyObj<AuthService>;
   let currentUserMock: ReturnType<typeof makeFakeCurrentUserService>;
+  let circleServiceMock: jasmine.SpyObj<CircleService>;
   let router: Router;
 
-  function setup(): void {
+  function setup(circles: CircleSummary[] = MOCK_CIRCLES): void {
     authMock = jasmine.createSpyObj('AuthService', ['logoutAllDevices', 'deleteAccount']);
     authMock.logoutAllDevices.and.returnValue(of(undefined));
     authMock.deleteAccount.and.returnValue(of(undefined));
     currentUserMock = makeFakeCurrentUserService();
+    circleServiceMock = jasmine.createSpyObj('CircleService', ['getMyCircles']);
+    circleServiceMock.getMyCircles.and.returnValue(of(circles));
 
     TestBed.configureTestingModule({
       imports: [ProfileComponent],
@@ -86,6 +95,7 @@ describe('ProfileComponent', () => {
         { provide: PwaPlatformService, useClass: FakePwaPlatformService },
         { provide: AuthService, useValue: authMock },
         { provide: CurrentUserService, useValue: currentUserMock },
+        { provide: CircleService, useValue: circleServiceMock },
       ]
     });
     fixture = TestBed.createComponent(ProfileComponent);
@@ -336,6 +346,45 @@ describe('ProfileComponent', () => {
       await fixture.componentInstance.saveName();
       expect(fixture.componentInstance.nameError()).toBeTruthy();
       expect(fixture.componentInstance.nameSaved()).toBeFalse();
+    });
+  });
+
+  describe('riepilogo circoli', () => {
+    it('mostra nome e rating per ogni circolo', async () => {
+      await fixture.componentInstance.ngOnInit();
+      fixture.detectChanges();
+
+      const rows: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.circle-row');
+      expect(rows.length).toBe(2);
+      expect(rows[0].textContent).toContain('Padel Club');
+      expect(rows[0].textContent).toContain('1050');
+      expect(rows[1].textContent).toContain('Burraco Roma');
+      expect(rows[1].textContent).toContain('980');
+    });
+
+    it('click su riga naviga a /circles/:id/matches', async () => {
+      const navigateSpy = spyOn(router, 'navigate');
+      await fixture.componentInstance.ngOnInit();
+      fixture.detectChanges();
+
+      const rows: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.circle-row');
+      rows[0].click();
+
+      expect(navigateSpy).toHaveBeenCalledWith(['/circles', 'c1', 'matches']);
+    });
+
+    it('con lista vuota mostra messaggio invece di righe', async () => {
+      TestBed.resetTestingModule();
+      setup([]);
+      fixture = TestBed.createComponent(ProfileComponent);
+      fixture.detectChanges();
+      await fixture.componentInstance.ngOnInit();
+      fixture.detectChanges();
+
+      const rows = fixture.nativeElement.querySelectorAll('.circle-row');
+      expect(rows.length).toBe(0);
+      const hint: HTMLElement | null = fixture.nativeElement.querySelector('.circles-hint');
+      expect(hint?.textContent).toContain('Non sei ancora membro');
     });
   });
 

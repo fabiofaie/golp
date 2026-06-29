@@ -7,6 +7,7 @@ import { PwaPlatformService } from '../shared/pwa-install/pwa-platform.service';
 import { PwaInstallGuideComponent } from '../shared/pwa-install/pwa-install-guide.component';
 import { AuthService } from '../auth/auth.service';
 import { CurrentUserService } from '../auth/current-user.service';
+import { CircleService, CircleSummary } from '../circles/circle.service';
 
 @Component({
   selector: 'app-profile',
@@ -54,6 +55,24 @@ import { CurrentUserService } from '../auth/current-user.service';
                 Salva
               </button>
             </div>
+          }
+        </div>
+
+        <div class="field">
+          <label>I tuoi circoli</label>
+          @if (circlesLoading()) {
+            <p class="circles-hint">Caricamento…</p>
+          } @else if (myCircles().length === 0) {
+            <p class="circles-hint">Non sei ancora membro di nessun circolo.</p>
+          } @else {
+            <ul class="circles-list">
+              @for (c of myCircles(); track c.id) {
+                <li class="circle-row" (click)="goToCircle(c.id)" role="link" tabindex="0" (keydown.enter)="goToCircle(c.id)">
+                  <span class="circle-name">{{ c.name }}</span>
+                  <span class="circle-rating">{{ c.myRating }} pt</span>
+                </li>
+              }
+            </ul>
           }
         </div>
 
@@ -186,6 +205,43 @@ import { CurrentUserService } from '../auth/current-user.service';
     </div>
   `,
   styles: [`
+    .circles-list {
+      list-style: none;
+      margin: var(--sp-2) 0 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-2);
+    }
+    .circle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--r-md);
+      padding: var(--sp-3) var(--sp-4);
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .circle-row:hover {
+      border-color: var(--color-accent);
+    }
+    .circle-name {
+      font-size: var(--font-size-base);
+      color: var(--color-text-primary);
+      font-weight: var(--font-weight-med);
+    }
+    .circle-rating {
+      font-size: var(--font-size-sm);
+      color: var(--color-accent);
+      font-weight: var(--font-weight-med);
+    }
+    .circles-hint {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-secondary);
+      margin-top: var(--sp-2);
+    }
     .name-display {
       font-size: var(--font-size-base);
       color: var(--color-text-primary);
@@ -351,6 +407,10 @@ export class ProfileComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   readonly currentUserService = inject(CurrentUserService);
+  private readonly circleService = inject(CircleService);
+
+  readonly myCircles = signal<CircleSummary[]>([]);
+  readonly circlesLoading = signal(true);
 
   displayName = '';
   readonly editingName = signal(false);
@@ -376,6 +436,14 @@ export class ProfileComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     await this.currentUserService.load();
     this.displayName = this.currentUserService.currentUser()?.name ?? '';
+    this.circleService.getMyCircles().subscribe({
+      next: list => { this.myCircles.set(list); this.circlesLoading.set(false); },
+      error: () => { this.circlesLoading.set(false); },
+    });
+  }
+
+  goToCircle(id: string): void {
+    this.router.navigate(['/circles', id, 'matches']);
   }
 
   startEditName(): void {
