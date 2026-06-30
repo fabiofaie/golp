@@ -47,6 +47,7 @@ export interface MemberSummary {
   name: string;
   rating: number;
   rank: number;
+  isActivated?: boolean;
 }
 
 export interface JoinResult {
@@ -60,11 +61,13 @@ export interface LeaderboardEntry {
   rating: number;
   rank: number;
   confirmedMatches: number;
+  isActivated?: boolean;
 }
 
 export interface LeaderboardUnclassified {
   userId: string;
   name: string;
+  isActivated?: boolean;
 }
 
 export interface LeaderboardResponse {

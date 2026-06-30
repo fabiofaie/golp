@@ -254,8 +254,8 @@ public class ConfirmMatchTests : IClassFixture<ConfirmMatchTestFactory>
     private Task<HttpResponseMessage> PostMatchAsync(Guid circleId, Guid t1p1, Guid t1p2, Guid t2p1, Guid t2p2) =>
         _client.PostAsJsonAsync($"/circles/{circleId}/matches", new
         {
-            team1 = new[] { t1p1, t1p2 },
-            team2 = new[] { t2p1, t2p2 },
+            team1 = new[] { new { userId = t1p1 }, new { userId = t1p2 } },
+            team2 = new[] { new { userId = t2p1 }, new { userId = t2p2 } },
             sets  = new[] { new { team1 = 6, team2 = 4 } },
         });
 

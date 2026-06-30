@@ -39,12 +39,12 @@ public static class MatchEndpoints
         if (circle == null)
             return Results.NotFound(new { error = "Circolo non trovato" });
 
-        var memberIds = await db.CircleMemberships
+        var existingMemberIds = await db.CircleMemberships
             .Where(m => m.CircleId == circleId)
             .Select(m => m.UserId)
             .ToHashSetAsync();
 
-        if (!memberIds.Contains(userId))
+        if (!existingMemberIds.Contains(userId))
             return Results.Json(new { error = "Non sei membro del circolo" }, statusCode: 403);
 
         if (req.Team1 == null || req.Team1.Length != 2)
@@ -53,18 +53,39 @@ public static class MatchEndpoints
         if (req.Team2 == null || req.Team2.Length != 2)
             return Results.BadRequest(new { error = "Team2 deve avere esattamente 2 giocatori" });
 
-        var allPlayers = req.Team1.Concat(req.Team2).ToArray();
-
-        if (allPlayers.Distinct().Count() != 4)
-            return Results.BadRequest(new { error = "I 4 giocatori devono essere tutti distinti" });
-
-        foreach (var playerId in allPlayers)
+        // Validate each slot structure
+        foreach (var slot in req.Team1.Concat(req.Team2))
         {
-            if (!memberIds.Contains(playerId))
-                return Results.BadRequest(new { error = $"Il giocatore {playerId} non è membro del circolo" });
+            if (slot.UserId == null && (string.IsNullOrWhiteSpace(slot.GuestName) ||
+                (string.IsNullOrWhiteSpace(slot.GuestEmail) && string.IsNullOrWhiteSpace(slot.GuestPhone))))
+                return Results.BadRequest(new { error = "Slot ospite richiede nome e almeno email o telefono" });
         }
 
-        var creatorInTeam = req.Team1.Contains(userId) || req.Team2.Contains(userId);
+        // Resolve all 4 player IDs (find-or-create for guest slots)
+        var resolvedIds = new Guid[4];
+        var allSlots = req.Team1.Concat(req.Team2).ToArray();
+        for (int i = 0; i < 4; i++)
+        {
+            var slot = allSlots[i];
+            if (slot.UserId.HasValue)
+            {
+                if (!existingMemberIds.Contains(slot.UserId.Value))
+                    return Results.BadRequest(new { error = $"Il giocatore {slot.UserId.Value} non è membro del circolo" });
+                resolvedIds[i] = slot.UserId.Value;
+            }
+            else
+            {
+                resolvedIds[i] = await ResolveOrCreateGuestAsync(slot, circleId, db);
+            }
+        }
+
+        if (resolvedIds.Distinct().Count() != 4)
+            return Results.BadRequest(new { error = "I 4 giocatori devono essere tutti distinti" });
+
+        var team1Ids = resolvedIds[0..2];
+        var team2Ids = resolvedIds[2..4];
+
+        var creatorInTeam = team1Ids.Contains(userId) || team2Ids.Contains(userId);
         if (!creatorInTeam && circle.OwnerId != userId)
             return Results.BadRequest(new { error = "L'inseritore deve essere uno dei 4 giocatori o il proprietario del circolo" });
 
@@ -106,10 +127,10 @@ public static class MatchEndpoints
             CircleId       = circleId,
             CreatedById    = userId,
             WinnerTeam     = winnerTeam,
-            Team1Player1Id = req.Team1[0],
-            Team1Player2Id = req.Team1[1],
-            Team2Player1Id = req.Team2[0],
-            Team2Player2Id = req.Team2[1],
+            Team1Player1Id = team1Ids[0],
+            Team1Player2Id = team1Ids[1],
+            Team2Player1Id = team2Ids[0],
+            Team2Player2Id = team2Ids[1],
         };
 
         var sets = req.Sets.Select((s, i) => new MatchSet
@@ -139,7 +160,7 @@ public static class MatchEndpoints
 
         // US-006/US-020: push + email ai 3 da confermare (escluso l'inseritore), fire-and-forget.
         // Scope DI nuovo: quello della request viene disposed alla risposta.
-        var recipientIds = allPlayers.Where(id => id != userId).ToArray();
+        var recipientIds = resolvedIds.Where(id => id != userId).ToArray();
         var matchId = match.Id;
         var circleName = circle.Name;
         var frontendBase = configuration["Cors:AllowedOrigins:0"] ?? "http://localhost:4200";
@@ -166,10 +187,18 @@ public static class MatchEndpoints
                 using var scope = scopeFactory.CreateScope();
                 var scopedDb = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
-                var recipientEmails = await scopedDb.Users
+                var recipientUsers = await scopedDb.Users
                     .Where(u => recipientIds.Contains(u.Id))
-                    .Select(u => u.Email)
+                    .Select(u => new { u.Id, u.Email })
                     .ToListAsync();
+
+                foreach (var r in recipientUsers.Where(r => r.Email == null))
+                    emailLogger.LogInformation("Skipping email for phone-only guest {UserId}, match {MatchId}", r.Id, matchId);
+
+                var recipientEmails = recipientUsers
+                    .Where(r => r.Email != null)
+                    .Select(r => r.Email!)
+                    .ToList();
 
                 foreach (var email in recipientEmails)
                 {
@@ -229,10 +258,10 @@ public static class MatchEndpoints
             .Distinct()
             .ToHashSet();
 
-        var userNames = await db.Users
+        var userInfos = await db.Users
             .Where(u => playerIds.Contains(u.Id))
-            .Select(u => new { u.Id, u.Name })
-            .ToDictionaryAsync(u => u.Id, u => u.Name);
+            .Select(u => new { u.Id, u.Name, u.IsActivated })
+            .ToDictionaryAsync(u => u.Id);
 
         var matchIds = matches.Select(m => m.Id).ToList();
 
@@ -268,13 +297,13 @@ public static class MatchEndpoints
                 hasCurrentUserConfirmed = userConfirmedSet.Contains(m.Id),
                 team1 = new[]
                 {
-                    new { userId = m.Team1Player1Id, name = userNames.GetValueOrDefault(m.Team1Player1Id, "") },
-                    new { userId = m.Team1Player2Id, name = userNames.GetValueOrDefault(m.Team1Player2Id, "") },
+                    new { userId = m.Team1Player1Id, name = userInfos.GetValueOrDefault(m.Team1Player1Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team1Player1Id)?.IsActivated ?? true },
+                    new { userId = m.Team1Player2Id, name = userInfos.GetValueOrDefault(m.Team1Player2Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team1Player2Id)?.IsActivated ?? true },
                 },
                 team2 = new[]
                 {
-                    new { userId = m.Team2Player1Id, name = userNames.GetValueOrDefault(m.Team2Player1Id, "") },
-                    new { userId = m.Team2Player2Id, name = userNames.GetValueOrDefault(m.Team2Player2Id, "") },
+                    new { userId = m.Team2Player1Id, name = userInfos.GetValueOrDefault(m.Team2Player1Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team2Player1Id)?.IsActivated ?? true },
+                    new { userId = m.Team2Player2Id, name = userInfos.GetValueOrDefault(m.Team2Player2Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team2Player2Id)?.IsActivated ?? true },
                 },
             };
         });
@@ -303,10 +332,12 @@ public static class MatchEndpoints
             return Results.Json(new { error = "Non sei membro del circolo" }, statusCode: 403);
 
         var playerIds = new[] { match.Team1Player1Id, match.Team1Player2Id, match.Team2Player1Id, match.Team2Player2Id };
-        var userNames = await db.Users
+        var playerInfos = await db.Users
             .Where(u => playerIds.Contains(u.Id))
-            .Select(u => new { u.Id, u.Name })
-            .ToDictionaryAsync(u => u.Id, u => u.Name);
+            .Select(u => new { u.Id, u.Name, u.IsActivated })
+            .ToDictionaryAsync(u => u.Id);
+        // keep userNames for compat with existing lookups below
+        var userNames = playerInfos.ToDictionary(kv => kv.Key, kv => kv.Value.Name);
 
         var sets = await db.MatchSets
             .Where(s => s.MatchId == matchId)
@@ -371,13 +402,13 @@ public static class MatchEndpoints
             sets,
             team1 = new[]
             {
-                new { userId = match.Team1Player1Id, name = userNames.GetValueOrDefault(match.Team1Player1Id, "") },
-                new { userId = match.Team1Player2Id, name = userNames.GetValueOrDefault(match.Team1Player2Id, "") },
+                new { userId = match.Team1Player1Id, name = userNames.GetValueOrDefault(match.Team1Player1Id, ""), isActivated = playerInfos.GetValueOrDefault(match.Team1Player1Id)?.IsActivated ?? true },
+                new { userId = match.Team1Player2Id, name = userNames.GetValueOrDefault(match.Team1Player2Id, ""), isActivated = playerInfos.GetValueOrDefault(match.Team1Player2Id)?.IsActivated ?? true },
             },
             team2 = new[]
             {
-                new { userId = match.Team2Player1Id, name = userNames.GetValueOrDefault(match.Team2Player1Id, "") },
-                new { userId = match.Team2Player2Id, name = userNames.GetValueOrDefault(match.Team2Player2Id, "") },
+                new { userId = match.Team2Player1Id, name = userNames.GetValueOrDefault(match.Team2Player1Id, ""), isActivated = playerInfos.GetValueOrDefault(match.Team2Player1Id)?.IsActivated ?? true },
+                new { userId = match.Team2Player2Id, name = userNames.GetValueOrDefault(match.Team2Player2Id, ""), isActivated = playerInfos.GetValueOrDefault(match.Team2Player2Id)?.IsActivated ?? true },
             },
         });
     }
@@ -489,7 +520,7 @@ public static class MatchEndpoints
                     .Select(c => new { c.Name, c.Owner.Email })
                     .FirstOrDefaultAsync();
 
-                if (owner != null)
+                if (owner?.Email != null)
                     await emailService.SendMatchDisputedEmailAsync(owner.Email, owner.Name, matchLink);
             }
             catch (Exception ex)
@@ -538,7 +569,51 @@ public static class MatchEndpoints
 
         return Results.Ok(new { status = match.Status, forceConfirmedBy = userId });
     }
+
+    private static async Task<Guid> ResolveOrCreateGuestAsync(
+        PlayerSlotDto slot,
+        Guid circleId,
+        AppDbContext db)
+    {
+        User? existing = null;
+
+        if (!string.IsNullOrWhiteSpace(slot.GuestEmail))
+        {
+            var email = slot.GuestEmail.Trim().ToLowerInvariant();
+            existing = db.Users.Local.FirstOrDefault(u => u.Email == email)
+                       ?? await db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        }
+
+        if (existing == null && !string.IsNullOrWhiteSpace(slot.GuestPhone))
+        {
+            var phone = slot.GuestPhone.Trim();
+            existing = db.Users.Local.FirstOrDefault(u => u.Phone == phone)
+                       ?? await db.Users.FirstOrDefaultAsync(u => u.Phone == phone);
+        }
+
+        if (existing == null)
+        {
+            existing = new User
+            {
+                Name         = slot.GuestName!.Trim(),
+                Email        = string.IsNullOrWhiteSpace(slot.GuestEmail) ? null : slot.GuestEmail.Trim().ToLowerInvariant(),
+                Phone        = string.IsNullOrWhiteSpace(slot.GuestPhone) ? null : slot.GuestPhone.Trim(),
+                PasswordHash = string.Empty,
+                IsActivated  = false,
+            };
+            db.Users.Add(existing);
+        }
+
+        var alreadyMember = await db.CircleMemberships
+            .AnyAsync(m => m.CircleId == circleId && m.UserId == existing.Id);
+
+        if (!alreadyMember)
+            db.CircleMemberships.Add(new CircleMembership { CircleId = circleId, UserId = existing.Id, Rating = 1000 });
+
+        return existing.Id;
+    }
 }
 
-record CreateMatchRequest(Guid[] Team1, Guid[] Team2, SetScoreDto[] Sets);
+record PlayerSlotDto(Guid? UserId, string? GuestName, string? GuestEmail, string? GuestPhone);
+record CreateMatchRequest(PlayerSlotDto[] Team1, PlayerSlotDto[] Team2, SetScoreDto[] Sets);
 record SetScoreDto(int Team1, int Team2);

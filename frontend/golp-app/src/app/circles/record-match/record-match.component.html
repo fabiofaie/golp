@@ -32,33 +32,65 @@
     <!-- Team 1 -->
     <div class="team-block team-block--team1">
       <p class="team-label team-label--team1">Squadra 1</p>
-      <div style="display:flex; flex-direction:column; gap:8px;">
-        <div class="select-wrapper">
-          <select [(ngModel)]="team1Player1" name="t1p1">
-            <option value="">Giocatore 1</option>
-            @for (m of availableForSlot([team1Player2, team2Player1, team2Player2]); track m.userId) {
-              <option [value]="m.userId">{{ m.name }}</option>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        @for (slotIndex of [0, 1]; track slotIndex) {
+          <div class="player-slot-card"
+               [style.border-color]="slots[slotIndex].mode === 'ospite' ? 'rgba(245,158,11,0.25)' : ''">
+            <div class="slot-toggle" style="margin-bottom:8px;">
+              <button type="button" class="slot-toggle-btn"
+                      [class.slot-toggle-btn--active]="slots[slotIndex].mode === 'membro'"
+                      (click)="setSlotMode(slotIndex, 'membro')">Membro</button>
+              <button type="button" class="slot-toggle-btn slot-toggle-btn--guest"
+                      [class.slot-toggle-btn--active-guest]="slots[slotIndex].mode === 'ospite'"
+                      (click)="setSlotMode(slotIndex, 'ospite')">Ospite</button>
+            </div>
+            @if (slots[slotIndex].mode === 'membro') {
+              <div class="select-wrapper">
+                <select [ngModel]="slots[slotIndex].userId"
+                        (ngModelChange)="updateSlotField(slotIndex, 'userId', $event)"
+                        [name]="'slot_' + slotIndex">
+                  <option value="">Giocatore {{ slotIndex + 1 }}</option>
+                  @for (m of availableForSlot(otherSlotIndexes(slotIndex)); track m.userId) {
+                    <option [value]="m.userId">{{ m.name }}</option>
+                  }
+                </select>
+                <span class="select-chevron">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+              </div>
             }
-          </select>
-          <span class="select-chevron">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
-        </div>
-        <div class="select-wrapper">
-          <select [(ngModel)]="team1Player2" name="t1p2">
-            <option value="">Giocatore 2</option>
-            @for (m of availableForSlot([team1Player1, team2Player1, team2Player2]); track m.userId) {
-              <option [value]="m.userId">{{ m.name }}</option>
+            @if (slots[slotIndex].mode === 'ospite') {
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                @if (contactPickerAvailable) {
+                  <button type="button" class="contact-picker-btn" (click)="pickContact(slotIndex)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    Scegli dai contatti
+                  </button>
+                  <div class="guest-divider">o inserisci manualmente</div>
+                }
+                <input type="text" class="guest-input" placeholder="Nome *"
+                       [ngModel]="slots[slotIndex].guestName"
+                       (ngModelChange)="updateSlotField(slotIndex, 'guestName', $event)"
+                       [name]="'gn_' + slotIndex">
+                <input type="email" class="guest-input" placeholder="Email"
+                       [ngModel]="slots[slotIndex].guestEmail"
+                       (ngModelChange)="updateSlotField(slotIndex, 'guestEmail', $event)"
+                       [name]="'ge_' + slotIndex">
+                <input type="tel" class="guest-input" placeholder="Telefono"
+                       [ngModel]="slots[slotIndex].guestPhone"
+                       (ngModelChange)="updateSlotField(slotIndex, 'guestPhone', $event)"
+                       [name]="'gp_' + slotIndex">
+                <p style="font-size:10px; color:var(--color-text-placeholder); margin:0;">
+                  Email o telefono obbligatorio
+                </p>
+              </div>
             }
-          </select>
-          <span class="select-chevron">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
-        </div>
+          </div>
+        }
       </div>
     </div>
 
@@ -68,33 +100,65 @@
     <!-- Team 2 -->
     <div class="team-block team-block--team2">
       <p class="team-label team-label--team2">Squadra 2</p>
-      <div style="display:flex; flex-direction:column; gap:8px;">
-        <div class="select-wrapper">
-          <select [(ngModel)]="team2Player1" name="t2p1">
-            <option value="">Giocatore 3</option>
-            @for (m of availableForSlot([team1Player1, team1Player2, team2Player2]); track m.userId) {
-              <option [value]="m.userId">{{ m.name }}</option>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        @for (slotIndex of [2, 3]; track slotIndex) {
+          <div class="player-slot-card"
+               [style.border-color]="slots[slotIndex].mode === 'ospite' ? 'rgba(245,158,11,0.25)' : ''">
+            <div class="slot-toggle" style="margin-bottom:8px;">
+              <button type="button" class="slot-toggle-btn"
+                      [class.slot-toggle-btn--active]="slots[slotIndex].mode === 'membro'"
+                      (click)="setSlotMode(slotIndex, 'membro')">Membro</button>
+              <button type="button" class="slot-toggle-btn slot-toggle-btn--guest"
+                      [class.slot-toggle-btn--active-guest]="slots[slotIndex].mode === 'ospite'"
+                      (click)="setSlotMode(slotIndex, 'ospite')">Ospite</button>
+            </div>
+            @if (slots[slotIndex].mode === 'membro') {
+              <div class="select-wrapper">
+                <select [ngModel]="slots[slotIndex].userId"
+                        (ngModelChange)="updateSlotField(slotIndex, 'userId', $event)"
+                        [name]="'slot_' + slotIndex">
+                  <option value="">Giocatore {{ slotIndex + 1 }}</option>
+                  @for (m of availableForSlot(otherSlotIndexes(slotIndex)); track m.userId) {
+                    <option [value]="m.userId">{{ m.name }}</option>
+                  }
+                </select>
+                <span class="select-chevron">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+              </div>
             }
-          </select>
-          <span class="select-chevron">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
-        </div>
-        <div class="select-wrapper">
-          <select [(ngModel)]="team2Player2" name="t2p2">
-            <option value="">Giocatore 4</option>
-            @for (m of availableForSlot([team1Player1, team1Player2, team2Player1]); track m.userId) {
-              <option [value]="m.userId">{{ m.name }}</option>
+            @if (slots[slotIndex].mode === 'ospite') {
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                @if (contactPickerAvailable) {
+                  <button type="button" class="contact-picker-btn" (click)="pickContact(slotIndex)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    Scegli dai contatti
+                  </button>
+                  <div class="guest-divider">o inserisci manualmente</div>
+                }
+                <input type="text" class="guest-input" placeholder="Nome *"
+                       [ngModel]="slots[slotIndex].guestName"
+                       (ngModelChange)="updateSlotField(slotIndex, 'guestName', $event)"
+                       [name]="'gn_' + slotIndex">
+                <input type="email" class="guest-input" placeholder="Email"
+                       [ngModel]="slots[slotIndex].guestEmail"
+                       (ngModelChange)="updateSlotField(slotIndex, 'guestEmail', $event)"
+                       [name]="'ge_' + slotIndex">
+                <input type="tel" class="guest-input" placeholder="Telefono"
+                       [ngModel]="slots[slotIndex].guestPhone"
+                       (ngModelChange)="updateSlotField(slotIndex, 'guestPhone', $event)"
+                       [name]="'gp_' + slotIndex">
+                <p style="font-size:10px; color:var(--color-text-placeholder); margin:0;">
+                  Email o telefono obbligatorio
+                </p>
+              </div>
             }
-          </select>
-          <span class="select-chevron">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
-        </div>
+          </div>
+        }
       </div>
     </div>
   </div>
@@ -103,7 +167,6 @@
   @if (useSets) {
     <p class="section-label">Punteggio (set)</p>
     <div style="margin-bottom:24px;">
-      <!-- header allineato identicamente al score-row: placeholder per set-label + score-inputs + placeholder remove-btn -->
       <div class="score-row" style="margin-bottom:4px;">
         <span style="width:36px; flex-shrink:0;"></span>
         <div class="score-inputs">

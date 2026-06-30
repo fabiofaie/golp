@@ -1,0 +1,63 @@
+{
+  "extends": "US-037/style-tokens.json",
+  "colors": {
+    "ghost":          "#F59E0B",
+    "ghostBg":        "rgba(245, 158, 11, 0.10)",
+    "ghostBorder":    "rgba(245, 158, 11, 0.25)",
+    "contacts":       "#8B5CF6",
+    "contactsBg":     "rgba(139, 92, 246, 0.12)",
+    "contactsBorder": "rgba(139, 92, 246, 0.25)"
+  },
+  "components": {
+    "slotToggle": {
+      "bg":              "colors.surfaceElevated",
+      "borderRadius":    "borderRadius.full",
+      "padding":         "2px",
+      "activeAccent":    "colors.accent",
+      "activeGuest":     "colors.ghost",
+      "guestTextColor":  "#000000"
+    },
+    "playerCard": {
+      "bg":              "colors.surface",
+      "border":          "colors.border",
+      "borderRadius":    "borderRadius.lg",
+      "borderMember1":   "colors.team1Border",
+      "borderMember2":   "colors.team2Border",
+      "borderGuest":     "colors.ghostBorder"
+    },
+    "contactPickerBtn": {
+      "bg":              "colors.contactsBg",
+      "border":          "colors.contactsBorder",
+      "color":           "colors.contacts",
+      "borderRadius":    "borderRadius.md",
+      "fontSize":        "typography.scale.sm",
+      "fontWeight":      "typography.weights.bold"
+    },
+    "guestBadge": {
+      "bg":              "colors.ghostBg",
+      "color":           "colors.ghost",
+      "border":          "colors.ghostBorder",
+      "borderRadius":    "borderRadius.full",
+      "fontSize":        "10px",
+      "fontWeight":      "typography.weights.bold",
+      "padding":         "1px 6px"
+    },
+    "unregisteredBadge": {
+      "bg":              "colors.ghostBg",
+      "color":           "colors.ghost",
+      "border":          "colors.ghostBorder",
+      "borderRadius":    "borderRadius.full",
+      "fontSize":        "10px",
+      "fontWeight":      "typography.weights.bold",
+      "padding":         "2px 7px"
+    },
+    "guestFieldInput": {
+      "bg":              "colors.surfaceElevated",
+      "border":          "colors.border",
+      "borderFocus":     "colors.ghost",
+      "borderFilled":    "colors.ghostBorder",
+      "borderRadius":    "borderRadius.md",
+      "padding":         "spacing.3 spacing.4"
+    }
+  }
+}

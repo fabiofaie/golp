@@ -84,6 +84,9 @@
                 @if (isCurrentUser(entry.userId)) {
                   <span class="you-tag">Tu</span>
                 }
+                @if (entry.isActivated === false) {
+                  <span class="unreg-badge">(non registrato)</span>
+                }
               </div>
               <div class="player-matches">{{ entry.confirmedMatches }} {{ entry.confirmedMatches === 1 ? 'partita' : 'partite' }}</div>
             </div>
@@ -109,6 +112,9 @@
                 {{ player.name }}
                 @if (isCurrentUser(player.userId)) {
                   <span class="you-tag">Tu</span>
+                }
+                @if (player.isActivated === false) {
+                  <span class="unreg-badge">(non registrato)</span>
                 }
               </div>
             </div>

@@ -60,7 +60,8 @@
       "PowerShell(Stop-Process *)",
       "Bash(awk -F: '$1<118')",
       "Bash(taskkill *)",
-      "Bash(npx karma *)"
+      "Bash(npx karma *)",
+      "Bash(sqlcmd *)"
     ]
   }
 }

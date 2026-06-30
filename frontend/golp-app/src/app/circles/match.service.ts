@@ -8,9 +8,16 @@ export interface SetScore {
   team2: number;
 }
 
+export interface PlayerSlotDto {
+  userId?: string;
+  guestName?: string;
+  guestEmail?: string;
+  guestPhone?: string;
+}
+
 export interface CreateMatchRequest {
-  team1: string[];
-  team2: string[];
+  team1: PlayerSlotDto[];
+  team2: PlayerSlotDto[];
   sets: SetScore[];
 }
 
@@ -25,6 +32,7 @@ export interface MatchCreated {
 export interface PlayerInfo {
   userId: string;
   name: string;
+  isActivated?: boolean;
 }
 
 export interface MatchSummary {

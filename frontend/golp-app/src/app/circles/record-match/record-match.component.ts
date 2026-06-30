@@ -1,13 +1,25 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CircleService, MemberSummary, CircleSummary } from '../circle.service';
-import { MatchService } from '../match.service';
+import { MatchService, PlayerSlotDto } from '../match.service';
+
+interface PlayerSlot {
+  mode: 'membro' | 'ospite';
+  userId: string;
+  guestName: string;
+  guestEmail: string;
+  guestPhone: string;
+}
 
 interface SetRow {
   team1: number | null;
   team2: number | null;
+}
+
+function emptySlot(): PlayerSlot {
+  return { mode: 'membro', userId: '', guestName: '', guestEmail: '', guestPhone: '' };
 }
 
 @Component({
@@ -26,10 +38,7 @@ export class RecordMatchComponent implements OnInit {
   circle: CircleSummary | null = null;
   members: MemberSummary[] = [];
 
-  team1Player1 = '';
-  team1Player2 = '';
-  team2Player1 = '';
-  team2Player2 = '';
+  slots: PlayerSlot[] = [emptySlot(), emptySlot(), emptySlot(), emptySlot()];
 
   sets: SetRow[] = [{ team1: null, team2: null }];
   singleTeam1: number | null = null;
@@ -37,6 +46,11 @@ export class RecordMatchComponent implements OnInit {
 
   loading = false;
   errorMessage = '';
+
+  readonly contactPickerAvailable: boolean =
+    typeof navigator !== 'undefined' &&
+    'contacts' in navigator &&
+    'ContactsManager' in window;
 
   get useSets(): boolean {
     return this.circle?.sets ?? true;
@@ -60,6 +74,46 @@ export class RecordMatchComponent implements OnInit {
     });
   }
 
+  setSlotMode(index: number, mode: 'membro' | 'ospite'): void {
+    const s = { ...this.slots[index], mode };
+    if (mode === 'membro') {
+      s.guestName = '';
+      s.guestEmail = '';
+      s.guestPhone = '';
+    } else {
+      s.userId = '';
+    }
+    this.slots = this.slots.map((sl, i) => (i === index ? s : sl));
+  }
+
+  updateSlotField(index: number, field: keyof PlayerSlot, value: string): void {
+    this.slots = this.slots.map((sl, i) =>
+      i === index ? { ...sl, [field]: value } : sl
+    );
+  }
+
+  async pickContact(index: number): Promise<void> {
+    if (!this.contactPickerAvailable) return;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const contacts: Array<{ name?: string[]; tel?: string[] }> = await (navigator as any).contacts.select(
+        ['name', 'tel'],
+        { multiple: false }
+      );
+      if (contacts.length === 0) return;
+      const c = contacts[0];
+      const name = c.name?.[0] ?? '';
+      const tel = c.tel?.[0] ?? '';
+      this.slots = this.slots.map((sl, i) =>
+        i === index
+          ? { ...sl, guestName: name, guestPhone: tel }
+          : sl
+      );
+    } catch {
+      // user dismissed picker — no-op
+    }
+  }
+
   addSet(): void {
     this.sets = [...this.sets, { team1: null, team2: null }];
   }
@@ -75,16 +129,50 @@ export class RecordMatchComponent implements OnInit {
     );
   }
 
+  otherSlotIndexes(index: number): number[] {
+    return [0, 1, 2, 3].filter(i => i !== index);
+  }
+
+  availableForSlot(excludeIndexes: number[]): MemberSummary[] {
+    const usedIds = excludeIndexes
+      .map(i => this.slots[i])
+      .filter(s => s.mode === 'membro' && s.userId)
+      .map(s => s.userId);
+    return this.members.filter(m => !usedIds.includes(m.userId));
+  }
+
   submit(): void {
     this.errorMessage = '';
 
-    if (!this.team1Player1 || !this.team1Player2 || !this.team2Player1 || !this.team2Player2) {
-      this.errorMessage = 'Seleziona tutti e 4 i giocatori.';
-      return;
+    for (let i = 0; i < 4; i++) {
+      const s = this.slots[i];
+      if (s.mode === 'membro' && !s.userId) {
+        this.errorMessage = `Seleziona il giocatore ${i + 1} o scegli modalità ospite.`;
+        return;
+      }
+      if (s.mode === 'ospite') {
+        if (!s.guestName.trim()) {
+          this.errorMessage = `Inserisci il nome dell'ospite per il giocatore ${i + 1}.`;
+          return;
+        }
+        if (!s.guestEmail.trim() && !s.guestPhone.trim()) {
+          this.errorMessage = `Inserisci email o telefono per l'ospite ${i + 1}.`;
+          return;
+        }
+      }
     }
 
-    const team1 = [this.team1Player1, this.team1Player2];
-    const team2 = [this.team2Player1, this.team2Player2];
+    const toDto = (s: PlayerSlot): PlayerSlotDto =>
+      s.mode === 'membro'
+        ? { userId: s.userId }
+        : {
+            guestName: s.guestName.trim(),
+            guestEmail: s.guestEmail.trim() || undefined,
+            guestPhone: s.guestPhone.trim() || undefined,
+          };
+
+    const team1 = [toDto(this.slots[0]), toDto(this.slots[1])];
+    const team2 = [toDto(this.slots[2]), toDto(this.slots[3])];
 
     const setsPayload = this.useSets
       ? this.sets.map(s => ({ team1: s.team1 ?? 0, team2: s.team2 ?? 0 }))
@@ -101,13 +189,5 @@ export class RecordMatchComponent implements OnInit {
         this.errorMessage = err?.error?.error ?? 'Errore durante l\'inserimento della partita.';
       },
     });
-  }
-
-  memberName(id: string): string {
-    return this.members.find(m => m.userId === id)?.name ?? id;
-  }
-
-  availableForSlot(excludeIds: string[]): MemberSummary[] {
-    return this.members.filter(m => !excludeIds.includes(m.userId));
   }
 }

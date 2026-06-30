@@ -35,7 +35,7 @@ async function createAndConfirmMatch(
 ): Promise<void> {
   const ctx0 = await playwrightRequest.newContext({ extraHTTPHeaders: { Authorization: `Bearer ${tokens[0]}` } });
   const r = await ctx0.post(`${API}/circles/${circleId}/matches`, {
-    data: { team1: t1, team2: t2, sets: [{ team1: 6, team2: 4 }] },
+    data: { team1: t1.map(id => ({ userId: id })), team2: t2.map(id => ({ userId: id })), sets: [{ team1: 6, team2: 4 }] },
   });
   const matchId = (await r.json()).id as string;
   await ctx0.dispose();

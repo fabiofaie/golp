@@ -33,7 +33,7 @@ async function decodeUserId(token: string): Promise<string> {
 async function createMatch(token: string, circleId: string, t1: string[], t2: string[]): Promise<string> {
   const ctx = await playwrightRequest.newContext({ extraHTTPHeaders: { Authorization: `Bearer ${token}` } });
   const r = await ctx.post(`${API}/circles/${circleId}/matches`, {
-    data: { team1: t1, team2: t2, sets: [{ team1: 6, team2: 4 }] },
+    data: { team1: t1.map(id => ({ userId: id })), team2: t2.map(id => ({ userId: id })), sets: [{ team1: 6, team2: 4 }] },
   });
   const body = await r.json();
   await ctx.dispose();

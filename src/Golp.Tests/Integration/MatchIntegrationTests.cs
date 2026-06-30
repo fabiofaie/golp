@@ -223,8 +223,8 @@ public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
 
         var resp = await _client.PostAsJsonAsync($"/circles/{circleId}/matches", new
         {
-            team1 = new[] { ids[0], ids[1] },
-            team2 = new[] { ids[2], ids[3] },
+            team1 = new[] { new { userId = ids[0] }, new { userId = ids[1] } },
+            team2 = new[] { new { userId = ids[2] }, new { userId = ids[3] } },
             sets  = Array.Empty<object>(),
         });
 
@@ -254,8 +254,8 @@ public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
 
         var resp = await _client.PostAsJsonAsync($"/circles/{Guid.NewGuid()}/matches", new
         {
-            team1 = new[] { Guid.NewGuid(), Guid.NewGuid() },
-            team2 = new[] { Guid.NewGuid(), Guid.NewGuid() },
+            team1 = new[] { new { userId = Guid.NewGuid() }, new { userId = Guid.NewGuid() } },
+            team2 = new[] { new { userId = Guid.NewGuid() }, new { userId = Guid.NewGuid() } },
             sets  = new[] { new { team1 = 6, team2 = 4 } },
         });
 
@@ -415,6 +415,168 @@ public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
         Assert.Contains(ids[1], rankingUserIds);
     }
 
+    // ─── US-039: guest resolution ────────────────────────────────────────────
+
+    // Ospite nuovo con email → User creato IsActivated=false, Membership Rating=1000
+    [Fact]
+    public async Task CreateMatch_NewGuestByEmail_CreatesUserAndMembership()
+    {
+        var (circleId, ids, tokens) = await SetupAsync(useSets: false);
+        SetAuth(tokens[0]);
+
+        var guestEmail = $"guest_{Guid.NewGuid():N}@example.com";
+        var resp = await PostMatchWithSlotsAsync(circleId,
+            new { userId = ids[0] },
+            new { userId = ids[1] },
+            new { userId = ids[2] },
+            new { guestName = "Ospite Uno", guestEmail },
+            new[] { new { team1 = 21, team2 = 5 } });
+
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var guest = await db.Users.FirstOrDefaultAsync(u => u.Email == guestEmail);
+        Assert.NotNull(guest);
+        Assert.False(guest.IsActivated);
+        Assert.Empty(guest.PasswordHash);
+
+        var membership = await db.CircleMemberships
+            .FirstOrDefaultAsync(m => m.CircleId == circleId && m.UserId == guest.Id);
+        Assert.NotNull(membership);
+        Assert.Equal(1000, membership.Rating);
+    }
+
+    // Ospite con email = User esistente → nessun duplicato, stesso UserId in partita
+    [Fact]
+    public async Task CreateMatch_GuestEmailMatchesExistingUser_NoDuplicate()
+    {
+        var (circleId, ids, tokens) = await SetupAsync(useSets: false);
+        SetAuth(tokens[0]);
+
+        // Crea un utente registrato non membro del circolo
+        var existingEmail = $"existing_{Guid.NewGuid():N}@example.com";
+        var regResp = await _client.PostAsJsonAsync("/auth/register",
+            new { name = "Utente Esistente", email = existingEmail, password = "password123" });
+        var regBody = await regResp.Content.ReadFromJsonAsync<JsonElement>();
+        var existingToken = regBody.GetProperty("token").GetString()!;
+        var existingUserId = ExtractUserIdFromJwt(existingToken);
+
+        var resp = await PostMatchWithSlotsAsync(circleId,
+            new { userId = ids[0] },
+            new { userId = ids[1] },
+            new { userId = ids[2] },
+            new { guestName = "Ospite Alias", guestEmail = existingEmail },
+            new[] { new { team1 = 21, team2 = 5 } });
+
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var count = await db.Users.CountAsync(u => u.Email == existingEmail);
+        Assert.Equal(1, count);
+
+        var membership = await db.CircleMemberships
+            .FirstOrDefaultAsync(m => m.CircleId == circleId && m.UserId == existingUserId);
+        Assert.NotNull(membership);
+    }
+
+    // Ospite con phone = User esistente → nessun duplicato
+    [Fact]
+    public async Task CreateMatch_GuestPhoneMatchesExistingGhost_NoDuplicate()
+    {
+        var (circleId, ids, tokens) = await SetupAsync(useSets: false);
+        SetAuth(tokens[0]);
+
+        // Prima partita: crea ghost con phone
+        var phone = "+39333" + Guid.NewGuid().ToString("N")[..7];
+        var resp1 = await PostMatchWithSlotsAsync(circleId,
+            new { userId = ids[0] },
+            new { userId = ids[1] },
+            new { userId = ids[2] },
+            new { guestName = "Ghost Phone", guestPhone = phone },
+            new[] { new { team1 = 21, team2 = 5 } });
+        Assert.Equal(HttpStatusCode.Created, resp1.StatusCode);
+
+        using var scope1 = _factory.Services.CreateScope();
+        var db1 = scope1.ServiceProvider.GetRequiredService<AppDbContext>();
+        var ghostId = (await db1.Users.FirstOrDefaultAsync(u => u.Phone == phone))!.Id;
+        var countBefore = await db1.Users.CountAsync(u => u.Phone == phone);
+
+        // Seconda partita: stesso phone → riusa l'utente
+        // Serve un 5o membro per evitare conflitto distinct-4
+        var (newId, newToken) = await RegisterAndJoinAsync(circleId);
+        SetAuth(tokens[0]);
+
+        var resp2 = await PostMatchWithSlotsAsync(circleId,
+            new { userId = ids[0] },
+            new { userId = ids[1] },
+            new { userId = newId },
+            new { guestName = "Ghost Phone Again", guestPhone = phone },
+            new[] { new { team1 = 21, team2 = 5 } });
+        Assert.Equal(HttpStatusCode.Created, resp2.StatusCode);
+
+        using var scope2 = _factory.Services.CreateScope();
+        var db2 = scope2.ServiceProvider.GetRequiredService<AppDbContext>();
+        var countAfter = await db2.Users.CountAsync(u => u.Phone == phone);
+        Assert.Equal(countBefore, countAfter);
+    }
+
+    // 2 slot con stessa email ospite → 400 (4 giocatori distinti)
+    [Fact]
+    public async Task CreateMatch_TwoSlotsWithSameGuestEmail_Returns400()
+    {
+        var (circleId, ids, tokens) = await SetupAsync(useSets: false);
+        SetAuth(tokens[0]);
+
+        var guestEmail = $"dupguest_{Guid.NewGuid():N}@example.com";
+        var resp = await PostMatchWithSlotsAsync(circleId,
+            new { userId = ids[0] },
+            new { userId = ids[1] },
+            new { guestName = "Ospite A", guestEmail },
+            new { guestName = "Ospite B", guestEmail },
+            new[] { new { team1 = 21, team2 = 5 } });
+
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+        var body = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Contains("distinti", body.GetProperty("error").GetString()!);
+    }
+
+    // Ospite solo phone (no email) → User creato, email skippata (no eccezione)
+    [Fact]
+    public async Task CreateMatch_GuestPhoneOnly_CreatesUserNoEmail()
+    {
+        var (circleId, ids, tokens) = await SetupAsync(useSets: false);
+        SetAuth(tokens[0]);
+
+        var phone = "+39344" + Guid.NewGuid().ToString("N")[..7];
+        var resp = await PostMatchWithSlotsAsync(circleId,
+            new { userId = ids[0] },
+            new { userId = ids[1] },
+            new { userId = ids[2] },
+            new { guestName = "Solo Telefono", guestPhone = phone },
+            new[] { new { team1 = 21, team2 = 5 } });
+
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var ghost = await db.Users.FirstOrDefaultAsync(u => u.Phone == phone);
+        Assert.NotNull(ghost);
+        Assert.Null(ghost.Email);
+        Assert.False(ghost.IsActivated);
+
+        // Aspetta fire-and-forget email (deve essere 3, non 4: il phone-only non riceve email)
+        var matchId = (await resp.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetString()!;
+        await _factory.EmailCapture.WaitUntilCountAsync(
+            () => _factory.EmailCapture.ConfirmationRequestsSent.Count(s => s.MatchLink.Contains(matchId)),
+            2, TimeSpan.FromSeconds(5));
+        Assert.Equal(2, _factory.EmailCapture.ConfirmationRequestsSent.Count(s => s.MatchLink.Contains(matchId)));
+    }
+
     // ─── helpers ──────────────────────────────────────────────────────────────
 
     private async Task<(Guid CircleId, Guid[] Ids, string[] Tokens)> SetupAsync(bool useSets = true)
@@ -476,8 +638,18 @@ public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
     {
         return _client.PostAsJsonAsync($"/circles/{circleId}/matches", new
         {
-            team1 = new[] { t1p1, t1p2 },
-            team2 = new[] { t2p1, t2p2 },
+            team1 = new[] { new { userId = t1p1 }, new { userId = t1p2 } },
+            team2 = new[] { new { userId = t2p1 }, new { userId = t2p2 } },
+            sets,
+        });
+    }
+
+    private Task<HttpResponseMessage> PostMatchWithSlotsAsync(Guid circleId, object slot1, object slot2, object slot3, object slot4, object sets)
+    {
+        return _client.PostAsJsonAsync($"/circles/{circleId}/matches", new
+        {
+            team1 = new[] { slot1, slot2 },
+            team2 = new[] { slot3, slot4 },
             sets,
         });
     }

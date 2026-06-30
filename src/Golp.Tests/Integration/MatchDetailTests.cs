@@ -182,8 +182,8 @@ public class MatchDetailTests : IClassFixture<MatchDetailTestFactory>
         // owner (ids[0]) inserisce ma non gioca: 4 giocatori = ids[1..4]
         var resp = await _client.PostAsJsonAsync($"/circles/{circleId}/matches", new
         {
-            team1 = new[] { ids[1], ids[2] },
-            team2 = new[] { ids[3], ids[4] },
+            team1 = new[] { new { userId = ids[1] }, new { userId = ids[2] } },
+            team2 = new[] { new { userId = ids[3] }, new { userId = ids[4] } },
             sets  = new[] { new { team1 = 6, team2 = 4 } },
         });
         var body = await resp.Content.ReadFromJsonAsync<JsonElement>();

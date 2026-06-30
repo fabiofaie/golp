@@ -221,17 +221,19 @@ public static class CircleEndpoints
             .Select(m => new
             {
                 m.UserId,
-                Name   = m.User.Name,
+                Name        = m.User.Name,
                 m.Rating,
+                IsActivated = m.User.IsActivated,
             })
             .ToListAsync();
 
         return Results.Ok(members.Select((m, i) => new
         {
-            userId = m.UserId,
-            name   = m.Name,
-            rating = m.Rating,
-            rank   = i + 1,
+            userId      = m.UserId,
+            name        = m.Name,
+            rating      = m.Rating,
+            rank        = i + 1,
+            isActivated = m.IsActivated,
         }));
     }
 
@@ -263,7 +265,7 @@ public static class CircleEndpoints
 
         var members = await db.CircleMemberships
             .Where(m => m.CircleId == id)
-            .Select(m => new { m.UserId, Name = m.User.Name, m.Rating })
+            .Select(m => new { m.UserId, Name = m.User.Name, m.Rating, IsActivated = m.User.IsActivated })
             .ToListAsync();
 
         var classified = members
@@ -277,12 +279,13 @@ public static class CircleEndpoints
                 rating           = m.Rating,
                 rank             = i + 1,
                 confirmedMatches = confirmedCounts[m.UserId],
+                isActivated      = m.IsActivated,
             })
             .ToList();
 
         var unclassified = members
             .Where(m => !confirmedCounts.ContainsKey(m.UserId))
-            .Select(m => new { userId = m.UserId, name = m.Name })
+            .Select(m => new { userId = m.UserId, name = m.Name, isActivated = m.IsActivated })
             .ToList();
 
         return Results.Ok(new { classified, unclassified });
@@ -408,7 +411,7 @@ public static class CircleEndpoints
             });
             await db.SaveChangesAsync();
 
-            await emailService.SendAddedToCircleNotificationAsync(existingUser.Email, circle.Name);
+            await emailService.SendAddedToCircleNotificationAsync(existingUser.Email!, circle.Name);
 
             return Results.Ok(new { exists = true, alreadyMember = false, name = existingUser.Name });
         }
@@ -424,6 +427,7 @@ public static class CircleEndpoints
             Name         = req.Name.Trim(),
             Email        = email,
             PasswordHash = string.Empty,
+            IsActivated  = false,
         };
 
         db.Users.Add(newUser);

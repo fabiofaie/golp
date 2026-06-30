@@ -24,8 +24,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.HasKey(u => u.Id);
             e.Property(u => u.Name).HasMaxLength(100).IsRequired();
-            e.Property(u => u.Email).HasMaxLength(254).IsRequired();
-            e.HasIndex(u => u.Email).IsUnique();
+            e.Property(u => u.Email).HasMaxLength(254);
+            e.HasIndex(u => u.Email).IsUnique().HasFilter("[Email] IS NOT NULL");
+            e.Property(u => u.Phone).HasMaxLength(30);
             e.Property(u => u.PasswordHash).HasMaxLength(100).IsRequired();
         });
 

@@ -67,7 +67,7 @@ public static class AuthEndpoints
         var refreshToken = await refreshTokenService.IssueAsync(user.Id, userAgent);
 
         var logger = loggerFactory.CreateLogger(nameof(AuthEndpoints));
-        _ = emailService.SendNewUserNotificationAsync(user.Email, user.Name, DateTime.UtcNow)
+        _ = emailService.SendNewUserNotificationAsync(user.Email!, user.Name, DateTime.UtcNow)
             .ContinueWith(t => logger.LogError(t.Exception, "Staff user notification failed"),
                           TaskContinuationOptions.OnlyOnFaulted);
 
@@ -239,7 +239,7 @@ public static class AuthEndpoints
             var plainToken = await resetService.GenerateTokenAsync(user.Id);
             var frontendBase = configuration["Cors:AllowedOrigins:0"] ?? "http://localhost:4200";
             var resetLink = $"{frontendBase}/reset-password?token={Uri.EscapeDataString(plainToken)}";
-            await emailService.SendPasswordResetEmailAsync(user.Email, resetLink);
+            await emailService.SendPasswordResetEmailAsync(user.Email!, resetLink);
         }
 
         return Results.Ok();

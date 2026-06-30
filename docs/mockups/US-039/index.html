@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>US-039 — Registra Partita con Ospiti</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* Scenario tabs (mockup only) */
+    .scenario-bar {
+      position: sticky; top: 0;
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-border);
+      display: flex; gap: var(--sp-2);
+      padding: var(--sp-3) var(--sp-4);
+      z-index: 200;
+      overflow-x: auto;
+    }
+    .scenario-btn {
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--color-border);
+      background: transparent;
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: var(--font-family);
+      transition: all 0.15s;
+    }
+    .scenario-btn.active {
+      background: var(--color-accent);
+      border-color: var(--color-accent);
+      color: #fff;
+    }
+    .note {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-placeholder);
+      text-align: center;
+      margin-bottom: var(--sp-4);
+      padding: var(--sp-2) var(--sp-4);
+      border: 1px dashed var(--color-border);
+      border-radius: var(--radius-md);
+    }
+
+    /* Contact Picker as primary CTA — larger, more prominent */
+    .contact-picker-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sp-3);
+      width: 100%;
+      padding: var(--sp-4) var(--sp-4);
+      background: var(--color-contacts-bg);
+      border: 1.5px solid var(--color-contacts-border);
+      border-radius: var(--radius-md);
+      color: var(--color-contacts);
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-bold);
+      cursor: pointer;
+      transition: background 0.12s;
+      letter-spacing: 0.01em;
+    }
+    .contact-picker-primary:hover { background: rgba(139, 92, 246, 0.22); }
+
+    .manual-divider {
+      text-align: center;
+      font-size: var(--font-size-xs);
+      color: var(--color-text-placeholder);
+      position: relative;
+      margin: var(--sp-1) 0;
+    }
+    .manual-divider::before, .manual-divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: calc(50% - 36px);
+      height: 1px;
+      background: var(--color-border);
+    }
+    .manual-divider::before { left: 0; }
+    .manual-divider::after { right: 0; }
+  </style>
+</head>
+<body>
+
+<div class="scenario-bar">
+  <button class="scenario-btn active" onclick="setScenario('empty')">Form vuoto</button>
+  <button class="scenario-btn" onclick="setScenario('no-picker')">Ospite (no picker)</button>
+  <button class="scenario-btn" onclick="setScenario('with-picker')">Ospite + Picker</button>
+  <button class="scenario-btn" onclick="setScenario('picker-used')">Picker usato</button>
+  <button class="scenario-btn" onclick="setScenario('mixed')">Stato misto</button>
+</div>
+
+<div class="page">
+  <div class="page-header">
+    <a href="#" class="back-btn">←</a>
+    <div>
+      <div class="page-title">Registra Partita</div>
+      <div class="circle-label">Padel Club Milano</div>
+    </div>
+  </div>
+
+  <div class="note" id="scenario-note">Scenario: form iniziale — tutti gli slot mostrano dropdown membro.</div>
+
+  <!-- TEAM 1 -->
+  <div class="team-block team1">
+    <div class="team-header">
+      <div class="team-dot"></div>
+      <div class="team-name">Team A</div>
+    </div>
+
+    <!-- Slot 1 — bloccato su Membro (il registratore) -->
+    <div class="player-card is-member" id="slot-t1p1">
+      <div class="player-card-header">
+        <span style="font-size:var(--font-size-xs);color:var(--color-text-secondary);font-weight:var(--font-weight-bold);">GIOCATORE 1</span>
+        <div class="slot-toggle">
+          <button class="slot-toggle-btn active" disabled>Membro</button>
+          <button class="slot-toggle-btn" disabled style="opacity:0.4;">Ospite</button>
+        </div>
+      </div>
+      <div class="member-selected">
+        <div class="member-avatar">LB</div>
+        <div class="member-info">
+          <div class="name">Luca Bianchi</div>
+          <div class="rating">Rating: 1124</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slot 2 -->
+    <div class="player-card" id="slot-t1p2">
+      <div class="player-card-header">
+        <span style="font-size:var(--font-size-xs);color:var(--color-text-secondary);font-weight:var(--font-weight-bold);">GIOCATORE 2</span>
+        <div class="slot-toggle">
+          <button class="slot-toggle-btn active" id="t1p2-member-btn" onclick="setSlotMode('t1p2','member')">Membro</button>
+          <button class="slot-toggle-btn" id="t1p2-guest-btn" onclick="setSlotMode('t1p2','guest')">Ospite</button>
+        </div>
+      </div>
+      <!-- member mode -->
+      <div id="t1p2-member-content" class="member-select-wrap">
+        <select class="member-select">
+          <option value="">Seleziona membro…</option>
+          <option>Marco Rossi</option>
+          <option>Sara Ferrari</option>
+          <option>Andrea Conti</option>
+        </select>
+      </div>
+      <!-- guest mode -->
+      <div id="t1p2-guest-content" class="guest-fields" style="display:none;">
+        <!-- 1. Contact Picker — PRIMA OPZIONE (mobile) -->
+        <div id="t1p2-picker-wrap" style="display:none;">
+          <button class="contact-picker-primary" onclick="simulateContactPicker('t1p2')">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <rect x="1" y="1" width="16" height="16" rx="4" stroke="currentColor" stroke-width="1.6"/>
+              <circle cx="9" cy="7" r="2.5" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M3 15.5c0-2.5 2.7-4.5 6-4.5s6 2 6 4.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            Scegli dai contatti
+          </button>
+          <div class="manual-divider">o inserisci manualmente</div>
+        </div>
+        <!-- 2. Campi manuali — fallback -->
+        <div>
+          <label class="field-label">NOME <span>*</span></label>
+          <input class="field-input" type="text" placeholder="Nome e cognome ospite" id="t1p2-name">
+        </div>
+        <div>
+          <label class="field-label">EMAIL</label>
+          <input class="field-input" type="email" placeholder="email@esempio.com" id="t1p2-email">
+        </div>
+        <div class="contact-divider">oppure</div>
+        <div>
+          <label class="field-label">TELEFONO</label>
+          <input class="field-input" type="tel" placeholder="+39 340 123 4567" id="t1p2-phone">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEAM 2 -->
+  <div class="team-block team2">
+    <div class="team-header">
+      <div class="team-dot"></div>
+      <div class="team-name">Team B</div>
+    </div>
+
+    <!-- Slot 3 -->
+    <div class="player-card" id="slot-t2p1">
+      <div class="player-card-header">
+        <span style="font-size:var(--font-size-xs);color:var(--color-text-secondary);font-weight:var(--font-weight-bold);">GIOCATORE 3</span>
+        <div class="slot-toggle">
+          <button class="slot-toggle-btn active" id="t2p1-member-btn" onclick="setSlotMode('t2p1','member')">Membro</button>
+          <button class="slot-toggle-btn" id="t2p1-guest-btn" onclick="setSlotMode('t2p1','guest')">Ospite</button>
+        </div>
+      </div>
+      <div id="t2p1-member-content" class="member-select-wrap">
+        <select class="member-select">
+          <option value="">Seleziona membro…</option>
+          <option>Marco Rossi</option>
+          <option>Sara Ferrari</option>
+          <option>Andrea Conti</option>
+        </select>
+      </div>
+      <div id="t2p1-guest-content" class="guest-fields" style="display:none;">
+        <div id="t2p1-picker-wrap" style="display:none;">
+          <button class="contact-picker-primary" onclick="simulateContactPicker('t2p1')">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <rect x="1" y="1" width="16" height="16" rx="4" stroke="currentColor" stroke-width="1.6"/>
+              <circle cx="9" cy="7" r="2.5" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M3 15.5c0-2.5 2.7-4.5 6-4.5s6 2 6 4.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            Scegli dai contatti
+          </button>
+          <div class="manual-divider">o inserisci manualmente</div>
+        </div>
+        <div>
+          <label class="field-label">NOME <span>*</span></label>
+          <input class="field-input" type="text" placeholder="Nome e cognome ospite" id="t2p1-name">
+        </div>
+        <div>
+          <label class="field-label">EMAIL</label>
+          <input class="field-input" type="email" placeholder="email@esempio.com" id="t2p1-email">
+        </div>
+        <div class="contact-divider">oppure</div>
+        <div>
+          <label class="field-label">TELEFONO</label>
+          <input class="field-input" type="tel" placeholder="+39 340 123 4567" id="t2p1-phone">
+        </div>
+      </div>
+    </div>
+
+    <!-- Slot 4 -->
+    <div class="player-card" id="slot-t2p2">
+      <div class="player-card-header">
+        <span style="font-size:var(--font-size-xs);color:var(--color-text-secondary);font-weight:var(--font-weight-bold);">GIOCATORE 4</span>
+        <div class="slot-toggle">
+          <button class="slot-toggle-btn active" id="t2p2-member-btn" onclick="setSlotMode('t2p2','member')">Membro</button>
+          <button class="slot-toggle-btn" id="t2p2-guest-btn" onclick="setSlotMode('t2p2','guest')">Ospite</button>
+        </div>
+      </div>
+      <div id="t2p2-member-content" class="member-select-wrap">
+        <select class="member-select">
+          <option value="">Seleziona membro…</option>
+          <option>Marco Rossi</option>
+          <option>Sara Ferrari</option>
+          <option>Andrea Conti</option>
+        </select>
+      </div>
+      <div id="t2p2-guest-content" class="guest-fields" style="display:none;">
+        <div id="t2p2-picker-wrap" style="display:none;">
+          <button class="contact-picker-primary" onclick="simulateContactPicker('t2p2')">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <rect x="1" y="1" width="16" height="16" rx="4" stroke="currentColor" stroke-width="1.6"/>
+              <circle cx="9" cy="7" r="2.5" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M3 15.5c0-2.5 2.7-4.5 6-4.5s6 2 6 4.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            Scegli dai contatti
+          </button>
+          <div class="manual-divider">o inserisci manualmente</div>
+        </div>
+        <div>
+          <label class="field-label">NOME <span>*</span></label>
+          <input class="field-input" type="text" placeholder="Nome e cognome ospite" id="t2p2-name">
+        </div>
+        <div>
+          <label class="field-label">EMAIL</label>
+          <input class="field-input" type="email" placeholder="email@esempio.com" id="t2p2-email">
+        </div>
+        <div class="contact-divider">oppure</div>
+        <div>
+          <label class="field-label">TELEFONO</label>
+          <input class="field-input" type="tel" placeholder="+39 340 123 4567" id="t2p2-phone">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCORE -->
+  <div class="score-section">
+    <div class="section-label">Punteggio</div>
+    <div class="set-row">
+      <div class="set-label">SET 1</div>
+      <input class="score-input" type="number" placeholder="0" min="0" style="color:var(--color-team1);">
+      <div class="score-vs">–</div>
+      <input class="score-input" type="number" placeholder="0" min="0" style="color:var(--color-team2);">
+    </div>
+    <div class="set-row">
+      <div class="set-label">SET 2</div>
+      <input class="score-input" type="number" placeholder="0" min="0" style="color:var(--color-team1);">
+      <div class="score-vs">–</div>
+      <input class="score-input" type="number" placeholder="0" min="0" style="color:var(--color-team2);">
+    </div>
+  </div>
+
+  <button class="submit-btn">Registra Partita</button>
+</div>
+
+<nav class="bottom-nav">
+  <a href="#" class="nav-item"><span class="nav-icon">🏠</span>Home</a>
+  <a href="#" class="nav-item active"><span class="nav-icon">🎾</span>Partite</a>
+  <a href="#" class="nav-item"><span class="nav-icon">🏆</span>Circoli</a>
+  <a href="#" class="nav-item"><span class="nav-icon">👤</span>Profilo</a>
+</nav>
+
+<script src="app.js"></script>
+</body>
+</html>

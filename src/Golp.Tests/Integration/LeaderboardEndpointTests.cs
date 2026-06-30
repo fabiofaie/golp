@@ -180,8 +180,8 @@ public class LeaderboardEndpointTests : IClassFixture<LeaderboardTestFactory>
         SetAuth(tokens[t1p1]);
         var resp = await _client.PostAsJsonAsync($"/circles/{circleId}/matches", new
         {
-            team1 = new[] { ids[t1p1], ids[t1p2] },
-            team2 = new[] { ids[t2p1], ids[t2p2] },
+            team1 = new[] { new { userId = ids[t1p1] }, new { userId = ids[t1p2] } },
+            team2 = new[] { new { userId = ids[t2p1] }, new { userId = ids[t2p2] } },
             sets  = new[] { new { team1 = 6, team2 = 4 } },
         });
         var matchId = Guid.Parse(

@@ -154,8 +154,8 @@ public class ForceConfirmMatchTests : IClassFixture<ForceConfirmTestFactory>
     {
         var r = await _client.PostAsJsonAsync($"/circles/{circleId}/matches", new
         {
-            team1 = new[] { ids[0], ids[1] },
-            team2 = new[] { ids[2], ids[3] },
+            team1 = new[] { new { userId = ids[0] }, new { userId = ids[1] } },
+            team2 = new[] { new { userId = ids[2] }, new { userId = ids[3] } },
             sets  = new[] { new { team1 = 6, team2 = 4 } },
         });
         return GetId(await r.Content.ReadFromJsonAsync<JsonElement>());

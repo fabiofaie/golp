@@ -62,12 +62,20 @@
           <div class="teams-display">
             <div class="team-row" [class.team-row--winner]="m.winnerTeam === 1">
               <span class="team-label" [class.team-label--team1]="true">Team 1</span>
-              <span class="team-names">{{ teamNames(m.team1) }}</span>
+              <span class="team-names">
+                @for (p of m.team1; track p.userId; let last = $last) {
+                  {{ p.name }}@if (p.isActivated === false) { <span class="unreg-badge">(non registrato)</span> }@if (!last) { &amp; }
+                }
+              </span>
               @if (m.winnerTeam === 1) { <span class="win-tag">✓ Vince</span> }
             </div>
             <div class="team-row" [class.team-row--winner]="m.winnerTeam === 2">
               <span class="team-label" [class.team-label--team2]="true">Team 2</span>
-              <span class="team-names">{{ teamNames(m.team2) }}</span>
+              <span class="team-names">
+                @for (p of m.team2; track p.userId; let last = $last) {
+                  {{ p.name }}@if (p.isActivated === false) { <span class="unreg-badge">(non registrato)</span> }@if (!last) { &amp; }
+                }
+              </span>
               @if (m.winnerTeam === 2) { <span class="win-tag">✓ Vince</span> }
             </div>
           </div>
