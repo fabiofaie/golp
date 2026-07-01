@@ -579,6 +579,81 @@ public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
         Assert.Equal(2, _factory.EmailCapture.ConfirmationRequestsSent.Count - beforeCountGuest);
     }
 
+    // ─── US-042: confirmationLinks nella response ─────────────────────────────
+
+    // Response contiene confirmationLinks con 3 voci (i non-creatori)
+    [Fact]
+    public async Task CreateMatch_Response_ContainsConfirmationLinksForThreeRecipients()
+    {
+        var (circleId, ids, tokens) = await SetupAsync();
+        SetAuth(tokens[0]); // ids[0] è il creatore
+
+        var resp = await PostMatchAsync(circleId, ids[0], ids[1], ids[2], ids[3],
+            new[] { new { team1 = 6, team2 = 4 } });
+
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        var json = await resp.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.True(json.TryGetProperty("confirmationLinks", out var links));
+        Assert.Equal(3, links.GetArrayLength());
+
+        // Ogni link deve avere userId, name, tokenUrl non vuoti; phone può essere null
+        foreach (var link in links.EnumerateArray())
+        {
+            var userId = link.GetProperty("userId").GetString();
+            Assert.NotNull(userId);
+            Assert.NotEmpty(userId);
+
+            var name = link.GetProperty("name").GetString();
+            Assert.NotNull(name);
+            Assert.NotEmpty(name);
+
+            var tokenUrl = link.GetProperty("tokenUrl").GetString();
+            Assert.NotNull(tokenUrl);
+            Assert.Contains("/m/", tokenUrl);
+        }
+
+        // Il creatore non deve essere nella lista
+        var linkUserIds = links.EnumerateArray()
+            .Select(l => Guid.Parse(l.GetProperty("userId").GetString()!))
+            .ToHashSet();
+        Assert.DoesNotContain(ids[0], linkUserIds);
+        Assert.Contains(ids[1], linkUserIds);
+        Assert.Contains(ids[2], linkUserIds);
+        Assert.Contains(ids[3], linkUserIds);
+    }
+
+    // Response: ospite con phone → link con phone valorizzato
+    [Fact]
+    public async Task CreateMatch_GuestWithPhone_ConfirmationLinkContainsPhone()
+    {
+        var (circleId, ids, tokens) = await SetupAsync(useSets: false);
+        SetAuth(tokens[0]);
+
+        var phone = "+39340" + Guid.NewGuid().ToString("N")[..7];
+        var resp = await PostMatchWithSlotsAsync(circleId,
+            new { userId = ids[0] },
+            new { userId = ids[1] },
+            new { userId = ids[2] },
+            new { guestName = "Ospite Phone", guestPhone = phone },
+            new[] { new { team1 = 21, team2 = 5 } });
+
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        var json = await resp.Content.ReadFromJsonAsync<JsonElement>();
+
+        var links = json.GetProperty("confirmationLinks");
+        var guestLink = links.EnumerateArray()
+            .FirstOrDefault(l =>
+            {
+                var p = l.TryGetProperty("phone", out var ph) ? ph.GetString() : null;
+                return p != null;
+            });
+
+        Assert.True(guestLink.ValueKind != System.Text.Json.JsonValueKind.Undefined,
+            "Nessun link con phone trovato nella response");
+        Assert.Equal(phone, guestLink.GetProperty("phone").GetString());
+    }
+
     // ─── helpers ──────────────────────────────────────────────────────────────
 
     private async Task<(Guid CircleId, Guid[] Ids, string[] Tokens)> SetupAsync(bool useSets = true)

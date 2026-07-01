@@ -267,14 +267,26 @@ public static class QuickMatchEndpoints
             db.MatchConfirmationTokens.AddRange(tokensA);
             await db.SaveChangesAsync();
 
+            // US-042: nomi+phone per il componente share lato frontend.
+            var recipientDataA = await db.Users
+                .Where(u => recipientsA.Contains(u.Id))
+                .Select(u => new { u.Id, u.Name, u.Phone })
+                .ToListAsync();
+            var confirmationLinksA = tokensA.Select(t =>
+            {
+                var u = recipientDataA.First(x => x.Id == t.UserId);
+                return new { userId = u.Id, name = u.Name, phone = u.Phone, tokenUrl = linksA[t.UserId] };
+            }).ToList();
+
             FireNotifications(scopeFactory, loggerFactory, matchA.Id, circle.Id, circle.Name, recipientsA, linksA);
 
             return Results.Created($"/circles/{circle.Id}/matches/{matchA.Id}", new
             {
-                circleId     = circle.Id,
-                matchId      = matchA.Id,
-                circleName   = circle.Name,
-                circleCreated = false,
+                circleId          = circle.Id,
+                matchId           = matchA.Id,
+                circleName        = circle.Name,
+                circleCreated     = false,
+                confirmationLinks = confirmationLinksA,
             });
         }
         else
@@ -313,14 +325,26 @@ public static class QuickMatchEndpoints
             await db.SaveChangesAsync();
             await tx.CommitAsync();
 
+            // US-042: nomi+phone per il componente share lato frontend.
+            var recipientDataB = await db.Users
+                .Where(u => recipientsB.Contains(u.Id))
+                .Select(u => new { u.Id, u.Name, u.Phone })
+                .ToListAsync();
+            var confirmationLinksB = tokensB.Select(t =>
+            {
+                var u = recipientDataB.First(x => x.Id == t.UserId);
+                return new { userId = u.Id, name = u.Name, phone = u.Phone, tokenUrl = linksB[t.UserId] };
+            }).ToList();
+
             FireNotifications(scopeFactory, loggerFactory, matchB.Id, newCircle.Id, newCircle.Name, recipientsB, linksB);
 
             return Results.Created($"/circles/{newCircle.Id}/matches/{matchB.Id}", new
             {
-                circleId     = newCircle.Id,
-                matchId      = matchB.Id,
-                circleName   = newCircle.Name,
-                circleCreated = true,
+                circleId          = newCircle.Id,
+                matchId           = matchB.Id,
+                circleName        = newCircle.Name,
+                circleCreated     = true,
+                confirmationLinks = confirmationLinksB,
             });
         }
     }

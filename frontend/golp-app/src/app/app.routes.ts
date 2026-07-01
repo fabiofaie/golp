@@ -100,5 +100,10 @@ export const routes: Routes = [
     loadComponent: () => import('./circles/quick-match/quick-match.component').then(m => m.QuickMatchComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'my-matches',
+    loadComponent: () => import('./dashboard/my-matches-page.component').then(m => m.MyMatchesPageComponent),
+    canActivate: [authGuard]
+  },
   { path: '**', redirectTo: '/dashboard' }
 ];

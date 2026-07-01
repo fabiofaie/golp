@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CircleService, MemberSummary, CircleSummary } from '../circle.service';
-import { MatchService, PlayerSlotDto } from '../match.service';
+import { MatchService, MatchCreated, PlayerSlotDto } from '../match.service';
+import { ShareConfirmComponent } from '../share-confirm/share-confirm.component';
 
 interface PlayerSlot {
   mode: 'membro' | 'ospite';
@@ -25,7 +26,7 @@ function emptySlot(): PlayerSlot {
 @Component({
   selector: 'app-record-match',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, ShareConfirmComponent],
   templateUrl: './record-match.component.html',
 })
 export class RecordMatchComponent implements OnInit {
@@ -46,6 +47,7 @@ export class RecordMatchComponent implements OnInit {
 
   loading = false;
   errorMessage = '';
+  matchCreated: MatchCreated | null = null;
 
   readonly contactPickerAvailable: boolean =
     typeof navigator !== 'undefined' &&
@@ -180,9 +182,9 @@ export class RecordMatchComponent implements OnInit {
 
     this.loading = true;
     this.matchSvc.createMatch(this.circleId, { team1, team2, sets: setsPayload }).subscribe({
-      next: () => {
+      next: result => {
         this.loading = false;
-        this.router.navigate(['/circles']);
+        this.matchCreated = result;
       },
       error: err => {
         this.loading = false;

@@ -61,7 +61,8 @@
       "Bash(awk -F: '$1<118')",
       "Bash(taskkill *)",
       "Bash(npx karma *)",
-      "Bash(sqlcmd *)"
+      "Bash(sqlcmd *)",
+      "Skill(run)"
     ]
   }
 }

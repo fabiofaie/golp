@@ -175,6 +175,18 @@ public static class MatchEndpoints
         var frontendBase = configuration["Cors:AllowedOrigins:0"] ?? "http://localhost:4200";
         // US-040: mappa userId→tokenLink per inviare link individuali.
         var tokenLinkByUser = confirmationTokens.ToDictionary(t => t.UserId, t => $"{frontendBase}/m/{t.Token}");
+
+        // US-042: dati dei destinatari per il componente share (nome + phone per wa.me / Web Share).
+        var recipientData = await db.Users
+            .Where(u => recipientIds.Contains(u.Id))
+            .Select(u => new { u.Id, u.Name, u.Phone })
+            .ToListAsync();
+        var confirmationLinks = confirmationTokens.Select(t =>
+        {
+            var u = recipientData.First(x => x.Id == t.UserId);
+            return new { userId = u.Id, name = u.Name, phone = u.Phone, tokenUrl = tokenLinkByUser[t.UserId] };
+        }).ToList();
+
         _ = Task.Run(async () =>
         {
             try
@@ -227,11 +239,12 @@ public static class MatchEndpoints
 
         return Results.Created($"/circles/{circleId}/matches/{match.Id}", new
         {
-            id         = match.Id,
-            circleId   = match.CircleId,
-            status     = match.Status,
-            winnerTeam = match.WinnerTeam,
-            createdAt  = match.CreatedAt,
+            id                = match.Id,
+            circleId          = match.CircleId,
+            status            = match.Status,
+            winnerTeam        = match.WinnerTeam,
+            createdAt         = match.CreatedAt,
+            confirmationLinks,
         });
     }
 

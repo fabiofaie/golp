@@ -11,6 +11,25 @@
     <span class="brand">GOLP</span>
   </header>
 
+  @if (matchCreated) {
+    <div class="success-state" data-testid="success-state">
+      <h1 class="auth-title">Partita<br>Registrata!</h1>
+      <p style="font-size:14px; color:var(--color-text-secondary); margin-bottom:24px;">
+        Invia il link di conferma ai tuoi compagni di gioco.
+      </p>
+      @if (matchCreated.confirmationLinks.length > 0) {
+        <app-share-confirm
+          [links]="matchCreated.confirmationLinks"
+          [sport]="circle?.sport ?? ''"
+          [circleName]="circle?.name ?? ''">
+        </app-share-confirm>
+      }
+      <a routerLink="/circles" class="btn-primary" style="display:block; text-align:center; margin-top:24px; text-decoration:none;">
+        Vai ai tuoi circoli
+      </a>
+    </div>
+  } @else {
+
   <h1 class="auth-title">Registra<br>Partita.</h1>
 
   @if (circle) {
@@ -241,4 +260,6 @@
   <p style="font-size:11px; color:var(--color-text-placeholder); text-align:center; margin-top:12px;">
     La partita sarà in attesa di conferma degli altri 3 giocatori.
   </p>
+
+  } <!-- end @else -->
 </div>

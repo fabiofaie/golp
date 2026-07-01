@@ -6,6 +6,7 @@ import { provideRouter, Router } from '@angular/router';
 import { AppComponent } from './app.component';
 import { AppUpdateService } from './shared/update/app-update.service';
 import { PushNotificationService } from './push/push-notification.service';
+import { environment } from '../environments/environment';
 
 @Component({ selector: 'app-dummy', standalone: true, template: '' })
 class DummyComponent {}
@@ -69,5 +70,13 @@ describe('AppComponent', () => {
     await router.navigateByUrl('/login');
 
     expect(updateServiceMock.triggerCheck).toHaveBeenCalled();
+  });
+
+  it('imposta --color-brand da environment.brandColor al bootstrap', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+
+    const val = document.documentElement.style.getPropertyValue('--color-brand');
+    expect(val).toBe(environment.brandColor);
   });
 });

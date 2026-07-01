@@ -8,7 +8,8 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from "rxjs";
 import { environment } from "../../../environments/environment";
 import { AuthService } from "../../auth/auth.service";
 import { CircleService, SportConfig } from "../circle.service";
-import { CirclePick, MatchService, PlayerSlotDto, QuickCheckResponse, SuggestionUser } from "../match.service";
+import { CirclePick, MatchService, PlayerSlotDto, QuickMatchResult, QuickCheckResponse, SuggestionUser } from "../match.service";
+import { ShareConfirmComponent } from "../share-confirm/share-confirm.component";
 
 interface QuickSlot {
   filled: boolean;
@@ -31,13 +32,32 @@ type Step = "sport" | "players" | "picker" | "score";
 @Component({
   selector: "app-quick-match",
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ShareConfirmComponent],
   template: `
     <div class="qm-page">
       <header class="qm-header">
         <a routerLink="/dashboard" class="qm-back">← Indietro</a>
         <span class="qm-title">Registra Partita</span>
       </header>
+
+      @if (quickMatchResult) {
+        <main class="qm-main" data-testid="success-state">
+          <h2 class="qm-section-title" style="margin-bottom:8px;">Partita Registrata!</h2>
+          <p style="font-size:14px; color:var(--color-text-secondary); margin-bottom:24px;">
+            Invia il link di conferma ai tuoi compagni di gioco.
+          </p>
+          @if (quickMatchResult.confirmationLinks.length > 0) {
+            <app-share-confirm
+              [links]="quickMatchResult.confirmationLinks"
+              [sport]="selectedSport?.displayName ?? ''"
+              [circleName]="quickMatchResult.circleName">
+            </app-share-confirm>
+          }
+          <a routerLink="/dashboard" class="btn-primary" style="display:block; text-align:center; margin-top:24px; text-decoration:none;">
+            Vai alla dashboard
+          </a>
+        </main>
+      } @else {
 
       <!-- Stepper -->
       @if (step !== "picker") {
@@ -284,6 +304,8 @@ type Step = "sport" | "players" | "picker" | "score";
           </button>
         </main>
       }
+
+      } <!-- end @else (quickMatchResult) -->
     </div>
   `,
   styles: [
@@ -810,6 +832,7 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
 
   isSubmitting = false;
   errorMessage = "";
+  quickMatchResult: QuickMatchResult | null = null;
 
   get filledCount(): number {
     return this.slots.filter((s) => s.filled).length;
@@ -1051,7 +1074,8 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (result) => {
-          this.router.navigate(["/circles", result.circleId, "matches", result.matchId]);
+          this.isSubmitting = false;
+          this.quickMatchResult = result;
         },
         error: (err) => {
           this.isSubmitting = false;

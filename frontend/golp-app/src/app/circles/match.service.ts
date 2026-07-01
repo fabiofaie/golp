@@ -21,12 +21,20 @@ export interface CreateMatchRequest {
   sets: SetScore[];
 }
 
+export interface ConfirmationLink {
+  userId: string;
+  name: string;
+  phone: string | null;
+  tokenUrl: string;
+}
+
 export interface MatchCreated {
   id: string;
   circleId: string;
   status: string;
   winnerTeam: number;
   createdAt: string;
+  confirmationLinks: ConfirmationLink[];
 }
 
 export interface PlayerInfo {
@@ -69,6 +77,29 @@ export interface MatchDetail extends MatchSummary {
 export interface ConfirmDisputeResponse {
   status: string;
   confirmationsCount?: number;
+}
+
+// ── My Matches (US-044) ───────────────────────────────────────────────────
+
+export interface MyMatchSummary {
+  matchId: string;
+  circleId: string;
+  circleName: string;
+  sport: string;
+  createdAt: string;
+  status: 'pending' | 'confirmed' | 'disputed';
+  winnerTeam: number;
+  myTeam: 1 | 2;
+  sets: { team1Score: number; team2Score: number }[];
+  myDelta: number | null;
+  hasCurrentUserConfirmed: boolean;
+}
+
+export interface PagedResult<T> {
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  items: T[];
 }
 
 // ── Quick Match (US-041) ──────────────────────────────────────────────────
@@ -115,6 +146,7 @@ export interface QuickMatchResult {
   matchId: string;
   circleName: string;
   circleCreated: boolean;
+  confirmationLinks: ConfirmationLink[];
 }
 
 // ── Public token API (US-040) ──────────────────────────────────────────────
@@ -178,6 +210,11 @@ export class MatchService {
 
   forceConfirm(circleId: string, matchId: string): Observable<ConfirmDisputeResponse> {
     return this.http.post<ConfirmDisputeResponse>(`${this.base}/circles/${circleId}/matches/${matchId}/force-confirm`, null);
+  }
+
+  getMyMatches(page: number, pageSize: number, status?: string): Observable<PagedResult<MyMatchSummary>> {
+    const params = `page=${page}&pageSize=${pageSize}${status ? '&status=' + status : ''}`;
+    return this.http.get<PagedResult<MyMatchSummary>>(`${this.base}/match/mine?${params}`);
   }
 
   getSuggestions(sport: string, q?: string): Observable<SuggestionUser[]> {

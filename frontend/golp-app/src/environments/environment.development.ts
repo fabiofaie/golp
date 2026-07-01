@@ -2,6 +2,7 @@
 // seguendo docs/firebase-setup.md. Placeholder vuoti = push disabilitate.
 export const environment = {
   production: false,
+  brandColor: '#22C55E',
   apiUrl: '',
   firebaseConfig: {
     apiKey: 'AIzaSyCuAqF2kkBDbGBPSno-j3RlV7_DRmvOpJw',

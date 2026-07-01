@@ -19,6 +19,7 @@ import { AppVersionComponent } from '../shared/version/app-version.component';
         <p class="auth-subtitle">Cosa vuoi fare oggi?</p>
         <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
           <a routerLink="/match/quick" class="btn-primary" style="text-align:center;text-decoration:none">⚡ Registra Partita</a>
+          <a routerLink="/my-matches" class="btn-ghost">📋 Le mie partite</a>
           <a routerLink="/circles" class="btn-ghost">I miei circoli</a>
           <a routerLink="/circles/new" class="btn-ghost">+ Nuovo circolo</a>
           <a routerLink="/elo-info" class="btn-ghost">Simula una partita</a>

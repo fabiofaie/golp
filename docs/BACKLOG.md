@@ -1,12 +1,12 @@
 ﻿# Backlog — GOLP
 
-**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-06-30
+**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-07-01
 
 ## Riepilogo
 
 - Epic totali: 6
-- Storie totali: 42
-- Storie TODO: 15 | PLANNED: 1 | IN_PROGRESS: 1 | REVIEW: 5 | DONE: 21
+- Storie totali: 44
+- Storie TODO: 16 | PLANNED: 1 | IN_PROGRESS: 1 | REVIEW: 5 | DONE: 22
 
 ---
 
@@ -1448,24 +1448,26 @@ Dalla dashboard, il pulsante "Registra Partita" avvia un flusso Quick Match in 4
 
 ---
 
-#### US-042: Condivisione link conferma partita via WhatsApp
+#### US-042: Condivisione link conferma partita via WhatsApp o Web Share API
 
-**Epic:** EP-006 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** TODO
-**Blocked by:** US-039
+**Epic:** EP-006 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
+**Blocked by:** US-040
+**Review note (2026-07-01):** Codice in `src/Golp.Api/Endpoints/MatchEndpoints.cs`, `src/Golp.Api/Endpoints/QuickMatchEndpoints.cs`, `frontend/golp-app/src/app/circles/share-confirm/`, `record-match/`, `quick-match/`. Test: 2 integration (271 totali ✅), 13 unit ✅, 2 E2E ✅. Reviewer APPROVE.
+**Approved (2026-07-01):** Review umana OK.
 
 **Story**
-Come registratore di una partita, voglio poter inviare il link di conferma ai giocatori tramite WhatsApp con un solo tap, così che lo ricevono immediatamente e hanno più probabilità di confermare in tempo.
+Come registratore di una partita, voglio poter inviare il link di conferma ai giocatori tramite WhatsApp (con numero precompilato se disponibile) o via Web Share API, così che lo ricevono immediatamente e lo confermano con un solo tap.
 
 **Demonstrates**
-Dopo aver registrato una partita, l'utente vede la pagina di successo con un pulsante "Invia su WhatsApp" per ogni giocatore/ospite che ha un numero di telefono. Cliccando il pulsante, si apre WhatsApp (app o web) con il numero precompilato e il messaggio: *"Ciao Marco! Ho registrato una partita di Padel nel circolo Tennis Club. Conferma il risultato qui: golp.app/m/abc123"*. Il giocatore riceve il messaggio e clicca il link per confermare.
+Dopo aver registrato una partita, la pagina di successo mostra per ogni partecipante un pulsante di condivisione. Se il partecipante ha un numero di telefono, il pulsante apre WhatsApp con numero e messaggio precompilati. Se non ha numero, appare un pulsante "Condividi link" che invoca `navigator.share()` con il testo e il link già pronti — il sistema operativo apre il selettore nativo (WhatsApp, Telegram, SMS, email, copia…). L'utente sceglie il canale e invia.
 
 **Acceptance Criteria**
 
-- [ ] Dopo la creazione di una partita, la pagina di successo mostra un pulsante "Invia su WhatsApp" per ogni partecipante con numero di telefono
-- [ ] Il pulsante apre `https://wa.me/<phone>?text=<messaggio_encoded>` (su mobile apre l'app WhatsApp, su desktop apre WhatsApp Web)
-- [ ] Il numero di telefono è normalizzato al formato internazionale senza `+` (es. `393401234567` per un numero italiano)
+- [ ] Dopo la creazione di una partita, la pagina di successo mostra per ogni partecipante un pulsante di condivisione del link di conferma
+- [ ] Se il partecipante ha numero di telefono: il pulsante apre `https://wa.me/<phone>?text=<messaggio_encoded>` con numero normalizzato in formato internazionale senza `+` (es. `393401234567`)
 - [ ] Il messaggio precompilato contiene: nome del partecipante, sport, nome del circolo, link conferma con token (es. `golp.app/m/<token>`)
-- [ ] Se un partecipante non ha numero di telefono, il pulsante WhatsApp non appare (solo email)
+- [ ] Se il partecipante NON ha numero di telefono: il pulsante invoca `navigator.share({ title, text, url })` con messaggio e link già composti
+- [ ] Se il browser non supporta `navigator.share` (es. desktop senza supporto): viene mostrato un campo di testo con il link da copiare manualmente
 - [ ] Il link funziona senza che il registratore abbia salvato il numero in rubrica
 
 **Out of scope**
@@ -1474,6 +1476,7 @@ Dopo aver registrato una partita, l'utente vede la pagina di successo con un pul
 - Notifiche WhatsApp per eventi diversi dalla conferma partita (ranking, awards)
 - Chatbot WhatsApp bidirezionale
 - Verifica numero di telefono con OTP
+- CTA di condivisione in punti diversi dalla pagina di successo post-registrazione (vedi US-043)
 
 **Open questions**
 
@@ -1481,6 +1484,141 @@ Dopo aver registrato una partita, l'utente vede la pagina di successo con un pul
 
 ---
 
-> **PROSSIMO PASSO:** avvia il piano tecnico della prima storia del growth loop con `/eq-plan US-039`.
+#### US-043: CTA conferma WhatsApp/Share disponibile da tutti i punti di richiesta conferma
+
+**Epic:** EP-006 | **Priority:** MEDIUM | **Story Points:** 2 | **Status:** TODO
+**Blocked by:** US-042
+
+**Story**
+Come registratore di una partita, voglio poter ri-inviare il link di conferma ai giocatori che non hanno ancora confermato — non solo subito dopo la registrazione, ma anche dalla pagina di dettaglio partita e dalla lista partite in attesa — così che posso sollecitarli senza dover navigare altrove.
+
+**Demonstrates**
+Dalla pagina di dettaglio di una partita in stato `pending`, l'utente vede per ogni giocatore non-ancora-confermante un pulsante "Invia link conferma". Il comportamento è identico a US-042: WhatsApp diretto se ha numero, Web Share API se no, copia manuale come fallback. Stesso comportamento anche da un eventuale badge "in attesa" nella lista partite del circolo.
+
+**Acceptance Criteria**
+
+- [ ] La pagina di dettaglio partita (stato `pending`) mostra per ogni partecipante non confermante il pulsante di condivisione link (logica uguale a US-042)
+- [ ] La lista partite del circolo mostra, accanto alle partite `pending`, un pulsante rapido "Sollecita conferme" che apre un mini-sheet con i pulsanti per i non-confermanti
+- [ ] Il token nel link è lo stesso già generato per quella partita (non ne viene generato uno nuovo ad ogni tap)
+- [ ] Il pulsante di condivisione è visibile solo al registratore della partita o al proprietario del circolo
+- [ ] Il comportamento WhatsApp/Share/fallback-copia è identico a US-042
+
+**Out of scope**
+
+- Ri-generazione del token di conferma (il token esiste già da US-040)
+- Notifiche push o email aggiuntive (già in US-006 e US-020)
+- Interfaccia di sollecito per il giocatore non-registratore
+
+**Open questions**
+
+- (nessuna)
+
+---
+
+> **PROSSIMO PASSO:** avvia il piano tecnico della prima storia del growth loop con `/eq-plan US-042`.
+
+---
+
+#### US-044: Storico partite personale nella dashboard
+
+**Epic:** EP-004 | **Priority:** HIGH | **Story Points:** 5 | **Status:** REVIEW
+**Blocked by:** -
+**Review note (2026-07-01):** Backend in `src/Golp.Api/Endpoints/MyMatchEndpoints.cs`, registrato in `Program.cs`. FE: `frontend/golp-app/src/app/dashboard/my-matches-page.component.ts`, route in `app.routes.ts`, link in `dashboard.component.ts`. Interfacce in `match.service.ts`. Test integration in `src/Golp.Tests/Integration/MyMatchesEndpointTests.cs` (7 test). E2E in `e2e/dashboard-match-history.spec.ts` (3 scenari). Suite 278/278 verde. Reviewer APPROVE. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-044`.
+
+**Story**
+Come giocatore, voglio vedere sulla dashboard un elenco di tutte le mie partite (di tutti i circoli), ordinate dalla più recente alla più vecchia, così che posso monitorare i miei risultati e delta ELO senza entrare nei singoli circoli.
+
+**Demonstrates**
+Apro la dashboard e vedo una lista paginata delle mie partite con: nome circolo, sport, data, score (set), esito Win/Loss, delta ELO (se disponibile), stato (confermata / in attesa / disputata). Posso filtrare con tre toggle: Tutte / In attesa / Disputate. Le partite Quick Match (circoli auto-creati) sono incluse.
+
+**Acceptance Criteria**
+- [ ] Nuovo endpoint `GET /matches/mine?page=1&pageSize=20` restituisce partite dell'utente autenticato su tutti i circoli, ordinate per `CreatedAt` desc, con campi: `matchId`, `circleId`, `circleName`, `sport`, `createdAt`, `status`, `winnerTeam`, `myTeam` (1 o 2), `sets` (array score), `myDelta` (int? — null se pending/disputed), `hasCurrentUserConfirmed`
+- [ ] Response include `totalCount` e `page` per supportare paginazione lato client (load-more o pagine)
+- [ ] La dashboard mostra la lista partite sotto i link di navigazione esistenti
+- [ ] Ogni riga mostra: nome circolo, data, esito (Win/Loss o "—" se non confermata), score sintetico (es. "6-3 / 7-5"), delta ELO (es. "+12" verde / "-8" rosso / "—" se null), badge stato (confermata / in attesa / disputata)
+- [ ] Tre toggle di filtro: **Tutte** (default) | **In attesa** (`pending`) | **Disputate** (`disputed`)
+- [ ] Paginazione: bottone "Carica altre" appende la pagina successiva alla lista (infinite scroll-style, non replace)
+- [ ] Partite Quick Match (in circoli auto-creati) incluse nella lista
+- [ ] Se l'utente non ha partite, mostra empty state "Nessuna partita ancora"
+
+**Out of scope**
+- Dettaglio partita cliccabile (già US-037)
+- Filtro per singolo circolo o per sport
+- Grafici o trend ELO (feature separata)
+- Notifiche push per nuove partite
+
+**Open questions**
+- (nessuna)
+
+---
+
+> **PROSSIMO PASSO:** avvia il piano tecnico con `/eq-plan US-044`.
+
+---
+
+#### US-045: Pulsante "Torna all'ultimo circolo" nella dashboard
+
+**Epic:** EP-004 | **Priority:** MEDIUM | **Story Points:** 2 | **Status:** TODO
+**Blocked by:** -
+
+**Story**
+Come giocatore, voglio vedere nella dashboard un pulsante che mi porta direttamente all'ultimo circolo in cui ho giocato, con il nome del circolo visibile sull'etichetta, così che posso tornare subito al contesto più recente senza navigare tra i miei circoli.
+
+**Demonstrates**
+Accedo alla dashboard e vedo un pulsante con scritto "⚡ Padel Roma" (o il nome del mio ultimo circolo). Cliccando vado a `/circles/{circleId}`. Se non ho mai giocato nessuna partita, il pulsante non appare.
+
+**Acceptance Criteria**
+- [ ] Nuovo endpoint `GET /matches/mine/last-circle` restituisce `{ circleId, circleName }` dell'ultimo circolo in cui l'utente ha giocato (ordinato per `Match.CreatedAt` desc), oppure 204 se nessuna partita esiste
+- [ ] La dashboard mostra il pulsante solo se la chiamata restituisce un circolo (no 204)
+- [ ] L'etichetta del pulsante mostra il nome del circolo (es. "Padel Roma")
+- [ ] Click naviga a `/circles/{circleId}`
+- [ ] Se non ho partite, il pulsante è assente (niente placeholder o skeleton)
+
+**Out of scope**
+- Mostrare l'ultimo circolo dove sono membro ma non ho giocato
+- Storico degli ultimi N circoli
+- Badge con partite pending nel pulsante (feature separata)
+
+**Open questions**
+- (nessuna)
+
+---
+
+> **PROSSIMO PASSO:** avvia il piano tecnico con `/eq-plan US-044` o `/eq-plan US-045`.
+
+---
+
+#### US-046: Branding visivo per ambiente (logo e icona manifest)
+
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 2 | **Status:** DONE
+**Approved (2026-07-01):** Review umana OK.
+**Review note (2026-07-01):** Codice in `frontend/golp-app/src/` (environment files, styles.scss, app.component.ts, angular.json, manifest files, index files). Test in `src/app/app.component.spec.ts` (1 nuovo test, 6/6 pass). Reviewer APPROVE — Important fixato (rinomina `document` → `doc`).
+**Blocked by:** -
+
+**Story**
+Come sviluppatore/amministratore, voglio che il logo nell'header e l'icona sul manifest siano diversi per ambiente (arancione in prod, giallo in test, verde in dev), così che sia immediatamente visibile in quale ambiente sto operando senza dover leggere URL o configurazioni.
+
+**Demonstrates**
+Avviando l'app nei tre ambienti, il logo in alto a destra mostra colori distinti: arancione (#FF6B35 o simile) in prod, giallo in test, verde in dev. Installando la PWA su mobile, l'icona home-screen riflette lo stesso colore ambiente.
+
+**Acceptance Criteria**
+- [ ] In ambiente `production` il logo nell'header è arancione (colore attuale — nessuna regressione)
+- [ ] In ambiente `test` il logo nell'header è giallo
+- [ ] In ambiente `dev` (development) il logo nell'header è verde
+- [ ] L'icona nel `manifest.webmanifest` punta a un file immagine diverso per ciascuno dei tre ambienti
+- [ ] Le icone manifest sono presenti in tutti i formati già usati (es. 192×192, 512×512)
+- [ ] Il cambio di colore/icona è guidato da `environment.ts` (o equivalente Angular), non da un flag runtime in build
+
+**Out of scope**
+- Splash screen o tema colore dell'intera UI (solo logo + icona manifest)
+- Ambienti aggiuntivi oltre dev/test/prod
+- Generazione automatica delle icone (le icone colorate si creano manualmente o con script esterno)
+
+**Open questions**
+- (nessuna)
+
+---
+
+> **PROSSIMO PASSO:** avvia il piano tecnico con `/eq-plan US-046`.
 
 ---

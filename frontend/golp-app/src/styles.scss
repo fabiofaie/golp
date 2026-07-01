@@ -11,6 +11,7 @@
   --color-border:           #2C2C2C;
   --color-accent:           #FF5500;
   --color-accent-hover:     #E64D00;
+  --color-brand:            #FF5500;
   --color-accent-dim:       rgba(255, 85, 0, 0.12);
   --color-text-primary:     #FFFFFF;
   --color-text-secondary:   #9A9A9A;
@@ -217,7 +218,7 @@ body.has-pwa-install-banner {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-blk);
   letter-spacing: -0.5px;
-  color: var(--color-accent);
+  color: var(--color-brand);
 }
 
 .auth-main {

@@ -2,6 +2,7 @@
 // seguendo docs/firebase-setup.md. Placeholder vuoti = push disabilitate.
 export const environment = {
   production: true,
+  brandColor: '#FF5500',
   apiUrl: 'https://golpapi.eqproject.it',
   firebaseConfig: {
     apiKey: 'AIzaSyCuAqF2kkBDbGBPSno-j3RlV7_DRmvOpJw',

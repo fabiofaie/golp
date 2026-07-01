@@ -57,6 +57,7 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true,
+              "index": "src/index.development.html",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
@@ -67,6 +68,7 @@
             "testing": {
               "outputHashing": "all",
               "serviceWorker": "ngsw-config.json",
+              "index": "src/index.testing.html",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",

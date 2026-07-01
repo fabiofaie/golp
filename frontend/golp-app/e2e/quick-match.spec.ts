@@ -81,8 +81,9 @@ test('ScenarioA — 4 utenti nessun circolo: crea circolo privato e registra par
   await page.waitForSelector('.btn-primary.qm-cta:not([disabled])');
   await page.click('.btn-primary.qm-cta');
 
-  // Redirect to new match
-  await expect(page).toHaveURL(/\/circles\/.*\/matches\//, { timeout: 10000 });
+  // US-042: success state (no redirect)
+  await expect(page.locator('[data-testid="success-state"]')).toBeVisible({ timeout: 10000 });
+  await expect(page).toHaveURL(/match\/quick/);
 });
 
 // ─── Scenario B: 4 utenti stesso circolo → EXACT mode → banner obbligatorio ──
@@ -130,8 +131,8 @@ test('ScenarioB — 4 utenti stesso circolo: banner nome circolo, no nuovo circo
   await page.waitForSelector('.btn-primary.qm-cta:not([disabled])');
   await page.click('.btn-primary.qm-cta');
 
-  // Redirected to match inside the EXISTING circle
-  await expect(page).toHaveURL(new RegExp(`/circles/${circleId}/matches/`), { timeout: 10000 });
+  // US-042: success state (no redirect)
+  await expect(page.locator('[data-testid="success-state"]')).toBeVisible({ timeout: 10000 });
 });
 
 // ─── Scenario C: 3 utenti in circolo + 1 ospite → PARTIAL → picker → "Crea nuovo gruppo" ──
@@ -184,7 +185,7 @@ test('ScenarioC — 3 utenti + ospite nuovo: picker con Crea nuovo gruppo', asyn
   await page.waitForSelector('.btn-primary.qm-cta:not([disabled])');
   await page.click('.btn-primary.qm-cta');
 
-  // Redirected to a NEW circle (different from the existing one)
-  await expect(page).toHaveURL(/\/circles\/.*\/matches\//, { timeout: 10000 });
-  expect(page.url()).not.toContain(circleId);
+  // US-042: success state (no redirect)
+  await expect(page.locator('[data-testid="success-state"]')).toBeVisible({ timeout: 10000 });
+  expect(page.url()).not.toContain('/matches/');
 });
