@@ -156,15 +156,25 @@ public static class MatchEndpoints
             });
         }
 
+        // US-040: token pubblici per ogni giocatore non-creatore (salvati atomicamente con la partita).
+        var recipientIds = resolvedIds.Where(id => id != userId).ToArray();
+        var confirmationTokens = recipientIds.Select(rid => new MatchConfirmationToken
+        {
+            MatchId   = match.Id,
+            UserId    = rid,
+            ExpiresAt = DateTimeOffset.UtcNow.AddHours(72),
+        }).ToList();
+        db.MatchConfirmationTokens.AddRange(confirmationTokens);
+
         await db.SaveChangesAsync();
 
         // US-006/US-020: push + email ai 3 da confermare (escluso l'inseritore), fire-and-forget.
         // Scope DI nuovo: quello della request viene disposed alla risposta.
-        var recipientIds = resolvedIds.Where(id => id != userId).ToArray();
         var matchId = match.Id;
         var circleName = circle.Name;
         var frontendBase = configuration["Cors:AllowedOrigins:0"] ?? "http://localhost:4200";
-        var matchLink = $"{frontendBase}/circles/{circleId}/matches/{matchId}";
+        // US-040: mappa userId→tokenLink per inviare link individuali.
+        var tokenLinkByUser = confirmationTokens.ToDictionary(t => t.UserId, t => $"{frontendBase}/m/{t.Token}");
         _ = Task.Run(async () =>
         {
             try
@@ -195,21 +205,17 @@ public static class MatchEndpoints
                 foreach (var r in recipientUsers.Where(r => r.Email == null))
                     emailLogger.LogInformation("Skipping email for phone-only guest {UserId}, match {MatchId}", r.Id, matchId);
 
-                var recipientEmails = recipientUsers
-                    .Where(r => r.Email != null)
-                    .Select(r => r.Email!)
-                    .ToList();
-
-                foreach (var email in recipientEmails)
+                foreach (var r in recipientUsers.Where(r => r.Email != null))
                 {
+                    var tokenLink = tokenLinkByUser.GetValueOrDefault(r.Id, $"{frontendBase}/circles/{circleId}/matches/{matchId}");
                     try
                     {
-                        await emailService.SendMatchConfirmationRequestEmailAsync(email, circleName, matchLink);
+                        await emailService.SendMatchConfirmationRequestEmailAsync(r.Email!, circleName, tokenLink);
                     }
                     catch (Exception ex)
                     {
                         // un destinatario che fallisce non deve impedire l'invio agli altri
-                        emailLogger.LogWarning(ex, "Confirmation email failed for {Email}, match {MatchId}", email, matchId);
+                        emailLogger.LogWarning(ex, "Confirmation email failed for {Email}, match {MatchId}", r.Email, matchId);
                     }
                 }
             }
@@ -438,41 +444,19 @@ public static class MatchEndpoints
         if (!playerIds.Contains(userId))
             return Results.Json(new { error = "Non sei un partecipante di questa partita" }, statusCode: 403);
 
-        var alreadyConfirmed = await db.MatchConfirmations
-            .AnyAsync(c => c.MatchId == matchId && c.UserId == userId);
-
-        if (!alreadyConfirmed)
-        {
-            db.MatchConfirmations.Add(new MatchConfirmation
-            {
-                MatchId     = matchId,
-                UserId      = userId,
-                ConfirmedAt = DateTimeOffset.UtcNow,
-            });
-        }
-
-        var existingCount = await db.MatchConfirmations.CountAsync(c => c.MatchId == matchId);
-        var totalCount = existingCount + (alreadyConfirmed ? 0 : 1);
-
-        IReadOnlyList<(Guid UserId, int NewPosition)> rankingImprovements = [];
-        if (totalCount == 4 && !alreadyConfirmed)
-        {
-            match.Status = "confirmed";
-            rankingImprovements = await ratingService.CalculateAndApplyAsync(matchId, db);
-        }
-
+        var (_, status, totalCount, improvements) = await PrepareConfirmAsync(matchId, userId, match, db, ratingService);
         await db.SaveChangesAsync();
 
         // US-035: notifiche push fire-and-forget per chi sale in classifica
-        if (rankingImprovements.Count > 0)
+        if (improvements.Count > 0)
         {
             var circle = await db.Circles.FindAsync(circleId);
             var circleName = circle?.Name ?? "";
-            foreach (var (improvedUserId, newPos) in rankingImprovements)
+            foreach (var (improvedUserId, newPos) in improvements)
                 _ = pushService.SendRankingImprovedAsync(improvedUserId, newPos, circleName);
         }
 
-        return Results.Ok(new { status = match.Status, confirmationsCount = totalCount });
+        return Results.Ok(new { status, confirmationsCount = totalCount });
     }
 
     // ─── POST /{matchId}/dispute ──────────────────────────────────────────────
@@ -501,7 +485,7 @@ public static class MatchEndpoints
         if (!playerIds.Contains(userId))
             return Results.Json(new { error = "Non sei un partecipante di questa partita" }, statusCode: 403);
 
-        match.Status = "disputed";
+        PrepareDispute(match);
         await db.SaveChangesAsync();
 
         // US-020: notifica email all'owner del circolo, fire-and-forget (non blocca la dispute).
@@ -531,6 +515,37 @@ public static class MatchEndpoints
         });
 
         return Results.Ok(new { status = match.Status });
+    }
+
+    // ─── Shared helpers (usati da endpoint autenticati e pubblici) ───────────
+
+    // PrepareConfirm stages changes in the EF tracker without saving; caller must call SaveChangesAsync.
+    internal static async Task<(bool alreadyDone, string status, int count, IReadOnlyList<(Guid UserId, int NewPosition)> improvements)>
+        PrepareConfirmAsync(Guid matchId, Guid userId, Match match, AppDbContext db, IRatingService ratingService)
+    {
+        var alreadyConfirmed = await db.MatchConfirmations
+            .AnyAsync(c => c.MatchId == matchId && c.UserId == userId);
+
+        if (!alreadyConfirmed)
+            db.MatchConfirmations.Add(new MatchConfirmation { MatchId = matchId, UserId = userId, ConfirmedAt = DateTimeOffset.UtcNow });
+
+        var existingCount = await db.MatchConfirmations.CountAsync(c => c.MatchId == matchId);
+        var totalCount = existingCount + (alreadyConfirmed ? 0 : 1);
+
+        IReadOnlyList<(Guid UserId, int NewPosition)> improvements = [];
+        if (totalCount == 4 && !alreadyConfirmed)
+        {
+            match.Status = "confirmed";
+            improvements = await ratingService.CalculateAndApplyAsync(matchId, db);
+        }
+
+        return (alreadyConfirmed, match.Status, totalCount, improvements);
+    }
+
+    // PrepareDispute stages the status change without saving; caller must call SaveChangesAsync.
+    internal static void PrepareDispute(Match match)
+    {
+        match.Status = "disputed";
     }
 
     // ─── POST /{matchId}/force-confirm ───────────────────────────────────────────

@@ -23,4 +23,10 @@
     "changeOrigin": true,
     "logLevel": "warn"
   },
+  "/m/": {
+    "target": "http://localhost:5120",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "warn"
+  }
 }

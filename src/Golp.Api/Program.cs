@@ -123,6 +123,7 @@ app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapCircleEndpoints();
 app.MapMatchEndpoints();
+app.MapPublicMatchEndpoints();
 app.MapPushEndpoints();
 app.MapAwardsEndpoints();
 app.MapStatsEndpoints();

@@ -17,6 +17,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<CircleAward> CircleAwards => Set<CircleAward>();
     public DbSet<Sport> Sports => Set<Sport>();
     public DbSet<AwardNotificationSent> AwardNotificationsSent => Set<AwardNotificationSent>();
+    public DbSet<MatchConfirmationToken> MatchConfirmationTokens => Set<MatchConfirmationToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -149,6 +150,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(a => a.PeriodType).HasMaxLength(10).IsRequired();
             e.Property(a => a.PeriodLabel).HasMaxLength(20).IsRequired();
             e.HasIndex(a => new { a.CircleId, a.PeriodType, a.PeriodLabel }).IsUnique();
+        });
+
+        modelBuilder.Entity<MatchConfirmationToken>(e =>
+        {
+            e.HasKey(t => t.Id);
+            e.HasIndex(t => new { t.MatchId, t.UserId }).IsUnique();
+            e.HasIndex(t => t.Token).IsUnique();
+            e.HasOne(t => t.Match)
+             .WithMany()
+             .HasForeignKey(t => t.MatchId)
+             .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(t => t.User)
+             .WithMany()
+             .HasForeignKey(t => t.UserId)
+             .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Sport>(e =>

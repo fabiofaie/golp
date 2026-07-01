@@ -91,5 +91,9 @@ export const routes: Routes = [
     path: 'simulate-match',
     loadComponent: () => import('./elo-info/elo-info.component').then(m => m.EloInfoComponent)
   },
+  {
+    path: 'm/:token',
+    loadComponent: () => import('./public/match-public-confirm/match-public-confirm.component').then(m => m.MatchPublicConfirmComponent)
+  },
   { path: '**', redirectTo: '/dashboard' }
 ];

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>US-040 — Conferma Partita (pubblica)</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<!-- Public header: logo only, no nav -->
+<header class="pub-header">
+  <div class="pub-logo">GOLP<span>.app</span></div>
+</header>
+
+<!-- Scenario selector (mockup only) -->
+<nav class="scenario-bar">
+  <button class="scenario-btn active" onclick="switchScenario('pending')">Token valido (pending)</button>
+  <button class="scenario-btn" onclick="switchScenario('already-confirmed')">Già confermato</button>
+  <button class="scenario-btn" onclick="switchScenario('confirmed-match')">Partita confermata</button>
+  <button class="scenario-btn" onclick="switchScenario('expired')">Token scaduto</button>
+  <button class="scenario-btn" onclick="switchScenario('used')">Token usato</button>
+</nav>
+
+<main class="pub-page">
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- SCENARIO 1: Token valido, partita pending -->
+  <!-- ───────────────────────────────────────── -->
+  <div id="sc-pending" class="scenario-content active">
+
+    <p style="font-size:var(--font-size-xs);color:var(--color-text-secondary);text-align:center;margin-bottom:var(--sp-4);">
+      Sei stato invitato a confermare il risultato di questa partita
+    </p>
+
+    <div class="match-card">
+      <!-- Meta: sport + circolo + stato -->
+      <div class="match-meta">
+        <div class="sport-icon">🎾</div>
+        <div class="match-meta-info">
+          <div class="circle-name">Tennis Club Roma Est</div>
+          <div class="sport-label">Padel · 28 giu 2026</div>
+        </div>
+        <span class="status-badge pending">In attesa</span>
+      </div>
+
+      <!-- Score principale -->
+      <div class="score-strip">
+        <div class="score-team">
+          <div class="score-team-name t1">Team 1</div>
+          <div class="score-number t1">2</div>
+        </div>
+        <div class="score-vs">–</div>
+        <div class="score-team">
+          <div class="score-team-name t2">Team 2</div>
+          <div class="score-number t2">1</div>
+        </div>
+      </div>
+      <div class="score-sets">
+        <span class="score-set-chip">6–4</span>
+        <span class="score-set-chip">3–6</span>
+        <span class="score-set-chip">6–3</span>
+      </div>
+
+      <!-- Giocatori -->
+      <div class="players-grid">
+        <div class="players-col">
+          <div class="players-col-label t1">Team 1 — Vincitori</div>
+          <div class="player-row">
+            <div class="player-avatar t1">M</div>
+            <span class="player-name">Marco Rossi</span>
+          </div>
+          <div class="player-row">
+            <div class="player-avatar t1">L</div>
+            <span class="player-name">Luca Ferrari</span>
+          </div>
+        </div>
+        <div class="players-col">
+          <div class="players-col-label t2">Team 2</div>
+          <div class="player-row">
+            <div class="player-avatar t2">A</div>
+            <span class="player-name">Anna Verde</span>
+          </div>
+          <div class="player-row">
+            <div class="player-avatar ghost">G</div>
+            <span class="player-name" style="font-size:var(--font-size-xs)">Giulia B.</span>
+            <span class="guest-badge">ospite</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chi ha già confermato -->
+      <div class="confirm-progress">
+        <div class="confirm-progress-label">Conferme ricevute — 1 su 4</div>
+        <div class="confirm-list">
+          <div class="confirm-row">
+            <div class="confirm-dot done"></div>
+            <span class="confirm-name">Marco Rossi</span>
+            <span style="font-size:var(--font-size-xs);color:var(--color-text-secondary);margin-left:auto;">inseritore</span>
+          </div>
+          <div class="confirm-row">
+            <div class="confirm-dot wait"></div>
+            <span class="confirm-name secondary">Luca Ferrari</span>
+          </div>
+          <div class="confirm-row">
+            <div class="confirm-dot you"></div>
+            <span class="confirm-name">Anna Verde</span>
+            <span class="confirm-you-label">sei tu →</span>
+          </div>
+          <div class="confirm-row">
+            <div class="confirm-dot wait"></div>
+            <span class="confirm-name secondary">Giulia B. <span class="guest-badge" style="font-size:9px">ospite</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Azione -->
+    <div class="action-block">
+      <p class="action-desc">Sei d'accordo con il risultato?</p>
+      <button class="btn-confirm-big" onclick="switchScenario('post-confirm')">
+        ✓ &nbsp; Conferma risultato
+      </button>
+      <button class="btn-dispute-big" onclick="switchScenario('post-dispute')">
+        ✕ &nbsp; Contesta risultato
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ──────────────────────────────────── -->
+  <!-- SCENARIO 2: Token già usato da te   -->
+  <!-- ──────────────────────────────────── -->
+  <div id="sc-already-confirmed" class="scenario-content">
+
+    <div class="match-card">
+      <div class="match-meta">
+        <div class="sport-icon">🎾</div>
+        <div class="match-meta-info">
+          <div class="circle-name">Tennis Club Roma Est</div>
+          <div class="sport-label">Padel · 28 giu 2026</div>
+        </div>
+        <span class="status-badge pending">In attesa</span>
+      </div>
+
+      <div class="score-strip">
+        <div class="score-team">
+          <div class="score-team-name t1">Team 1</div>
+          <div class="score-number t1">2</div>
+        </div>
+        <div class="score-vs">–</div>
+        <div class="score-team">
+          <div class="score-team-name t2">Team 2</div>
+          <div class="score-number t2">1</div>
+        </div>
+      </div>
+      <div class="score-sets">
+        <span class="score-set-chip">6–4</span>
+        <span class="score-set-chip">3–6</span>
+        <span class="score-set-chip">6–3</span>
+      </div>
+
+      <div class="confirm-progress">
+        <div class="confirm-progress-label">Conferme ricevute — 2 su 4</div>
+        <div class="confirm-list">
+          <div class="confirm-row">
+            <div class="confirm-dot done"></div>
+            <span class="confirm-name">Marco Rossi</span>
+          </div>
+          <div class="confirm-row">
+            <div class="confirm-dot wait"></div>
+            <span class="confirm-name secondary">Luca Ferrari</span>
+          </div>
+          <div class="confirm-row">
+            <div class="confirm-dot done"></div>
+            <span class="confirm-name">Anna Verde</span>
+            <span class="confirm-you-label">sei tu ✓</span>
+          </div>
+          <div class="confirm-row">
+            <div class="confirm-dot wait"></div>
+            <span class="confirm-name secondary">Giulia B.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--color-success-bg);border:1px solid var(--color-success-border);border-radius:var(--radius-lg);padding:var(--sp-4);text-align:center;margin-bottom:var(--sp-4);">
+      <div style="font-size:20px;margin-bottom:var(--sp-1);">✅</div>
+      <div style="font-size:var(--font-size-sm);font-weight:var(--font-weight-bold);color:var(--color-success);">Hai già risposto a questa partita</div>
+      <div style="font-size:var(--font-size-xs);color:var(--color-text-secondary);margin-top:var(--sp-1);">In attesa degli altri giocatori</div>
+    </div>
+
+    <div style="text-align:center;">
+      <a href="/login" class="btn-app-link">Apri GOLP &rarr;</a>
+    </div>
+  </div>
+
+  <!-- ──────────────────────────────────────────── -->
+  <!-- SCENARIO 3: Partita già confirmed (no azioni) -->
+  <!-- ──────────────────────────────────────────── -->
+  <div id="sc-confirmed-match" class="scenario-content">
+
+    <div class="match-card">
+      <div class="match-meta">
+        <div class="sport-icon">🎾</div>
+        <div class="match-meta-info">
+          <div class="circle-name">Tennis Club Roma Est</div>
+          <div class="sport-label">Padel · 28 giu 2026</div>
+        </div>
+        <span class="status-badge confirmed">Confermata</span>
+      </div>
+
+      <div class="score-strip">
+        <div class="score-team">
+          <div class="score-team-name t1">Team 1</div>
+          <div class="score-number t1">2</div>
+        </div>
+        <div class="score-vs">–</div>
+        <div class="score-team">
+          <div class="score-team-name t2">Team 2</div>
+          <div class="score-number t2">1</div>
+        </div>
+      </div>
+      <div class="score-sets">
+        <span class="score-set-chip">6–4</span>
+        <span class="score-set-chip">3–6</span>
+        <span class="score-set-chip">6–3</span>
+      </div>
+
+      <div class="confirm-progress">
+        <div class="confirm-progress-label">Confermata da tutti — 4 su 4</div>
+        <div class="confirm-list">
+          <div class="confirm-row"><div class="confirm-dot done"></div><span class="confirm-name">Marco Rossi</span></div>
+          <div class="confirm-row"><div class="confirm-dot done"></div><span class="confirm-name">Luca Ferrari</span></div>
+          <div class="confirm-row"><div class="confirm-dot done"></div><span class="confirm-name">Anna Verde</span></div>
+          <div class="confirm-row"><div class="confirm-dot done"></div><span class="confirm-name">Giulia B.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;">
+      <a href="/login" class="btn-app-link">Vedi i tuoi risultati ELO su GOLP &rarr;</a>
+    </div>
+  </div>
+
+  <!-- ─────────────────── -->
+  <!-- SCENARIO 4: Scaduto -->
+  <!-- ─────────────────── -->
+  <div id="sc-expired" class="scenario-content">
+    <div class="token-error">
+      <div class="token-error-icon">⏱</div>
+      <div class="token-error-title">Link scaduto</div>
+      <div class="token-error-desc">
+        Questo link era valido per 72 ore dalla partita.<br>
+        Puoi ancora confermare accedendo all'app.
+      </div>
+      <div class="token-error-card">
+        <div style="font-size:var(--font-size-xs);color:var(--color-expired);font-weight:var(--font-weight-bold);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:var(--sp-2);">
+          ⚠ Link scaduto il 1 lug 2026
+        </div>
+        <div style="font-size:var(--font-size-sm);color:var(--color-text-secondary);">
+          La partita potrebbe ancora essere in attesa di conferma.
+        </div>
+      </div>
+      <a href="/login" class="btn-app-link">Accedi per confermare &rarr;</a>
+    </div>
+  </div>
+
+  <!-- ───────────────────────── -->
+  <!-- SCENARIO 5: Token già usato (navigato di nuovo) -->
+  <!-- ───────────────────────── -->
+  <div id="sc-used" class="scenario-content">
+
+    <div class="match-card">
+      <div class="match-meta">
+        <div class="sport-icon">🎾</div>
+        <div class="match-meta-info">
+          <div class="circle-name">Tennis Club Roma Est</div>
+          <div class="sport-label">Padel · 28 giu 2026</div>
+        </div>
+        <span class="status-badge pending">In attesa</span>
+      </div>
+      <div class="score-strip">
+        <div class="score-team">
+          <div class="score-team-name t1">Team 1</div>
+          <div class="score-number t1">2</div>
+        </div>
+        <div class="score-vs">–</div>
+        <div class="score-team">
+          <div class="score-team-name t2">Team 2</div>
+          <div class="score-number t2">1</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--color-surface-elevated);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--sp-4);text-align:center;margin-bottom:var(--sp-4);">
+      <div style="font-size:20px;margin-bottom:var(--sp-1);">ℹ️</div>
+      <div style="font-size:var(--font-size-sm);font-weight:var(--font-weight-bold);">Hai già risposto a questa partita</div>
+      <div style="font-size:var(--font-size-xs);color:var(--color-text-secondary);margin-top:var(--sp-1);">La tua risposta è stata registrata il 28 giu 2026</div>
+    </div>
+
+    <div style="text-align:center;">
+      <a href="/login" class="btn-app-link">Apri GOLP &rarr;</a>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  function switchScenario(id) {
+    document.querySelectorAll('.scenario-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.scenario-btn').forEach(btn => btn.classList.remove('active'));
+
+    const content = document.getElementById('sc-' + id);
+    if (content) content.classList.add('active');
+
+    const btns = document.querySelectorAll('.scenario-btn');
+    btns.forEach(btn => {
+      if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes("'" + id + "'")) {
+        btn.classList.add('active');
+      }
+    });
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>

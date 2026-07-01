@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>US-040 — Dopo Conferma / Disputa</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<header class="pub-header">
+  <div class="pub-logo">GOLP<span>.app</span></div>
+</header>
+
+<nav class="scenario-bar">
+  <button class="scenario-btn active" onclick="switchScenario('confirmed-user')">Confermato (utente attivo)</button>
+  <button class="scenario-btn" onclick="switchScenario('confirmed-guest')">Confermato (ospite)</button>
+  <button class="scenario-btn" onclick="switchScenario('disputed-user')">Contestato (utente attivo)</button>
+  <button class="scenario-btn" onclick="switchScenario('disputed-guest')">Contestato (ospite)</button>
+</nav>
+
+<main class="pub-page">
+
+  <!-- ─────────────────────────────── -->
+  <!-- Post-confirm: utente attivo     -->
+  <!-- ─────────────────────────────── -->
+  <div id="sc-confirmed-user" class="scenario-content active">
+
+    <div class="result-block" style="margin-bottom:var(--sp-4);">
+      <div class="result-icon">✅</div>
+      <div class="result-title">Risultato confermato!</div>
+      <div class="result-desc">La tua conferma è stata registrata.<br>In attesa degli altri giocatori.</div>
+    </div>
+
+    <!-- Riepilogo partita (condensato) -->
+    <div class="match-card" style="margin-bottom:var(--sp-4);">
+      <div class="match-meta">
+        <div class="sport-icon">🎾</div>
+        <div class="match-meta-info">
+          <div class="circle-name">Tennis Club Roma Est</div>
+          <div class="sport-label">Padel · 28 giu 2026</div>
+        </div>
+        <span class="status-badge pending">In attesa</span>
+      </div>
+
+      <div class="confirm-progress" style="margin-bottom:0;">
+        <div class="confirm-progress-label">Conferme ricevute — 2 su 4</div>
+        <div class="confirm-list">
+          <div class="confirm-row"><div class="confirm-dot done"></div><span class="confirm-name">Marco Rossi</span></div>
+          <div class="confirm-row"><div class="confirm-dot done"></div><span class="confirm-name">Anna Verde</span><span class="confirm-you-label">sei tu ✓</span></div>
+          <div class="confirm-row"><div class="confirm-dot wait"></div><span class="confirm-name secondary">Luca Ferrari</span></div>
+          <div class="confirm-row"><div class="confirm-dot wait"></div><span class="confirm-name secondary">Giulia B.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;">
+      <a href="/login" class="btn-app-link">Vedi i tuoi match su GOLP &rarr;</a>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────── -->
+  <!-- Post-confirm: ospite non attivo -->
+  <!-- ─────────────────────────────── -->
+  <div id="sc-confirmed-guest" class="scenario-content">
+
+    <div class="result-block" style="margin-bottom:var(--sp-4);">
+      <div class="result-icon">✅</div>
+      <div class="result-title">Risultato confermato!</div>
+      <div class="result-desc">La tua conferma è stata registrata.<br>In attesa degli altri giocatori.</div>
+    </div>
+
+    <!-- CTA per ospite: crea account -->
+    <div class="cta-register">
+      <div style="font-size:28px;margin-bottom:var(--sp-2);">🏆</div>
+      <div class="cta-register-title">Crea il tuo account GOLP</div>
+      <div class="cta-register-desc">
+        Sei già nel circolo con un profilo ospite. Registrati per vedere il tuo rating ELO, lo storico partite e sfidare i tuoi avversari.
+      </div>
+      <a href="/register" class="btn-register">
+        Crea account gratuito →
+      </a>
+    </div>
+
+    <div style="text-align:center;margin-top:var(--sp-2);">
+      <a href="/login" class="btn-app-link" style="font-size:var(--font-size-xs);">Hai già un account? Accedi</a>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────── -->
+  <!-- Post-dispute: utente attivo     -->
+  <!-- ─────────────────────────────── -->
+  <div id="sc-disputed-user" class="scenario-content">
+
+    <div class="result-block disputed" style="margin-bottom:var(--sp-4);">
+      <div class="result-icon">⚠️</div>
+      <div class="result-title">Partita contestata</div>
+      <div class="result-desc">Hai segnalato un problema con questo risultato.<br>Il proprietario del circolo verrà notificato.</div>
+    </div>
+
+    <div class="match-card" style="margin-bottom:var(--sp-4);">
+      <div class="match-meta">
+        <div class="sport-icon">🎾</div>
+        <div class="match-meta-info">
+          <div class="circle-name">Tennis Club Roma Est</div>
+          <div class="sport-label">Padel · 28 giu 2026</div>
+        </div>
+        <span class="status-badge disputed">Contestata</span>
+      </div>
+      <p style="font-size:var(--font-size-sm);color:var(--color-text-secondary);line-height:1.6;">
+        Il proprietario del circolo <strong>Tennis Club Roma Est</strong> è stato avvisato e potrà risolvere la disputa direttamente dall'app.
+      </p>
+    </div>
+
+    <div style="text-align:center;">
+      <a href="/login" class="btn-app-link">Apri GOLP &rarr;</a>
+    </div>
+  </div>
+
+  <!-- ──────────────────────────────── -->
+  <!-- Post-dispute: ospite non attivo  -->
+  <!-- ──────────────────────────────── -->
+  <div id="sc-disputed-guest" class="scenario-content">
+
+    <div class="result-block disputed" style="margin-bottom:var(--sp-4);">
+      <div class="result-icon">⚠️</div>
+      <div class="result-title">Partita contestata</div>
+      <div class="result-desc">Hai segnalato un problema con questo risultato.<br>Il proprietario del circolo verrà notificato.</div>
+    </div>
+
+    <!-- CTA per ospite: crea account -->
+    <div class="cta-register">
+      <div style="font-size:28px;margin-bottom:var(--sp-2);">🏆</div>
+      <div class="cta-register-title">Crea il tuo account GOLP</div>
+      <div class="cta-register-desc">
+        Registrati per seguire come si risolve la disputa, vedere il tuo rating ELO e partecipare alle classifiche.
+      </div>
+      <a href="/register" class="btn-register">
+        Crea account gratuito →
+      </a>
+    </div>
+
+    <div style="text-align:center;margin-top:var(--sp-2);">
+      <a href="/login" class="btn-app-link" style="font-size:var(--font-size-xs);">Hai già un account? Accedi</a>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  function switchScenario(id) {
+    document.querySelectorAll('.scenario-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.scenario-btn').forEach(btn => btn.classList.remove('active'));
+    const content = document.getElementById('sc-' + id);
+    if (content) content.classList.add('active');
+    document.querySelectorAll('.scenario-btn').forEach(btn => {
+      if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes("'" + id + "'"))
+        btn.classList.add('active');
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>

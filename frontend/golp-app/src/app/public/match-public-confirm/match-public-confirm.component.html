@@ -1,0 +1,227 @@
+<div class="pub-page-wrap">
+
+  <!-- ── Minimal header ──────────────────────────────────────────────────── -->
+  <header class="pub-header">
+    <span class="pub-logo">GOLP</span>
+  </header>
+
+  <!-- ── Loading ─────────────────────────────────────────────────────────── -->
+  @if (state === 'loading') {
+    <div class="pub-page" style="text-align:center; padding-top:64px;">
+      <p style="color:var(--color-text-secondary); font-size:var(--font-size-sm);">Caricamento…</p>
+    </div>
+  }
+
+  <!-- ── Error generico ──────────────────────────────────────────────────── -->
+  @if (state === 'error') {
+    <div class="pub-page">
+      <div class="pub-token-error">
+        <div class="pub-token-error-icon">⚠️</div>
+        <div class="pub-token-error-title">Qualcosa non ha funzionato</div>
+        <p class="pub-token-error-desc">{{ errorMessage }}</p>
+        <a routerLink="/login" class="btn-app-link">Apri GOLP →</a>
+      </div>
+    </div>
+  }
+
+  <!-- ── Token non trovato ────────────────────────────────────────────────── -->
+  @if (state === 'token-not-found') {
+    <div class="pub-page">
+      <div class="pub-token-error">
+        <div class="pub-token-error-icon">🔗</div>
+        <div class="pub-token-error-title">Link non valido</div>
+        <p class="pub-token-error-desc">
+          Questo link non è valido o è già scaduto.<br>
+          Accedi all'app per vedere le tue partite.
+        </p>
+        <a routerLink="/login" class="btn-app-link">Accedi a GOLP →</a>
+      </div>
+    </div>
+  }
+
+  <!-- ── Token scaduto ──────────────────────────────────────────────────── -->
+  @if (state === 'token-expired') {
+    <div class="pub-page">
+      <div class="pub-token-error">
+        <div class="pub-token-error-icon">⏱</div>
+        <div class="pub-token-error-title">Link scaduto</div>
+        <p class="pub-token-error-desc">
+          Questo link era valido per 72 ore dalla partita.<br>
+          Accedi all'app per confermare direttamente.
+        </p>
+        <a routerLink="/login" class="btn-app-link">Accedi per confermare →</a>
+      </div>
+    </div>
+  }
+
+  <!-- ── Ready: mostra dati partita ─────────────────────────────────────── -->
+  @if ((state === 'ready' || state === 'acting') && match) {
+    <div class="pub-page">
+
+      <p class="pub-intro-text">Sei stato invitato a confermare il risultato di questa partita.</p>
+
+      <!-- Match card -->
+      <div class="pub-match-card">
+
+        <!-- Meta -->
+        <div class="pub-match-meta">
+          <div class="pub-sport-icon">{{ sportIcon(match.sport) }}</div>
+          <div class="pub-match-meta-info">
+            <div class="pub-circle-name">{{ match.circleName }}</div>
+            <div class="pub-sport-label">{{ match.sport }}</div>
+          </div>
+          <span class="status-badge"
+            [class.status-badge--pending]="match.status === 'pending'"
+            [class.status-badge--confirmed]="match.status === 'confirmed'"
+            [class.status-badge--disputed]="match.status === 'disputed'">
+            {{ match.status === 'pending' ? 'In attesa' : match.status === 'confirmed' ? 'Confermata' : 'Contestata' }}
+          </span>
+        </div>
+
+        <!-- Set scores — info primaria in grande -->
+        @if (match.sets.length) {
+          <div class="pub-sets-big">
+            @for (s of match.sets; track $index) {
+              <div class="pub-set-big" [class.pub-set-big--t1]="s.team1Score > s.team2Score" [class.pub-set-big--t2]="s.team2Score > s.team1Score">
+                <span class="pub-set-big-score t1">{{ s.team1Score }}</span>
+                <span class="pub-set-big-sep">–</span>
+                <span class="pub-set-big-score t2">{{ s.team2Score }}</span>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Players -->
+        <div class="pub-players-grid">
+          <div class="pub-players-col">
+            <div class="pub-col-label t1">Team 1{{ match.winnerTeam === 1 ? ' ✓' : '' }}{{ match.sets.length > 1 ? ' (' + team1Sets() + ')' : '' }}</div>
+            @for (p of match.team1; track p.userId) {
+              <div class="pub-player-row">
+                <span class="pub-player-name">{{ p.name }}</span>
+                @if (!p.isActivated) { <span class="pub-guest-badge">ospite</span> }
+              </div>
+            }
+          </div>
+          <div class="pub-players-col">
+            <div class="pub-col-label t2">Team 2{{ match.winnerTeam === 2 ? ' ✓' : '' }}{{ match.sets.length > 1 ? ' (' + team2Sets() + ')' : '' }}</div>
+            @for (p of match.team2; track p.userId) {
+              <div class="pub-player-row">
+                <span class="pub-player-name">{{ p.name }}</span>
+                @if (!p.isActivated) { <span class="pub-guest-badge">ospite</span> }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Chi ha già confermato -->
+        <div class="pub-confirm-block">
+          <div class="pub-confirm-label">Conferme — {{ match.confirmationsCount }} su 4</div>
+          <div class="pub-confirm-dots">
+            @for (i of [0,1,2,3]; track i) {
+              <div class="confirm-dot"
+                [class.confirm-dot--filled]="i < match.confirmationsCount"
+                [class.confirm-dot--you]="tokenInfo?.userHasConfirmed && i === match.confirmationsCount - 1">
+              </div>
+            }
+          </div>
+          @if (tokenUsed) {
+            <p class="pub-already-text">Hai già risposto a questa partita.</p>
+          }
+          @if (tokenInfo?.userHasConfirmed && !tokenUsed) {
+            <p class="pub-already-text">Hai già confermato questa partita.</p>
+          }
+        </div>
+
+      </div><!-- /pub-match-card -->
+
+      <!-- Actions -->
+      @if (canAct) {
+        <p class="pub-action-desc">Il risultato corrisponde a quanto giocato?</p>
+        <div class="pub-actions">
+          <button class="pub-btn-confirm"
+            [disabled]="state === 'acting'"
+            (click)="confirm()">
+            @if (state === 'acting') { <span class="btn-spinner"></span> } @else { ✓ &nbsp; }
+            {{ state === 'acting' ? 'Invio…' : 'Conferma risultato' }}
+          </button>
+          <button class="pub-btn-dispute"
+            [disabled]="state === 'acting'"
+            (click)="dispute()">
+            ✕ &nbsp; Contesta risultato
+          </button>
+        </div>
+      }
+
+      @if (!canAct && match.status !== 'pending') {
+        <div style="text-align:center; margin-top:var(--sp-4);">
+          <a routerLink="/login" class="btn-app-link">Vedi i risultati su GOLP →</a>
+        </div>
+      }
+
+    </div>
+  }
+
+  <!-- ── Post-confirm ────────────────────────────────────────────────────── -->
+  @if (state === 'done-confirm' && match) {
+    <div class="pub-page">
+      <div class="pub-result-block pub-result-block--success">
+        <div class="pub-result-icon">✅</div>
+        <div class="pub-result-title">Risultato confermato!</div>
+        <p class="pub-result-desc">
+          {{ match.status === 'confirmed' ? 'Tutti hanno confermato — la partita è ora ufficiale.' : 'La tua conferma è stata registrata.' }}
+        </p>
+      </div>
+
+      @if (!isActivated) {
+        <div class="pub-cta-register">
+          <div class="pub-cta-icon">🏆</div>
+          <div class="pub-cta-title">Crea il tuo account GOLP</div>
+          <p class="pub-cta-desc">
+            Sei già nel circolo con un profilo ospite. Registrati per vedere il tuo rating ELO, lo storico partite e sfidare i tuoi avversari.
+          </p>
+          <a routerLink="/register" class="btn-primary" style="display:inline-block;">
+            Crea account gratuito →
+          </a>
+        </div>
+        <div style="text-align:center; margin-top:var(--sp-3);">
+          <a routerLink="/login" style="font-size:var(--font-size-xs); color:var(--color-text-secondary);">Hai già un account? Accedi</a>
+        </div>
+      } @else {
+        <div style="text-align:center; margin-top:var(--sp-4);">
+          <a routerLink="/login" class="btn-app-link">Vedi i tuoi match su GOLP →</a>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ── Post-dispute ────────────────────────────────────────────────────── -->
+  @if (state === 'done-dispute') {
+    <div class="pub-page">
+      <div class="pub-result-block pub-result-block--disputed">
+        <div class="pub-result-icon">⚠️</div>
+        <div class="pub-result-title">Partita contestata</div>
+        <p class="pub-result-desc">
+          Hai segnalato un problema con questo risultato. Il proprietario del circolo verrà notificato.
+        </p>
+      </div>
+
+      @if (!isActivated) {
+        <div class="pub-cta-register">
+          <div class="pub-cta-icon">🏆</div>
+          <div class="pub-cta-title">Crea il tuo account GOLP</div>
+          <p class="pub-cta-desc">
+            Registrati per seguire la risoluzione della disputa e partecipare alle classifiche.
+          </p>
+          <a routerLink="/register" class="btn-primary" style="display:inline-block;">
+            Crea account gratuito →
+          </a>
+        </div>
+      } @else {
+        <div style="text-align:center; margin-top:var(--sp-4);">
+          <a routerLink="/login" class="btn-app-link">Apri GOLP →</a>
+        </div>
+      }
+    </div>
+  }
+
+</div>

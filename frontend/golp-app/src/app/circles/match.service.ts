@@ -71,6 +71,40 @@ export interface ConfirmDisputeResponse {
   confirmationsCount?: number;
 }
 
+// ── Public token API (US-040) ──────────────────────────────────────────────
+
+export interface PublicMatchData {
+  id: string;
+  sport: string;
+  circleName: string;
+  status: 'pending' | 'confirmed' | 'disputed';
+  winnerTeam: number;
+  confirmationsCount: number;
+  sets: { team1Score: number; team2Score: number }[];
+  team1: PlayerInfo[];
+  team2: PlayerInfo[];
+}
+
+export interface PublicMatchTokenInfo {
+  valid?: boolean;
+  userId: string;
+  userName: string;
+  userHasConfirmed?: boolean;
+}
+
+export interface PublicMatchResponse {
+  tokenUsed: boolean;
+  match: PublicMatchData;
+  token: PublicMatchTokenInfo;
+}
+
+export interface PublicConfirmDisputeResponse {
+  alreadyDone?: boolean;
+  status: string;
+  confirmationsCount?: number;
+  isActivated?: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class MatchService {
   private readonly http = inject(HttpClient);
@@ -98,5 +132,17 @@ export class MatchService {
 
   forceConfirm(circleId: string, matchId: string): Observable<ConfirmDisputeResponse> {
     return this.http.post<ConfirmDisputeResponse>(`${this.base}/circles/${circleId}/matches/${matchId}/force-confirm`, null);
+  }
+
+  getPublicMatch(token: string): Observable<PublicMatchResponse> {
+    return this.http.get<PublicMatchResponse>(`${this.base}/m/${token}`);
+  }
+
+  confirmViaToken(token: string): Observable<PublicConfirmDisputeResponse> {
+    return this.http.post<PublicConfirmDisputeResponse>(`${this.base}/m/${token}/confirm`, null);
+  }
+
+  disputeViaToken(token: string): Observable<PublicConfirmDisputeResponse> {
+    return this.http.post<PublicConfirmDisputeResponse>(`${this.base}/m/${token}/dispute`, null);
   }
 }

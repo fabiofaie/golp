@@ -297,6 +297,40 @@ namespace Golp.Api.Migrations
                     b.ToTable("MatchConfirmations");
                 });
 
+            modelBuilder.Entity("Golp.Api.Data.Entities.MatchConfirmationToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("MatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Token")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("UsedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("MatchId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("MatchConfirmationTokens");
+                });
+
             modelBuilder.Entity("Golp.Api.Data.Entities.MatchSet", b =>
                 {
                     b.Property<Guid>("Id")
@@ -617,6 +651,25 @@ namespace Golp.Api.Migrations
                 });
 
             modelBuilder.Entity("Golp.Api.Data.Entities.MatchConfirmation", b =>
+                {
+                    b.HasOne("Golp.Api.Data.Entities.Match", "Match")
+                        .WithMany()
+                        .HasForeignKey("MatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Golp.Api.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Match");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Golp.Api.Data.Entities.MatchConfirmationToken", b =>
                 {
                     b.HasOne("Golp.Api.Data.Entities.Match", "Match")
                         .WithMany()

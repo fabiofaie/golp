@@ -495,8 +495,10 @@ Nella pagina "Registra Partita", per ogni slot giocatore posso scegliere tra "Me
 
 #### US-040: Pagina pubblica conferma partita via token temporaneo
 
-**Epic:** EP-006 | **Priority:** HIGH | **Story Points:** 5 | **Status:** TODO
+**Epic:** EP-006 | **Priority:** HIGH | **Story Points:** 5 | **Status:** DONE
 **Blocked by:** US-039
+**Review note (2026-07-01):** Codice in `src/Golp.Api/Endpoints/PublicMatchEndpoints.cs`, entity `MatchConfirmationToken`, frontend `src/app/public/match-public-confirm/`. Test in `PublicMatchTokenTests.cs`. 257/257 backend tests verdi. Reviewer: APPROVE.
+**Approved (2026-07-01):** Review umana OK.
 
 **Story**
 Come giocatore (registrato o ospite), voglio aprire un link ricevuto via email o notifica e vedere una pagina riepilogativa della partita accessibile senza login, così che posso confermare o contestare la partita con un solo tap.

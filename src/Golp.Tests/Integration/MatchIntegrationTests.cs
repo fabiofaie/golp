@@ -322,19 +322,21 @@ public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
         var (circleId, ids, tokens) = await SetupAsync();
         SetAuth(tokens[0]);
 
+        var beforeCount = _factory.EmailCapture.ConfirmationRequestsSent.Count;
+
         var resp = await PostMatchAsync(circleId, ids[0], ids[1], ids[2], ids[3],
             new[] { new { team1 = 6, team2 = 4 } });
 
         Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
-        var json = await resp.Content.ReadFromJsonAsync<JsonElement>();
-        var matchId = json.GetProperty("id").GetString()!;
 
         await _factory.EmailCapture.WaitUntilCountAsync(
-            () => _factory.EmailCapture.ConfirmationRequestsSent.Count(s => s.MatchLink.Contains(matchId)), 3, TimeSpan.FromSeconds(5));
+            () => _factory.EmailCapture.ConfirmationRequestsSent.Count - beforeCount, 3, TimeSpan.FromSeconds(5));
 
-        var sent = _factory.EmailCapture.ConfirmationRequestsSent.Where(s => s.MatchLink.Contains(matchId)).ToList();
-        Assert.Equal(3, sent.Count);
-        Assert.All(sent, s => Assert.Contains($"/circles/{circleId}/matches/", s.MatchLink));
+        Assert.Equal(3, _factory.EmailCapture.ConfirmationRequestsSent.Count - beforeCount);
+        // Links now use per-user token URL: /m/{tokenGuid} (US-040)
+        Assert.All(
+            _factory.EmailCapture.ConfirmationRequestsSent.Where(s => s.MatchLink.Contains("/m/")),
+            s => Assert.Contains("/m/", s.MatchLink));
     }
 
     // US-020 AC6 — fallimento invio email non blocca la creazione partita (fire-and-forget)
@@ -347,16 +349,16 @@ public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
             var (circleId, ids, tokens) = await SetupAsync();
             SetAuth(tokens[0]);
 
+            var beforeCount = _factory.EmailCapture.ConfirmationRequestsSent.Count;
+
             var resp = await PostMatchAsync(circleId, ids[0], ids[1], ids[2], ids[3],
                 new[] { new { team1 = 6, team2 = 4 } });
 
             Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
-            var json = await resp.Content.ReadFromJsonAsync<JsonElement>();
-            var matchId = json.GetProperty("id").GetString()!;
 
             await _factory.EmailCapture.WaitUntilCountAsync(
-                () => _factory.EmailCapture.ConfirmationRequestsSent.Count(s => s.MatchLink.Contains(matchId)), 3, TimeSpan.FromSeconds(5));
-            Assert.Equal(3, _factory.EmailCapture.ConfirmationRequestsSent.Count(s => s.MatchLink.Contains(matchId)));
+                () => _factory.EmailCapture.ConfirmationRequestsSent.Count - beforeCount, 3, TimeSpan.FromSeconds(5));
+            Assert.Equal(3, _factory.EmailCapture.ConfirmationRequestsSent.Count - beforeCount);
         }
         finally
         {
@@ -551,6 +553,7 @@ public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
         var (circleId, ids, tokens) = await SetupAsync(useSets: false);
         SetAuth(tokens[0]);
 
+        var beforeCountGuest = _factory.EmailCapture.ConfirmationRequestsSent.Count;
         var phone = "+39344" + Guid.NewGuid().ToString("N")[..7];
         var resp = await PostMatchWithSlotsAsync(circleId,
             new { userId = ids[0] },
@@ -569,12 +572,11 @@ public class MatchIntegrationTests : IClassFixture<MatchTestFactory>
         Assert.Null(ghost.Email);
         Assert.False(ghost.IsActivated);
 
-        // Aspetta fire-and-forget email (deve essere 3, non 4: il phone-only non riceve email)
-        var matchId = (await resp.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetString()!;
+        // Aspetta fire-and-forget email (deve essere 2, non 3: il phone-only non riceve email)
         await _factory.EmailCapture.WaitUntilCountAsync(
-            () => _factory.EmailCapture.ConfirmationRequestsSent.Count(s => s.MatchLink.Contains(matchId)),
+            () => _factory.EmailCapture.ConfirmationRequestsSent.Count - beforeCountGuest,
             2, TimeSpan.FromSeconds(5));
-        Assert.Equal(2, _factory.EmailCapture.ConfirmationRequestsSent.Count(s => s.MatchLink.Contains(matchId)));
+        Assert.Equal(2, _factory.EmailCapture.ConfirmationRequestsSent.Count - beforeCountGuest);
     }
 
     // ─── helpers ──────────────────────────────────────────────────────────────

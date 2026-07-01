@@ -1,0 +1,68 @@
+{
+  "extends": "US-039/style-tokens.json",
+  "colors": {
+    "expiredColor":       "#F59E0B",
+    "expiredBg":          "rgba(245, 158, 11, 0.10)",
+    "expiredBorder":      "rgba(245, 158, 11, 0.25)",
+    "ctaRegister":        "#FF5500",
+    "ctaRegisterBg":      "rgba(255, 85, 0, 0.12)",
+    "ctaRegisterBorder":  "rgba(255, 85, 0, 0.25)"
+  },
+  "components": {
+    "publicHeader": {
+      "height":       "52px",
+      "bg":           "colors.bg",
+      "borderBottom": "colors.border",
+      "logoColor":    "colors.accent"
+    },
+    "matchSummaryCard": {
+      "bg":           "colors.surface",
+      "border":       "colors.border",
+      "borderRadius": "borderRadius.lg",
+      "padding":      "spacing.6"
+    },
+    "scoreVsStrip": {
+      "bg":           "colors.surfaceElevated",
+      "borderRadius": "borderRadius.md",
+      "padding":      "spacing.4",
+      "fontSize":     "typography.scale.2xl",
+      "fontWeight":   "typography.weights.black"
+    },
+    "confirmRow": {
+      "bg":           "colors.surfaceElevated",
+      "border":       "colors.border",
+      "borderRadius": "borderRadius.md",
+      "padding":      "spacing.3 spacing.4"
+    },
+    "btnConfirmBig": {
+      "bg":           "colors.success",
+      "bgHover":      "#1DAF52",
+      "color":        "#fff",
+      "borderRadius": "borderRadius.md",
+      "padding":      "spacing.4",
+      "fontSize":     "typography.scale.base",
+      "fontWeight":   "typography.weights.bold"
+    },
+    "btnDisputeBig": {
+      "bg":           "transparent",
+      "border":       "colors.errorBorder",
+      "color":        "colors.error",
+      "borderRadius": "borderRadius.md",
+      "padding":      "spacing.4",
+      "fontSize":     "typography.scale.base",
+      "fontWeight":   "typography.weights.bold"
+    },
+    "ctaGuestCard": {
+      "bg":           "colors.ctaRegisterBg",
+      "border":       "colors.ctaRegisterBorder",
+      "borderRadius": "borderRadius.lg",
+      "padding":      "spacing.5"
+    },
+    "expiredCard": {
+      "bg":           "colors.expiredBg",
+      "border":       "colors.expiredBorder",
+      "borderRadius": "borderRadius.lg",
+      "padding":      "spacing.6"
+    }
+  }
+}
