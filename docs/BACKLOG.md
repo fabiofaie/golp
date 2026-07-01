@@ -1411,30 +1411,36 @@ Il link `golp.app/m/{token}` apre una pagina pubblica (no auth required) che mos
 
 #### US-041: Quick Match — registra partita e crea circolo in un'unica azione
 
-**Epic:** EP-006 | **Priority:** HIGH | **Story Points:** 8 | **Status:** TODO
+**Epic:** EP-006 | **Priority:** HIGH | **Story Points:** 8 | **Status:** DONE
+**Approved (2026-07-01):** Review umana OK.
 **Blocked by:** US-039, US-040
+**Review note (2026-07-01):** Codice in `src/Golp.Api/Endpoints/QuickMatchEndpoints.cs`, `frontend/golp-app/src/app/circles/quick-match/quick-match.component.ts`. Test integration in `src/Golp.Tests/Integration/QuickMatchEndpointsTests.cs` (11 test). E2E in `frontend/golp-app/e2e/quick-match.spec.ts` (3 scenari). Reviewer APPROVE. **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-041`.
 
 **Story**
 Come giocatore registrato, voglio registrare una partita con amici senza dover prima creare un circolo separatamente, così che posso iniziare a usare GOLP immediatamente per qualsiasi gruppo di gioco senza setup preliminare.
 
 **Demonstrates**
-Dalla dashboard, il pulsante principale "Registra Partita" avvia un flusso unificato: scelgo lo sport, inserisco un nome opzionale per il circolo (altrimenti auto-generato come "Padel con Mario e Anna"), aggiungo i 3 altri giocatori (registrati o ospiti con nome+contatto), inserisco il risultato e invio. Il backend crea il circolo (privato), aggiunge tutti come membri, crea eventuali utenti ghost e registra la partita in un'unica transazione. Gli ospiti ricevono la notifica con il link di conferma.
+Dalla dashboard, il pulsante "Registra Partita" avvia un flusso Quick Match in 4 passi: (1) scelgo lo sport; (2) seleziono i 3 altri giocatori tramite ricerca libera o chip suggeriti — i suggerimenti includono sia giocatori con cui ho già disputato partite sia membri dei miei circoli, ordinati per interazione più recente; ogni giocatore può essere aggiunto come utente registrato o come ospite (nome + contatto); (3) il backend verifica i circoli esistenti con due modalità distinte — **senza nuovi ospiti**: cerca circoli con esattamente questi 4 membri per quello sport (1 trovato → redirect obbligatorio, N trovati → picker, 0 trovati → crea nuovo); **con nuovi ospiti** (persone non ancora in DB): cerca circoli dove i giocatori noti condividono lo stesso sport e chiede "Registri in un circolo esistente o crei un nuovo gruppo?" con entrambe le opzioni sempre disponibili; (4) inserisco il risultato e invio. Il backend aggiunge gli ospiti nuovi al circolo scelto (o al circolo appena creato), crea gli utenti ghost e registra la partita in un'unica transazione atomica. Tutti i partecipanti ricevono notifica con link di conferma.
 
 **Acceptance Criteria**
 
-- [ ] Dalla dashboard esiste un pulsante primario "Registra Partita" visibile senza dover entrare in un circolo
-- [ ] Il flusso chiede: sport → nome circolo (opzionale, con placeholder auto-generato) → 3 giocatori (membro esistente o ospite) → risultato
-- [ ] Il backend gestisce la creazione atomica: `Circle` (privato, `IsPrivate = true`) + `CircleMembership` per tutti + eventuali `User` ghost + `Match`
-- [ ] Se uno dei giocatori è già membro di un circolo con lo stesso sport e gli stessi partecipanti, viene proposto di usare il circolo esistente invece di crearne uno nuovo
+- [ ] Dalla dashboard esiste un pulsante primario "Registra Partita" visibile senza dover entrare in un circolo; il pulsante identico dentro un circolo usa il flusso classico (invariato)
+- [ ] Il flusso Quick Match segue i passi: sport → selezione 3 giocatori → (check circolo) → risultato → (nome circolo se nuovo)
+- [ ] I suggerimenti giocatori al passo 2 sono l'unione di: partecipanti a partite passate + membri dei circoli dell'utente; deduplicati e ordinati per recency
+- [ ] Ogni giocatore può essere aggiunto come utente registrato (ricerca per nome/email) o come ospite (nome + telefono o email)
+- [ ] **Modalità exact** (nessun nuovo ospite): il backend risolve eventuali ghost user per email/telefono e cerca circoli con esattamente questi 4 membri per quello sport
+  - 1 circolo trovato → redirect obbligatorio con banner "Stai registrando in [Nome Circolo]"; nessun bypass possibile
+  - N circoli trovati → picker esplicito con nome circolo e data ultima partita; l'utente sceglie
+  - 0 circoli trovati → passo "Nome gruppo" appare dopo il risultato, pre-compilato e modificabile
+- [ ] **Modalità partial** (almeno un ospite nuovo non in DB): il backend cerca circoli dove tutti i giocatori noti (utenti registrati + ghost già esistenti) condividono lo stesso sport; mostra picker CON opzione "Crea nuovo gruppo" sempre visibile; l'utente sceglie; il nuovo ospite viene aggiunto come membro al circolo scelto o a quello appena creato
+- [ ] Il backend gestisce la creazione atomica: `Circle` (privato, `IsPrivate = true`) + `CircleMembership` per tutti (inclusi ghost) + eventuali `User` ghost + `Match`
 - [ ] Il circolo creato è privato per default (`IsPrivate = true`): non appare in "Sfoglia Circoli"
-- [ ] Il creatore viene aggiunto automaticamente come membro del nuovo circolo
 - [ ] Tutti i giocatori ricevono notifica (push o email) al termine del flusso
-- [ ] Il flusso "Registra Partita" da dentro un circolo esistente rimane invariato
 
 **Out of scope**
 
 - Impostazioni avanzate del circolo durante il quick match (join code, visibilità pubblica)
-- Rilevamento duplicati per circoli con più di 2 partecipanti in comune (solo exact match 4/4)
+- Gestione dati legacy con circoli duplicati identici preesistenti (il picker copre il caso)
 
 **Open questions**
 

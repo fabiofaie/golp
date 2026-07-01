@@ -128,6 +128,7 @@ app.MapPushEndpoints();
 app.MapAwardsEndpoints();
 app.MapStatsEndpoints();
 app.MapSimulateEndpoints();
+app.MapQuickMatchEndpoints();
 
 app.Run();
 

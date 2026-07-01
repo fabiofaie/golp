@@ -95,5 +95,10 @@ export const routes: Routes = [
     path: 'm/:token',
     loadComponent: () => import('./public/match-public-confirm/match-public-confirm.component').then(m => m.MatchPublicConfirmComponent)
   },
+  {
+    path: 'match/quick',
+    loadComponent: () => import('./circles/quick-match/quick-match.component').then(m => m.QuickMatchComponent),
+    canActivate: [authGuard]
+  },
   { path: '**', redirectTo: '/dashboard' }
 ];

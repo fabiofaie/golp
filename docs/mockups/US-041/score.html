@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuova partita rapida — Risultato</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* Toggle per modalità mockup: new vs existing */
+    .mode-toggle {
+      display: flex;
+      gap: var(--sp-2);
+      margin-bottom: var(--sp-6);
+      padding: var(--sp-3) var(--sp-4);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-xs);
+      color: var(--color-text-secondary);
+      align-items: center;
+    }
+    .mode-toggle strong { color: var(--color-text-primary); }
+    .mode-btn {
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--color-border);
+      background: transparent;
+      color: var(--color-text-secondary);
+      font-family: var(--font-family);
+      font-size: 11px;
+      font-weight: var(--font-weight-bold);
+      cursor: pointer;
+    }
+    .mode-btn.active {
+      background: var(--color-accent);
+      border-color: var(--color-accent);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- Header -->
+    <div class="page-header">
+      <a href="circle-picker.html" class="back-btn">←</a>
+      <div>
+        <div class="page-title">Risultato</div>
+        <div class="page-subtitle" id="subtitle">Padel · Padel Amici</div>
+      </div>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step done">
+        <div class="step-dot">✓</div>
+        <div class="step-label">Sport</div>
+      </div>
+      <div class="step done">
+        <div class="step-dot">✓</div>
+        <div class="step-label">Giocatori</div>
+      </div>
+      <div class="step active">
+        <div class="step-dot">3</div>
+        <div class="step-label">Risultato</div>
+      </div>
+      <div class="step" id="step4">
+        <div class="step-dot">4</div>
+        <div class="step-label">Gruppo</div>
+      </div>
+    </div>
+
+    <!-- TOGGLE MOCKUP (solo per demo) -->
+    <div class="mode-toggle">
+      <span>Modalità:</span>
+      <button class="mode-btn active" onclick="setMode('existing')">Circolo esistente</button>
+      <button class="mode-btn" onclick="setMode('new')">Nuovo gruppo</button>
+    </div>
+
+    <!-- Info banner: circolo esistente -->
+    <div class="info-banner" id="banner-existing">
+      <span class="info-icon">🎾</span>
+      <span>Stai registrando in <strong>Padel Amici</strong></span>
+    </div>
+
+    <!-- Riepilogo squadre -->
+    <div class="teams-summary">
+      <div class="team-summary team1">
+        <div class="team-summary-label">Squadra A</div>
+        <div class="team-summary-players">Mario Rossi (tu)<br>Anna Alberti</div>
+      </div>
+      <div class="teams-vs">VS</div>
+      <div class="team-summary team2">
+        <div class="team-summary-label">Squadra B</div>
+        <div class="team-summary-players">Luca Pellegrini<br>Marco Gentile</div>
+      </div>
+    </div>
+
+    <!-- Score -->
+    <div class="score-section">
+      <div class="section-label">Punteggio</div>
+
+      <div class="set-row">
+        <span class="set-label">Set 1</span>
+        <input class="score-input" type="number" min="0" max="99" value="6" placeholder="—">
+        <span class="score-vs">vs</span>
+        <input class="score-input" type="number" min="0" max="99" value="4" placeholder="—">
+      </div>
+
+      <div class="set-row">
+        <span class="set-label">Set 2</span>
+        <input class="score-input" type="number" min="0" max="99" value="7" placeholder="—">
+        <span class="score-vs">vs</span>
+        <input class="score-input" type="number" min="0" max="99" value="5" placeholder="—">
+      </div>
+
+      <div class="set-row">
+        <span class="set-label">Set 3</span>
+        <input class="score-input" type="number" min="0" max="99" placeholder="—">
+        <span class="score-vs">vs</span>
+        <input class="score-input" type="number" min="0" max="99" placeholder="—">
+      </div>
+    </div>
+
+    <!-- Nome gruppo: solo modalità NEW -->
+    <div class="circle-name-section" id="section-circle-name" style="display:none;">
+      <div class="circle-name-hint">
+        Verrà creato un nuovo gruppo privato per questi giocatori. Puoi lasciare il nome auto-generato o cambiarlo.
+      </div>
+      <label class="field-label">Nome gruppo</label>
+      <input
+        class="field-input"
+        type="text"
+        id="circle-name-input"
+        value="Padel con Luca e Marco"
+        placeholder="Es. Padel con Luca e Marco"
+      >
+    </div>
+
+    <!-- CTA -->
+    <a href="#" class="submit-btn" onclick="handleSubmit(event)">Registra partita</a>
+
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <a href="#" class="nav-item">
+      <span class="nav-icon">🏠</span>
+      <span>Home</span>
+    </a>
+    <a href="#" class="nav-item active">
+      <span class="nav-icon">➕</span>
+      <span>Partita</span>
+    </a>
+    <a href="#" class="nav-item">
+      <span class="nav-icon">⚽</span>
+      <span>Circoli</span>
+    </a>
+    <a href="#" class="nav-item">
+      <span class="nav-icon">👤</span>
+      <span>Profilo</span>
+    </a>
+  </nav>
+
+  <script>
+    var currentMode = 'existing';
+
+    function setMode(mode) {
+      currentMode = mode;
+      var btns = document.querySelectorAll('.mode-btn');
+      btns[0].classList.toggle('active', mode === 'existing');
+      btns[1].classList.toggle('active', mode === 'new');
+
+      document.getElementById('banner-existing').style.display  = mode === 'existing' ? 'flex'  : 'none';
+      document.getElementById('section-circle-name').style.display = mode === 'new'  ? 'block' : 'none';
+
+      var step4 = document.getElementById('step4');
+      step4.style.opacity = mode === 'new' ? '1' : '0.35';
+
+      var subtitle = document.getElementById('subtitle');
+      subtitle.textContent = mode === 'existing' ? 'Padel · Padel Amici' : 'Padel · Nuovo gruppo';
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      var msg = currentMode === 'existing'
+        ? '✅ Partita registrata in "Padel Amici"!\nI giocatori riceveranno la richiesta di conferma.'
+        : '✅ Gruppo "' + document.getElementById('circle-name-input').value + '" creato!\nPartita registrata. I giocatori riceveranno la richiesta di conferma.';
+      alert(msg);
+    }
+  </script>
+</body>
+</html>

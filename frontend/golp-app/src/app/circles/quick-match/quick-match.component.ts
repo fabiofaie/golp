@@ -1,0 +1,1062 @@
+import { CommonModule } from "@angular/common";
+import { HttpClient } from "@angular/common/http";
+import { Component, OnDestroy, OnInit, inject } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { Router, RouterLink } from "@angular/router";
+import { Subject, debounceTime, distinctUntilChanged, takeUntil } from "rxjs";
+
+import { environment } from "../../../environments/environment";
+import { AuthService } from "../../auth/auth.service";
+import { CircleService, SportConfig } from "../circle.service";
+import { CirclePick, MatchService, PlayerSlotDto, QuickCheckResponse, SuggestionUser } from "../match.service";
+
+interface QuickSlot {
+  filled: boolean;
+  userId?: string;
+  displayName: string;
+  isMe: boolean;
+  isGuest: boolean;
+  guestName?: string;
+  guestEmail?: string;
+  guestPhone?: string;
+}
+
+interface SetRow {
+  team1: number | null;
+  team2: number | null;
+}
+
+type Step = "sport" | "players" | "picker" | "score";
+
+@Component({
+  selector: "app-quick-match",
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
+  template: `
+    <div class="qm-page">
+      <header class="qm-header">
+        <a routerLink="/dashboard" class="qm-back">← Indietro</a>
+        <span class="qm-title">Registra Partita</span>
+      </header>
+
+      <!-- Stepper -->
+      @if (step !== "picker") {
+        <div class="qm-stepper">
+          <span class="qm-step" [class.active]="step === 'sport'">1</span>
+          <span class="qm-step-line"></span>
+          <span class="qm-step" [class.active]="step === 'players'">2</span>
+          <span class="qm-step-line"></span>
+          <span class="qm-step" [class.active]="step === 'score'">3</span>
+        </div>
+      }
+
+      <!-- Step 1: Sport -->
+      @if (step === "sport") {
+        <main class="qm-main">
+          <h2 class="qm-section-title">Scegli lo sport</h2>
+          <div class="qm-sport-grid">
+            @for (s of sports; track s.sport) {
+              <button class="qm-sport-card" (click)="selectSport(s)">
+                <span class="qm-sport-name">{{ s.displayName }}</span>
+              </button>
+            }
+          </div>
+        </main>
+      }
+
+      <!-- Step 2: Players -->
+      @if (step === "players") {
+        <main class="qm-main">
+          <h2 class="qm-section-title">Squadre</h2>
+
+          <div class="qm-teams">
+            <div class="qm-team">
+              <div class="qm-team-label team-a">Squadra A</div>
+              @for (i of [0, 1]; track i) {
+                <div class="qm-slot" [class.filled]="slots[i].filled" [class.me-slot]="slots[i].isMe">
+                  @if (slots[i].filled) {
+                    <span class="qm-slot-name">{{ slots[i].displayName }}</span>
+                    @if (!slots[i].isMe) {
+                      <button class="qm-slot-remove" (click)="clearSlot(i)">×</button>
+                    }
+                    @if (slots[i].isMe) {
+                      <span class="qm-slot-badge">Tu</span>
+                    }
+                    @if (slots[i].isGuest) {
+                      <span class="qm-slot-guest-badge">ospite</span>
+                    }
+                  } @else {
+                    <span class="qm-slot-placeholder">+ Aggiungi</span>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="qm-team">
+              <div class="qm-team-label team-b">Squadra B</div>
+              @for (i of [2, 3]; track i) {
+                <div class="qm-slot" [class.filled]="slots[i].filled">
+                  @if (slots[i].filled) {
+                    <span class="qm-slot-name">{{ slots[i].displayName }}</span>
+                    <button class="qm-slot-remove" (click)="clearSlot(i)">×</button>
+                    @if (slots[i].isGuest) {
+                      <span class="qm-slot-guest-badge">ospite</span>
+                    }
+                  } @else {
+                    <span class="qm-slot-placeholder">+ Aggiungi</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Search + chip cloud -->
+          @if (filledCount < 4) {
+            <div class="qm-search-section">
+              <input
+                class="qm-search-input"
+                type="text"
+                placeholder="Cerca giocatore..."
+                [(ngModel)]="searchQuery"
+                (ngModelChange)="onSearch($event)" />
+
+              @if (suggestions.length > 0) {
+                <div class="qm-chip-cloud">
+                  @for (s of suggestions; track s.userId) {
+                    <button
+                      class="qm-chip"
+                      [class.used]="isUsed(s.userId)"
+                      [disabled]="isUsed(s.userId)"
+                      (click)="addFromSuggestion(s)">
+                      {{ s.name }}
+                    </button>
+                  }
+                </div>
+              } @else if (searchQuery.length > 1 && !checkingCircles) {
+                <p class="qm-no-results">Nessun giocatore trovato</p>
+              }
+
+              <!-- Guest form -->
+              @if (!showGuestForm) {
+                <button class="qm-add-guest-btn" (click)="showGuestForm = true">+ Aggiungi come ospite</button>
+              } @else {
+                <div class="qm-guest-form">
+                  @if (contactPickerAvailable) {
+                    <button type="button" class="qm-contact-picker-btn" (click)="pickContact()">
+                      📇 Scegli dai contatti
+                    </button>
+                    <div class="qm-guest-divider">o inserisci manualmente</div>
+                  }
+                  <input class="qm-input" type="text" placeholder="Nome ospite *" [(ngModel)]="guestName" />
+                  <input class="qm-input" type="email" placeholder="Email" [(ngModel)]="guestEmail" />
+                  <input class="qm-input" type="tel" placeholder="Telefono" [(ngModel)]="guestPhone" />
+                  @if (guestName.trim() && !guestEmail.trim() && !guestPhone.trim()) {
+                    <p class="qm-guest-hint">Email o telefono obbligatorio</p>
+                  }
+                  <div class="qm-guest-form-actions">
+                    <button class="btn-primary"
+                      [disabled]="!guestName.trim() || (!guestEmail.trim() && !guestPhone.trim())"
+                      (click)="addGuest()">Aggiungi</button>
+                    <button class="btn-ghost" (click)="cancelGuest()">Annulla</button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          @if (checkingCircles) {
+            <p class="qm-checking">Cerco circoli...</p>
+          }
+
+          @if (errorMessage && !checkingCircles && !checkResult) {
+            <div class="qm-error">{{ errorMessage }}</div>
+          }
+
+          <button
+            class="btn-primary qm-cta"
+            [disabled]="filledCount < 4 || checkingCircles"
+            (click)="proceedFromPlayers()">
+            Avanti →
+          </button>
+        </main>
+      }
+
+      <!-- Circle picker -->
+      @if (step === "picker") {
+        <main class="qm-main">
+          <h2 class="qm-section-title">
+            {{ checkResult?.mode === "exact" ? "Con quale circolo?" : "Dove registrare?" }}
+          </h2>
+          <p class="qm-picker-hint">
+            {{
+              checkResult?.mode === "partial"
+                ? "Trovati circoli con i giocatori noti. Scegli o crea un nuovo gruppo."
+                : "Questi 4 giocatori si trovano in più circoli."
+            }}
+          </p>
+
+          <div class="qm-circle-list">
+            @for (c of checkResult!.circles; track c.id) {
+              <button class="qm-circle-item" (click)="pickCircle(c)">
+                <span class="qm-circle-name">{{ c.name }}</span>
+                @if (c.lastMatchAt) {
+                  <span class="qm-circle-date">Ultima partita: {{ c.lastMatchAt | date: "dd/MM/yy" }}</span>
+                }
+              </button>
+            }
+            @if (checkResult?.mode === "partial") {
+              <button class="qm-circle-item qm-circle-new" (click)="pickNewCircle()">+ Crea nuovo gruppo</button>
+            }
+          </div>
+        </main>
+      }
+
+      <!-- Step 3: Score (+4 name if new circle) -->
+      @if (step === "score") {
+        <main class="qm-main">
+          <!-- Circle banner -->
+          @if (selectedCircle) {
+            <div class="qm-info-banner">
+              📍 Stai registrando in <strong>{{ selectedCircle.name }}</strong>
+            </div>
+          }
+
+          <!-- Team recap -->
+          <div class="qm-score-teams">
+            <div class="qm-score-team">
+              <div
+                class="qm-team-label team-a"
+                style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">
+                Squadra A
+              </div>
+              <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.4">
+                {{ slots[0].displayName }}<br />{{ slots[1].displayName }}
+              </div>
+            </div>
+            <div class="qm-score-vs">VS</div>
+            <div class="qm-score-team">
+              <div
+                class="qm-team-label team-b"
+                style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">
+                Squadra B
+              </div>
+              <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.4">
+                {{ slots[2].displayName }}<br />{{ slots[3].displayName }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Sets -->
+          <h2 class="qm-section-title">Risultato</h2>
+          @for (set of sets; track $index) {
+            <div class="qm-set-row">
+              <span class="qm-set-label">{{ selectedSport?.sets ? "Set " + ($index + 1) : "Punteggio" }}</span>
+              <input class="qm-score-input" type="number" min="0" [(ngModel)]="set.team1" placeholder="A" />
+              <span class="qm-score-sep">–</span>
+              <input class="qm-score-input" type="number" min="0" [(ngModel)]="set.team2" placeholder="B" />
+              @if (selectedSport?.sets && sets.length > 1) {
+                <button class="qm-remove-set" (click)="removeSet($index)">×</button>
+              }
+            </div>
+          }
+          @if (selectedSport?.sets) {
+            <button class="qm-add-set" (click)="addSet()">+ Aggiungi set</button>
+          }
+
+          <!-- Step 4: circle name (new group only) -->
+          @if (!selectedCircle) {
+            <div class="qm-name-section">
+              <h2 class="qm-section-title">Nome del gruppo</h2>
+              <input
+                class="qm-input"
+                type="text"
+                [(ngModel)]="newCircleName"
+                placeholder="Es. Padel con Marco e Luca" />
+            </div>
+          }
+
+          @if (errorMessage) {
+            <div class="qm-error">{{ errorMessage }}</div>
+          }
+
+          <button class="btn-primary qm-cta" [disabled]="!canSubmit() || isSubmitting" (click)="submit()">
+            {{ isSubmitting ? "Registrazione..." : "Registra Partita" }}
+          </button>
+        </main>
+      }
+    </div>
+  `,
+  styles: [
+    `
+      .qm-page {
+        min-height: 100vh;
+        background: var(--color-bg);
+        color: var(--color-text);
+        font-family: inherit;
+      }
+
+      .qm-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        border-bottom: 1px solid var(--color-border);
+        background: var(--color-surface);
+      }
+
+      .qm-back {
+        color: var(--color-text-secondary);
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .qm-title {
+        font-weight: 700;
+        font-size: 16px;
+      }
+
+      .qm-main {
+        padding: 20px 16px;
+        max-width: 480px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .qm-stepper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 16px;
+      }
+
+      .qm-step {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--color-text-secondary);
+      }
+
+      .qm-step.active {
+        background: var(--color-accent);
+        border-color: var(--color-accent);
+        color: #fff;
+      }
+
+      .qm-step-line {
+        flex: 1;
+        height: 1px;
+        background: var(--color-border);
+        max-width: 40px;
+      }
+
+      .qm-section-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      /* Sport grid */
+      .qm-sport-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .qm-sport-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        padding: 24px 16px;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--color-text);
+        cursor: pointer;
+        text-align: center;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+      }
+
+      .qm-sport-card:hover {
+        border-color: var(--color-accent);
+        background: var(--color-surface-hover, var(--color-surface));
+      }
+
+      .qm-sport-name {
+        display: block;
+      }
+
+      /* Teams + slots */
+      .qm-teams {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .qm-team {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .qm-team-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .team-a {
+        color: var(--color-accent);
+      }
+      .team-b {
+        color: var(--color-info, #4a9eff);
+      }
+
+      .qm-slot {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 6px;
+        border: 1px dashed var(--color-border);
+        background: var(--color-surface);
+        min-height: 42px;
+      }
+
+      .qm-slot.filled {
+        border-style: solid;
+      }
+
+      .qm-slot.me-slot {
+        border-color: var(--color-accent);
+        background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+      }
+
+      .qm-slot-name {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .qm-slot-placeholder {
+        flex: 1;
+        color: var(--color-text-secondary);
+        font-size: 13px;
+      }
+
+      .qm-slot-remove {
+        background: none;
+        border: none;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        font-size: 16px;
+        padding: 0 4px;
+      }
+
+      .qm-slot-badge {
+        font-size: 10px;
+        font-weight: 700;
+        background: var(--color-accent);
+        color: #fff;
+        border-radius: 4px;
+        padding: 2px 6px;
+      }
+
+      .qm-slot-guest-badge {
+        font-size: 10px;
+        font-weight: 700;
+        background: var(--color-surface);
+        color: var(--color-text-secondary);
+        border: 1px solid var(--color-border);
+        border-radius: 4px;
+        padding: 2px 6px;
+      }
+
+      /* Search + chips */
+      .qm-search-section {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .qm-search-input {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 6px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        color: var(--color-text);
+        font-size: 14px;
+        box-sizing: border-box;
+      }
+
+      .qm-chip-cloud {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .qm-chip {
+        padding: 6px 12px;
+        border-radius: 20px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        color: var(--color-text);
+        font-size: 13px;
+        cursor: pointer;
+        transition: border-color 0.15s;
+      }
+
+      .qm-chip:hover:not(.used) {
+        border-color: var(--color-accent);
+      }
+
+      .qm-chip.used {
+        opacity: 0.35;
+        cursor: default;
+      }
+
+      .qm-no-results {
+        color: var(--color-text-secondary);
+        font-size: 13px;
+        margin: 0;
+      }
+
+      .qm-add-guest-btn {
+        align-self: flex-start;
+        background: none;
+        border: none;
+        color: var(--color-accent);
+        font-size: 13px;
+        cursor: pointer;
+        padding: 0;
+      }
+
+      .qm-guest-form {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        background: var(--color-surface);
+      }
+
+      .qm-contact-picker-btn {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid var(--color-accent);
+        background: none;
+        color: var(--color-accent);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .qm-guest-divider {
+        text-align: center;
+        font-size: 11px;
+        color: var(--color-text-secondary);
+      }
+
+      .qm-guest-hint {
+        font-size: 11px;
+        color: var(--color-text-secondary);
+        margin: 0;
+      }
+
+      .qm-guest-form-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .qm-input {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 6px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        color: var(--color-text);
+        font-size: 14px;
+        box-sizing: border-box;
+      }
+
+      .qm-checking {
+        color: var(--color-text-secondary);
+        font-size: 13px;
+        margin: 0;
+        text-align: center;
+      }
+
+      .qm-cta {
+        width: 100%;
+        margin-top: 8px;
+      }
+
+      /* Picker */
+      .qm-picker-hint {
+        color: var(--color-text-secondary);
+        font-size: 13px;
+        margin: 0;
+      }
+
+      .qm-circle-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .qm-circle-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        border-radius: 8px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        color: var(--color-text);
+        cursor: pointer;
+        text-align: left;
+        width: 100%;
+        transition: border-color 0.15s;
+      }
+
+      .qm-circle-item:hover {
+        border-color: var(--color-accent);
+      }
+
+      .qm-circle-new {
+        border-style: dashed;
+        color: var(--color-accent);
+        justify-content: center;
+      }
+
+      .qm-circle-name {
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--color-text);
+      }
+
+      .qm-circle-date {
+        font-size: 12px;
+        color: var(--color-text-secondary);
+      }
+
+      /* Score step */
+      .qm-info-banner {
+        padding: 12px 16px;
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--color-accent) 15%, var(--color-surface));
+        border: 1px solid var(--color-accent);
+        font-size: 14px;
+      }
+
+      .qm-score-teams {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        margin-bottom: 24px;
+      }
+
+      .qm-score-team {
+        flex: 1;
+      }
+
+      .qm-score-vs {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--color-text-secondary);
+        flex-shrink: 0;
+      }
+
+      .qm-set-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .qm-set-label {
+        font-size: 12px;
+        color: var(--color-text-secondary);
+        width: 36px;
+        flex-shrink: 0;
+      }
+
+      .qm-score-input {
+        flex: 1;
+        min-width: 0;
+        box-sizing: border-box;
+        padding: 12px 8px;
+        text-align: center;
+        border-radius: 10px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        color: var(--color-text);
+        font-size: 24px;
+        font-weight: 900;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+
+      .qm-score-input:focus {
+        border-color: var(--color-accent);
+      }
+
+      .qm-score-sep {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--color-text-secondary);
+        width: 16px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+
+      .qm-remove-set {
+        background: none;
+        border: none;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        font-size: 16px;
+      }
+
+      .qm-add-set {
+        align-self: flex-start;
+        background: none;
+        border: none;
+        color: var(--color-accent);
+        font-size: 13px;
+        cursor: pointer;
+        padding: 0;
+      }
+
+      .qm-name-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border-top: 1px solid var(--color-border);
+        padding-top: 16px;
+      }
+
+      .qm-error {
+        padding: 12px;
+        border-radius: 6px;
+        background: color-mix(in srgb, #ff4444 15%, var(--color-surface));
+        border: 1px solid #ff4444;
+        font-size: 13px;
+        color: var(--color-text);
+      }
+    `
+  ]
+})
+export class QuickMatchComponent implements OnInit, OnDestroy {
+  private readonly router = inject(Router);
+  private readonly authSvc = inject(AuthService);
+  private readonly circleSvc = inject(CircleService);
+  private readonly matchSvc = inject(MatchService);
+  private readonly http = inject(HttpClient);
+  private readonly destroy$ = new Subject<void>();
+  private readonly search$ = new Subject<string>();
+
+  step: Step = "sport";
+  sports: SportConfig[] = [];
+
+  selectedSport: SportConfig | null = null;
+
+  currentUserId = "";
+  currentUserName = "";
+
+  slots: QuickSlot[] = [
+    { filled: false, displayName: "", isMe: true, isGuest: false },
+    { filled: false, displayName: "", isMe: false, isGuest: false },
+    { filled: false, displayName: "", isMe: false, isGuest: false },
+    { filled: false, displayName: "", isMe: false, isGuest: false }
+  ];
+
+  suggestions: SuggestionUser[] = [];
+  searchQuery = "";
+  showGuestForm = false;
+  guestName = "";
+  guestEmail = "";
+  guestPhone = "";
+
+  readonly contactPickerAvailable: boolean =
+    typeof navigator !== 'undefined' &&
+    'contacts' in navigator &&
+    'ContactsManager' in window;
+  checkingCircles = false;
+
+  checkResult: QuickCheckResponse | null = null;
+  selectedCircle: CirclePick | null = null;
+
+  sets: SetRow[] = [{ team1: null, team2: null }];
+  newCircleName = "";
+
+  isSubmitting = false;
+  errorMessage = "";
+
+  get filledCount(): number {
+    return this.slots.filter((s) => s.filled).length;
+  }
+
+  ngOnInit(): void {
+    this.currentUserId = this.authSvc.getCurrentUserId() ?? "";
+
+    // Load user name from /auth/me
+    this.http
+      .get<{ id: string; name: string; email: string }>(`${environment.apiUrl}/auth/me`)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (me) => {
+          this.currentUserName = me.name;
+          this.slots[0] = { filled: true, userId: me.id, displayName: me.name, isMe: true, isGuest: false };
+        }
+      });
+
+    // Load sports
+    this.circleSvc
+      .getSports()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (sports) => (this.sports = sports)
+      });
+
+    // Search debounce
+    this.search$
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((q) => this.loadSuggestions(q));
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  selectSport(sport: SportConfig): void {
+    this.selectedSport = sport;
+    this.step = "players";
+    this.loadSuggestions("");
+  }
+
+  onSearch(q: string): void {
+    this.search$.next(q);
+  }
+
+  private loadSuggestions(q: string): void {
+    if (!this.selectedSport) return;
+    this.matchSvc
+      .getSuggestions(this.selectedSport.sport, q || undefined)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({ next: (s) => (this.suggestions = s) });
+  }
+
+  isUsed(userId: string): boolean {
+    return this.slots.some((s) => s.filled && s.userId === userId);
+  }
+
+  addFromSuggestion(s: SuggestionUser): void {
+    const idx = this.slots.findIndex((slot) => !slot.filled);
+    if (idx === -1) return;
+    this.slots[idx] = {
+      filled: true,
+      userId: s.userId,
+      displayName: s.name,
+      isMe: false,
+      isGuest: false
+    };
+    this.onSlotsChanged();
+  }
+
+  clearSlot(i: number): void {
+    if (this.slots[i].isMe) return;
+    this.slots[i] = { filled: false, displayName: "", isMe: false, isGuest: false };
+    this.checkResult = null;
+    this.selectedCircle = null;
+  }
+
+  addGuest(): void {
+    const idx = this.slots.findIndex((s) => !s.filled);
+    if (idx === -1 || !this.guestName.trim()) return;
+    this.slots[idx] = {
+      filled: true,
+      displayName: this.guestName.trim(),
+      isMe: false,
+      isGuest: true,
+      guestName: this.guestName.trim(),
+      guestEmail: this.guestEmail.trim() || undefined,
+      guestPhone: this.guestPhone.trim() || undefined,
+    };
+    this.guestName = '';
+    this.guestEmail = '';
+    this.guestPhone = '';
+    this.showGuestForm = false;
+    this.onSlotsChanged();
+  }
+
+  cancelGuest(): void {
+    this.guestName = '';
+    this.guestEmail = '';
+    this.guestPhone = '';
+    this.showGuestForm = false;
+  }
+
+  async pickContact(): Promise<void> {
+    if (!this.contactPickerAvailable) return;
+    try {
+      const contacts: Array<{ name?: string[]; tel?: string[] }> =
+        await (navigator as any).contacts.select(['name', 'tel'], { multiple: false });
+      if (contacts.length === 0) return;
+      const c = contacts[0];
+      this.guestName = c.name?.[0] ?? this.guestName;
+      this.guestPhone = c.tel?.[0] ?? this.guestPhone;
+    } catch {
+      // user cancelled or API not supported
+    }
+  }
+
+  private onSlotsChanged(): void {
+    if (this.filledCount === 4) {
+      this.runCheck();
+    }
+  }
+
+  private runCheck(): void {
+    if (!this.selectedSport) return;
+    this.checkingCircles = true;
+    this.checkResult = null;
+    this.errorMessage = "";
+
+    const userIds = this.slots.filter((s) => s.filled && !s.isGuest).map((s) => s.userId!);
+    const guests = this.slots
+      .filter((s) => s.filled && s.isGuest)
+      .map((s) => ({ email: s.guestEmail, phone: s.guestPhone }));
+
+    this.matchSvc
+      .checkQuickMatch({
+        sport: this.selectedSport.sport,
+        userIds,
+        guests
+      })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result) => {
+          this.checkResult = result;
+          this.checkingCircles = false;
+        },
+        error: () => {
+          this.checkingCircles = false;
+          this.errorMessage = "Errore nella verifica dei circoli. Riprova.";
+        }
+      });
+  }
+
+  proceedFromPlayers(): void {
+    if (this.filledCount < 4 || this.checkingCircles) return;
+    if (!this.checkResult) return;
+
+    const { mode, circles } = this.checkResult;
+
+    if (mode === "exact") {
+      if (circles.length === 1) {
+        this.selectedCircle = circles[0];
+        this.step = "score";
+      } else if (circles.length > 1) {
+        this.step = "picker";
+      } else {
+        this.selectedCircle = null;
+        this.buildAutoName();
+        this.step = "score";
+      }
+    } else {
+      // partial
+      if (circles.length > 0) {
+        this.step = "picker";
+      } else {
+        this.selectedCircle = null;
+        this.buildAutoName();
+        this.step = "score";
+      }
+    }
+  }
+
+  pickCircle(c: CirclePick): void {
+    this.selectedCircle = c;
+    this.step = "score";
+  }
+
+  pickNewCircle(): void {
+    this.selectedCircle = null;
+    this.buildAutoName();
+    this.step = "score";
+  }
+
+  private buildAutoName(): void {
+    if (!this.selectedSport) return;
+    const n1 = this.slots[1]?.displayName ?? "?";
+    const n2 = this.slots[2]?.displayName ?? "?";
+    this.newCircleName = `${this.selectedSport.displayName} con ${n1} e ${n2}`;
+  }
+
+  addSet(): void {
+    this.sets.push({ team1: null, team2: null });
+  }
+
+  removeSet(i: number): void {
+    if (this.sets.length <= 1) return;
+    this.sets.splice(i, 1);
+  }
+
+  canSubmit(): boolean {
+    if (!this.selectedSport) return false;
+    if (this.sets.some((s) => s.team1 === null || s.team2 === null)) return false;
+    if (!this.selectedCircle && !this.newCircleName.trim()) return false;
+    return true;
+  }
+
+  submit(): void {
+    if (!this.canSubmit() || this.isSubmitting || !this.selectedSport) return;
+    this.isSubmitting = true;
+    this.errorMessage = "";
+
+    const toSlotDto = (slot: QuickSlot): PlayerSlotDto =>
+      slot.isGuest
+        ? { guestName: slot.guestName, guestEmail: slot.guestEmail, guestPhone: slot.guestPhone }
+        : { userId: slot.userId };
+
+    this.matchSvc
+      .createQuickMatch({
+        sport: this.selectedSport.sport,
+        circleId: this.selectedCircle?.id,
+        circleName: this.selectedCircle ? undefined : this.newCircleName.trim(),
+        team1: [toSlotDto(this.slots[0]), toSlotDto(this.slots[1])],
+        team2: [toSlotDto(this.slots[2]), toSlotDto(this.slots[3])],
+        sets: this.sets.map((s) => ({ team1: s.team1!, team2: s.team2! }))
+      })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result) => {
+          this.router.navigate(["/circles", result.circleId, "matches", result.matchId]);
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          this.errorMessage = err?.error?.error ?? "Errore durante la registrazione.";
+        }
+      });
+  }
+}

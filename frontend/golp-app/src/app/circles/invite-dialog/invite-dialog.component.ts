@@ -29,7 +29,6 @@ export class InviteDialogComponent implements OnInit {
         this.loading = false;
         if (this.canShare) {
           this.shareLink();
-          this.close();
         }
       },
       error: () => {

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuova partita rapida — Scegli circolo</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+  <div class="page">
+
+    <!-- Header -->
+    <div class="page-header">
+      <a href="players.html" class="back-btn">←</a>
+      <div>
+        <div class="page-title">Scegli il circolo</div>
+        <div class="page-subtitle">Padel · Mario, Anna, Luca + tu</div>
+      </div>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step done">
+        <div class="step-dot">✓</div>
+        <div class="step-label">Sport</div>
+      </div>
+      <div class="step done">
+        <div class="step-dot">✓</div>
+        <div class="step-label">Giocatori</div>
+      </div>
+      <div class="step active">
+        <div class="step-dot">3</div>
+        <div class="step-label">Risultato</div>
+      </div>
+      <div class="step">
+        <div class="step-dot">4</div>
+        <div class="step-label">Gruppo</div>
+      </div>
+    </div>
+
+    <!-- Spiegazione -->
+    <div class="info-banner" style="margin-bottom:var(--sp-5);">
+      <span class="info-icon">ℹ️</span>
+      <span>Hai già più circoli di <strong>Padel</strong> con questi giocatori. Scegli dove registrare la partita.</span>
+    </div>
+
+    <!-- Circle list -->
+    <div class="section-label">I tuoi circoli con questi giocatori</div>
+    <div class="circle-list">
+
+      <a href="score.html?mode=existing&name=Padel+Amici" class="circle-item">
+        <div class="circle-icon">🎾</div>
+        <div class="circle-info">
+          <div class="circle-name">Padel Amici</div>
+          <div class="circle-meta">Ultima partita · 15 giu 2025 · 12 partite</div>
+        </div>
+        <span class="circle-chevron">›</span>
+      </a>
+
+      <a href="score.html?mode=existing&name=Padel+Serale" class="circle-item">
+        <div class="circle-icon">🌙</div>
+        <div class="circle-info">
+          <div class="circle-name">Padel Serale</div>
+          <div class="circle-meta">Ultima partita · 2 mag 2025 · 5 partite</div>
+        </div>
+        <span class="circle-chevron">›</span>
+      </a>
+
+    </div>
+
+    <!-- Crea nuovo (edge case) -->
+    <a href="score.html?mode=new" class="create-new-link">
+      <span>➕</span>
+      Crea un nuovo circolo
+    </a>
+
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <a href="#" class="nav-item">
+      <span class="nav-icon">🏠</span>
+      <span>Home</span>
+    </a>
+    <a href="#" class="nav-item active">
+      <span class="nav-icon">➕</span>
+      <span>Partita</span>
+    </a>
+    <a href="#" class="nav-item">
+      <span class="nav-icon">⚽</span>
+      <span>Circoli</span>
+    </a>
+    <a href="#" class="nav-item">
+      <span class="nav-icon">👤</span>
+      <span>Profilo</span>
+    </a>
+  </nav>
+</body>
+</html>

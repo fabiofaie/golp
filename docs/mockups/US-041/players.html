@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuova partita rapida — Step 2</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+  <div class="page">
+
+    <!-- Header -->
+    <div class="page-header">
+      <a href="index.html" class="back-btn">←</a>
+      <div>
+        <div class="page-title">Chi ha giocato?</div>
+        <div class="page-subtitle">Padel · 2 vs 2</div>
+      </div>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step done">
+        <div class="step-dot">✓</div>
+        <div class="step-label">Sport</div>
+      </div>
+      <div class="step active">
+        <div class="step-dot">2</div>
+        <div class="step-label">Giocatori</div>
+      </div>
+      <div class="step">
+        <div class="step-dot">3</div>
+        <div class="step-label">Risultato</div>
+      </div>
+      <div class="step">
+        <div class="step-dot">4</div>
+        <div class="step-label">Gruppo</div>
+      </div>
+    </div>
+
+    <!-- Team A -->
+    <div class="team-block team1">
+      <div class="team-header">
+        <div class="team-dot"></div>
+        <div class="team-name">Squadra A</div>
+      </div>
+
+      <!-- Slot 1: Tu (auto-filled) -->
+      <div class="player-slot you-slot">
+        <div class="slot-avatar">MR</div>
+        <div class="slot-info">
+          <div class="slot-name">Mario Rossi</div>
+          <div class="slot-meta">Rating 1245</div>
+        </div>
+        <span class="slot-you-badge">Tu</span>
+      </div>
+
+      <!-- Slot 2: compagno selezionato -->
+      <div class="player-slot team1-filled">
+        <div class="slot-avatar">AA</div>
+        <div class="slot-info">
+          <div class="slot-name">Anna Alberti</div>
+          <div class="slot-meta">Rating 1320</div>
+        </div>
+        <button class="slot-remove">×</button>
+      </div>
+    </div>
+
+    <!-- Team B -->
+    <div class="team-block team2">
+      <div class="team-header">
+        <div class="team-dot"></div>
+        <div class="team-name">Squadra B</div>
+      </div>
+
+      <!-- Slot 3: slot attivo (in ricerca) -->
+      <div class="player-slot empty" id="slot-active">
+        <div class="slot-avatar-placeholder">+</div>
+        <span class="slot-empty-label">Aggiungi avversario</span>
+      </div>
+
+      <!-- Slot 4: vuoto -->
+      <div class="player-slot empty">
+        <div class="slot-avatar-placeholder">+</div>
+        <span class="slot-empty-label">Aggiungi avversario</span>
+      </div>
+    </div>
+
+    <!-- Search field (visibile quando uno slot è attivo) -->
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Cerca per nome o email…"
+        autofocus
+      >
+    </div>
+
+    <!-- Suggestion chips -->
+    <div class="suggestions-label">
+      <span class="suggestions-title">Suggeriti</span>
+    </div>
+    <div class="suggestions-grid">
+
+      <!-- Chip: usato (Anna è già in squadra A) -->
+      <div class="suggestion-chip used">
+        <div class="chip-avatar">AA</div>
+        <div class="chip-name">Anna A.</div>
+        <div class="chip-meta">1320</div>
+      </div>
+
+      <!-- Chips disponibili -->
+      <div class="suggestion-chip" onclick="selectPlayer(this, 'LP', 'Luca P.', '1180')">
+        <div class="chip-avatar">LP</div>
+        <div class="chip-name">Luca P.</div>
+        <div class="chip-meta">1180</div>
+      </div>
+
+      <div class="suggestion-chip" onclick="selectPlayer(this, 'MG', 'Marco G.', '1095')">
+        <div class="chip-avatar">MG</div>
+        <div class="chip-name">Marco G.</div>
+        <div class="chip-meta">1095</div>
+      </div>
+
+      <div class="suggestion-chip" onclick="selectPlayer(this, 'GR', 'Giulia R.', '1310')">
+        <div class="chip-avatar">GR</div>
+        <div class="chip-name">Giulia R.</div>
+        <div class="chip-meta">1310</div>
+      </div>
+
+      <!-- Chip: ospite (membro circolo senza partite) -->
+      <div class="suggestion-chip" onclick="selectPlayer(this, 'FB', 'Fabio B.', null, true)">
+        <div class="chip-avatar" style="border: 1px dashed #6B6B6B;">FB</div>
+        <div class="chip-name">Fabio B.</div>
+        <div class="chip-ghost-label">ospite</div>
+      </div>
+
+      <div class="suggestion-chip" onclick="selectPlayer(this, 'ST', 'Sara T.', '1155')">
+        <div class="chip-avatar">ST</div>
+        <div class="chip-name">Sara T.</div>
+        <div class="chip-meta">1155</div>
+      </div>
+
+    </div>
+
+    <!-- Add guest link -->
+    <a href="#" class="add-guest-link">
+      <span>👤</span>
+      Aggiungi giocatore non registrato
+    </a>
+
+    <!-- CTA (disabilitato finché non sono selezionati 3 giocatori) -->
+    <a href="circle-picker.html" class="submit-btn" id="btn-avanti" style="opacity:0.4;pointer-events:none;">
+      Avanti →
+    </a>
+
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <a href="#" class="nav-item">
+      <span class="nav-icon">🏠</span>
+      <span>Home</span>
+    </a>
+    <a href="#" class="nav-item active">
+      <span class="nav-icon">➕</span>
+      <span>Partita</span>
+    </a>
+    <a href="#" class="nav-item">
+      <span class="nav-icon">⚽</span>
+      <span>Circoli</span>
+    </a>
+    <a href="#" class="nav-item">
+      <span class="nav-icon">👤</span>
+      <span>Profilo</span>
+    </a>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>

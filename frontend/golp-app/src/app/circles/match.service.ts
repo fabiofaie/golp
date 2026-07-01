@@ -71,6 +71,52 @@ export interface ConfirmDisputeResponse {
   confirmationsCount?: number;
 }
 
+// ── Quick Match (US-041) ──────────────────────────────────────────────────
+
+export interface SuggestionUser {
+  userId: string;
+  name: string;
+  isActivated: boolean;
+}
+
+export interface GuestCheckDto {
+  email?: string;
+  phone?: string;
+}
+
+export interface QuickCheckRequest {
+  sport: string;
+  userIds: string[];
+  guests: GuestCheckDto[];
+}
+
+export interface CirclePick {
+  id: string;
+  name: string;
+  lastMatchAt: string | null;
+}
+
+export interface QuickCheckResponse {
+  mode: 'exact' | 'partial';
+  circles: CirclePick[];
+}
+
+export interface QuickMatchRequest {
+  sport: string;
+  circleId?: string;
+  circleName?: string;
+  team1: PlayerSlotDto[];
+  team2: PlayerSlotDto[];
+  sets: SetScore[];
+}
+
+export interface QuickMatchResult {
+  circleId: string;
+  matchId: string;
+  circleName: string;
+  circleCreated: boolean;
+}
+
 // ── Public token API (US-040) ──────────────────────────────────────────────
 
 export interface PublicMatchData {
@@ -132,6 +178,19 @@ export class MatchService {
 
   forceConfirm(circleId: string, matchId: string): Observable<ConfirmDisputeResponse> {
     return this.http.post<ConfirmDisputeResponse>(`${this.base}/circles/${circleId}/matches/${matchId}/force-confirm`, null);
+  }
+
+  getSuggestions(sport: string, q?: string): Observable<SuggestionUser[]> {
+    const params = q ? `?q=${encodeURIComponent(q)}` : '';
+    return this.http.get<SuggestionUser[]>(`${this.base}/match/quick/suggestions${params}`);
+  }
+
+  checkQuickMatch(body: QuickCheckRequest): Observable<QuickCheckResponse> {
+    return this.http.post<QuickCheckResponse>(`${this.base}/match/quick/check`, body);
+  }
+
+  createQuickMatch(body: QuickMatchRequest): Observable<QuickMatchResult> {
+    return this.http.post<QuickMatchResult>(`${this.base}/match/quick`, body);
   }
 
   getPublicMatch(token: string): Observable<PublicMatchResponse> {
