@@ -150,6 +150,35 @@ public class MatchDetailTests : IClassFixture<MatchDetailTestFactory>
         AssertNullOrAbsent(body, "deltas");
     }
 
+    // confirmations[] — lista userId che hanno confermato
+    [Fact]
+    public async Task GetMatchDetail_Pending_ConfirmationsContainsOnlyConfirmedPlayers()
+    {
+        var (circleId, ids, tokens) = await SetupAsync();
+        SetAuth(tokens[0]);
+        var matchId = await CreatePendingMatchAsync(circleId, ids);
+
+        // 2 giocatori su 4 confermano (ids[1] e ids[2])
+        SetAuth(tokens[1]);
+        await _client.PostAsync($"/circles/{circleId}/matches/{matchId}/confirm", null);
+        SetAuth(tokens[2]);
+        await _client.PostAsync($"/circles/{circleId}/matches/{matchId}/confirm", null);
+
+        SetAuth(tokens[1]);
+        var r = await _client.GetAsync($"/circles/{circleId}/matches/{matchId}");
+        var body = await r.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal("pending", body.GetProperty("status").GetString());
+        var confirmations = body.GetProperty("confirmations").EnumerateArray()
+            .Select(e => Guid.Parse(e.GetString()!)).ToList();
+
+        Assert.Equal(2, confirmations.Count);
+        Assert.Contains(ids[1], confirmations);
+        Assert.Contains(ids[2], confirmations);
+        Assert.DoesNotContain(ids[3], confirmations);
+        Assert.DoesNotContain(ids[4], confirmations);
+    }
+
     // ─── helpers ──────────────────────────────────────────────────────────────
 
     private static void AssertNullOrAbsent(JsonElement body, string property)

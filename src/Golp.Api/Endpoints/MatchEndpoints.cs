@@ -366,6 +366,10 @@ public static class MatchEndpoints
 
         var confirmationsCount = await db.MatchConfirmations.CountAsync(c => c.MatchId == matchId);
         var hasCurrentUserConfirmed = await db.MatchConfirmations.AnyAsync(c => c.MatchId == matchId && c.UserId == userId);
+        var confirmedUserIds = await db.MatchConfirmations
+            .Where(c => c.MatchId == matchId)
+            .Select(c => c.UserId)
+            .ToListAsync();
 
         DateTimeOffset? confirmedAt = null;
         string? confirmedByName = null;
@@ -413,6 +417,7 @@ public static class MatchEndpoints
             createdAt               = match.CreatedAt,
             confirmationsCount,
             hasCurrentUserConfirmed,
+            confirmations           = confirmedUserIds,
             isParticipant           = playerIds.Contains(userId),
             confirmedAt,
             confirmedByName,

@@ -50,4 +50,9 @@ export class MatchDetailComponent implements OnInit {
     if (!player) return '';
     return userId === this.currentUserId ? `${player.name} (Tu)` : player.name;
   }
+
+  allPlayers(): { userId: string; name: string }[] {
+    if (!this.match) return [];
+    return [...this.match.team1, ...this.match.team2];
+  }
 }

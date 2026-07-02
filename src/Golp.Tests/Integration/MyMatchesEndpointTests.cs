@@ -192,6 +192,47 @@ public class MyMatchesEndpointTests : IClassFixture<MyMatchesTestFactory>
         Assert.Equal(18, items[0].GetProperty("myDelta").GetInt32());
     }
 
+    // Test 7: team1, team2 e confirmationsCount presenti e corretti
+    [Fact]
+    public async Task GetMyMatches_ReturnsTeamsAndConfirmationsCount()
+    {
+        var token = await RegisterTokenAsync();
+        SetAuth(token);
+        var myId = ExtractUserId(token);
+
+        var c = await CreateCircleAsync("Teams Circle");
+        var (p2, p2Token) = await RegisterAndJoinAsync(c);
+        var (p3, _) = await RegisterAndJoinAsync(c);
+        var (p4, p4Token) = await RegisterAndJoinAsync(c);
+
+        SetAuth(token);
+        var matchResp = await PostMatchAsync(c, myId, p2, p3, p4);
+        var matchId = GetId(await matchResp.Content.ReadFromJsonAsync<JsonElement>());
+
+        // myId è inseritore e partecipante → conferma implicita 1/4
+        // p4 conferma → 2/4
+        SetAuth(p4Token);
+        await _client.PostAsync($"/circles/{c}/matches/{matchId}/confirm", null);
+
+        SetAuth(token);
+        var resp = await _client.GetAsync("/match/mine");
+        var item = (await resp.Content.ReadFromJsonAsync<JsonElement>())
+            .GetProperty("items").EnumerateArray().First();
+
+        // team1 e team2 presenti con 2 giocatori ciascuno
+        var team1 = item.GetProperty("team1").EnumerateArray().ToList();
+        var team2 = item.GetProperty("team2").EnumerateArray().ToList();
+        Assert.Equal(2, team1.Count);
+        Assert.Equal(2, team2.Count);
+
+        // ogni giocatore ha userId e name
+        Assert.True(team1.All(p => p.TryGetProperty("userId", out _) && p.TryGetProperty("name", out _)));
+        Assert.True(team2.All(p => p.TryGetProperty("userId", out _) && p.TryGetProperty("name", out _)));
+
+        // confirmationsCount = 2 (myId implicita + p4)
+        Assert.Equal(2, item.GetProperty("confirmationsCount").GetInt32());
+    }
+
     // ─── helpers ─────────────────────────────────────────────────────────────
 
     private async Task<string> RegisterTokenAsync()

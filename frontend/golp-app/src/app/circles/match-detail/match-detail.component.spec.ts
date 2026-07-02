@@ -24,6 +24,7 @@ function makeMatch(overrides: Partial<MatchDetail> = {}): MatchDetail {
     confirmedByName: null,
     isForced: null,
     deltas: null,
+    confirmations: [],
     team1: [{ userId: CURRENT_USER, name: 'Marco' }, { userId: 'user-2', name: 'Luca' }],
     team2: [{ userId: 'user-3', name: 'Sara' }, { userId: 'user-4', name: 'Giorgio' }],
     ...overrides,

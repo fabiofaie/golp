@@ -56,6 +56,22 @@ public static class MyMatchEndpoints
             .Select(c => c.MatchId)
             .ToHashSetAsync();
 
+        var confirmationCounts = await db.MatchConfirmations
+            .Where(c => matchIds.Contains(c.MatchId))
+            .GroupBy(c => c.MatchId)
+            .Select(g => new { MatchId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.MatchId, x => x.Count);
+
+        var playerIds = matches
+            .SelectMany(m => new[] { m.Team1Player1Id, m.Team1Player2Id, m.Team2Player1Id, m.Team2Player2Id })
+            .Distinct()
+            .ToHashSet();
+
+        var userInfos = await db.Users
+            .Where(u => playerIds.Contains(u.Id))
+            .Select(u => new { u.Id, u.Name, u.IsActivated })
+            .ToDictionaryAsync(u => u.Id);
+
         var items = matches.Select(m =>
         {
             int myTeam;
@@ -90,7 +106,18 @@ public static class MyMatchEndpoints
                     team2Score = s.Team2Score
                 }),
                 myDelta,
+                confirmationsCount      = confirmationCounts.GetValueOrDefault(m.Id, 0),
                 hasCurrentUserConfirmed = confirmedByUser.Contains(m.Id),
+                team1 = new[]
+                {
+                    new { userId = m.Team1Player1Id, name = userInfos.GetValueOrDefault(m.Team1Player1Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team1Player1Id)?.IsActivated ?? true },
+                    new { userId = m.Team1Player2Id, name = userInfos.GetValueOrDefault(m.Team1Player2Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team1Player2Id)?.IsActivated ?? true },
+                },
+                team2 = new[]
+                {
+                    new { userId = m.Team2Player1Id, name = userInfos.GetValueOrDefault(m.Team2Player1Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team2Player1Id)?.IsActivated ?? true },
+                    new { userId = m.Team2Player2Id, name = userInfos.GetValueOrDefault(m.Team2Player2Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team2Player2Id)?.IsActivated ?? true },
+                },
             };
         });
 

@@ -83,6 +83,21 @@
       </div>
     }
 
+    <!-- conferme per giocatore -->
+    <div class="section-heading" style="margin-top:20px;">Conferme</div>
+    <div class="delta-list" style="margin-bottom:20px;">
+      @for (p of allPlayers(); track p.userId) {
+        <div class="player-delta-row">
+          <span class="player-name">{{ playerName(p.userId) }}</span>
+          @if (match.confirmations?.includes(p.userId)) {
+            <span style="font-size:12px; color:var(--color-success); font-weight:700;">✓ Confermato</span>
+          } @else {
+            <span style="font-size:12px; color:var(--color-text-placeholder);">In attesa</span>
+          }
+        </div>
+      }
+    </div>
+
     <!-- delta section -->
     @if (match.status === 'confirmed' && match.deltas) {
       <div class="section-heading">Variazione rating</div>

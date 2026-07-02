@@ -12,62 +12,149 @@ type Filter = 'all' | 'pending' | 'disputed';
   template: `
     <div class="page">
       <header class="auth-header">
-        <a routerLink="/dashboard" style="color:var(--color-text-secondary);text-decoration:none;font-size:20px;line-height:1">←</a>
-        <span style="font-weight:700">Le mie partite</span>
-        <div style="width:28px"></div>
+        <a routerLink="/dashboard" class="back-nav">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Dashboard
+        </a>
+        <span class="brand">GOLP</span>
       </header>
 
-      <main style="padding:16px;display:flex;flex-direction:column;gap:12px;max-width:480px;margin:0 auto;width:100%">
+      <h1 class="auth-title">Partite.</h1>
+      <p class="auth-subtitle">Le tue partite in tutti i circoli</p>
 
-        <!-- Filter tabs -->
-        <div class="filter-tabs">
-          <button class="filter-tab" [class.active]="filter === 'all'"      (click)="setFilter('all')">Tutte</button>
-          <button class="filter-tab" [class.active]="filter === 'pending'"  (click)="setFilter('pending')">In attesa</button>
-          <button class="filter-tab" [class.active]="filter === 'disputed'" (click)="setFilter('disputed')">Disputate</button>
+      <!-- Filter tabs -->
+      <div class="filter-tabs">
+        <button class="filter-tab" [class.active]="filter === 'all'"      (click)="setFilter('all')">Tutte</button>
+        <button class="filter-tab" [class.active]="filter === 'pending'"  (click)="setFilter('pending')">In attesa</button>
+        <button class="filter-tab" [class.active]="filter === 'disputed'" (click)="setFilter('disputed')">Disputate</button>
+      </div>
+
+      @if (loading && items.length === 0) {
+        <p style="color:var(--color-text-secondary); font-size:13px; margin-top:16px;">Caricamento…</p>
+      } @else if (items.length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon" aria-hidden="true">✓</div>
+          <p class="empty-title">Nessuna partita.</p>
+          <p class="empty-subtitle">Non hai ancora partite registrate.</p>
+        </div>
+      } @else {
+        @if (actionError) {
+          <div class="form-error" style="margin-bottom:12px;">{{ actionError }}</div>
+        }
+
+        <div style="display:flex; flex-direction:column; gap:16px; margin-top:16px;">
+          @for (m of items; track m.matchId) {
+            <div class="match-card"
+              [class.match-card--confirmed]="m.status === 'confirmed'"
+              [class.match-card--disputed]="m.status === 'disputed'">
+
+              <!-- header: data + circolo/sport | badge -->
+              <div class="match-card-header">
+                <div>
+                  <a [routerLink]="['/circles', m.circleId, 'matches', m.matchId, 'detail']"
+                     class="match-date" style="text-decoration:underline;">
+                    {{ m.createdAt | date:'dd/MM, HH:mm' }}
+                  </a>
+                  <div style="margin-top:3px; display:flex; gap:6px; align-items:center;">
+                    <span style="font-size:11px; font-weight:700; color:var(--color-text-secondary); text-transform:uppercase; letter-spacing:0.04em;">{{ m.circleName }}</span>
+                    <span style="font-size:11px; color:var(--color-text-placeholder);">· {{ m.sport }}</span>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  @if (m.status !== 'confirmed') {
+                    <span class="status-badge"
+                      [class.status-badge--disputed]="m.status === 'disputed'"
+                      [class.status-badge--pending]="m.status === 'pending'">
+                      {{ m.status === 'disputed' ? 'Contestata' : 'In attesa' }}
+                    </span>
+                  }
+                  @if (m.status === 'confirmed' && m.myDelta !== null) {
+                    <span class="delta-badge"
+                      [class.delta-badge--positive]="m.myDelta! > 0"
+                      [class.delta-badge--negative]="m.myDelta! < 0"
+                      [class.delta-badge--zero]="m.myDelta === 0">
+                      {{ m.myDelta! >= 0 ? '+' : '' }}{{ m.myDelta }} pt
+                    </span>
+                  }
+                </div>
+              </div>
+
+              <!-- teams -->
+              <div class="teams-display">
+                <div class="team-row" [class.team-row--winner]="m.winnerTeam === 1">
+                  <span class="team-label team-label--team1">Team 1</span>
+                  <span class="team-names">
+                    @for (p of m.team1; track p.userId; let last = $last) {
+                      {{ p.name }}@if (p.isActivated === false) { <span class="unreg-badge">(non registrato)</span> }@if (!last) { &amp; }
+                    }
+                  </span>
+                  @if (m.winnerTeam === 1) { <span class="win-tag">✓ Vince</span> }
+                </div>
+                <div class="team-row" [class.team-row--winner]="m.winnerTeam === 2">
+                  <span class="team-label team-label--team2">Team 2</span>
+                  <span class="team-names">
+                    @for (p of m.team2; track p.userId; let last = $last) {
+                      {{ p.name }}@if (p.isActivated === false) { <span class="unreg-badge">(non registrato)</span> }@if (!last) { &amp; }
+                    }
+                  </span>
+                  @if (m.winnerTeam === 2) { <span class="win-tag">✓ Vince</span> }
+                </div>
+              </div>
+
+              <!-- confirm dots (pending only) -->
+              @if (m.status === 'pending') {
+                <div class="confirm-progress">
+                  <div class="confirm-dots">
+                    @for (dot of confirmDots(m); track $index) {
+                      <div class="confirm-dot"
+                        [class.confirm-dot--filled]="dot === 'filled'"
+                        [class.confirm-dot--you]="dot === 'you'">
+                      </div>
+                    }
+                  </div>
+                  <span class="confirm-label">{{ m.confirmationsCount }} di 4 conferme</span>
+                </div>
+              }
+
+              <!-- actions -->
+              @if (m.status === 'pending') {
+                @if (m.hasCurrentUserConfirmed) {
+                  <p style="font-size:12px; color:var(--color-text-placeholder); text-align:center; padding:8px 0;">
+                    Hai già confermato · in attesa degli altri
+                  </p>
+                } @else {
+                  <div class="match-actions">
+                    <button class="btn-dispute"
+                      [disabled]="disputing === m.matchId"
+                      (click)="dispute(m.circleId, m.matchId)">
+                      {{ disputing === m.matchId ? '…' : 'Contesta' }}
+                    </button>
+                    <a [routerLink]="['/circles', m.circleId, 'matches', m.matchId]" class="btn-confirm">
+                      <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                        <path d="M2 7l4 4 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      Conferma
+                    </a>
+                  </div>
+                }
+              }
+
+            </div>
+          }
         </div>
 
-        <!-- Count -->
-        <div style="font-size:12px;color:var(--color-text-placeholder)" *ngIf="totalCount > 0">
-          {{ totalCount }} partite
-        </div>
+        @if (loading) {
+          <p style="color:var(--color-text-secondary); font-size:13px; margin-top:16px; text-align:center;">Caricamento…</p>
+        }
 
-        <!-- Empty state -->
-        <div *ngIf="items.length === 0 && !loading" class="empty-state">
-          <span style="font-size:32px;display:block;margin-bottom:12px">🎾</span>
-          Nessuna partita ancora
-        </div>
-
-        <!-- Match list -->
-        <div *ngFor="let m of items" class="match-row" [ngClass]="rowClass(m)">
-          <!-- Top: circle + sport + date -->
-          <div class="match-row-top">
-            <span class="circle-tag">{{ m.circleName }}</span>
-            <span class="sport-pip">· {{ m.sport }}</span>
-            <span class="match-date-small">{{ m.createdAt | date:'dd/MM/yy' }}</span>
+        @if (hasMore && !loading) {
+          <div style="margin-top:24px;">
+            <button class="btn-load-more" (click)="loadMore()">Carica altre</button>
           </div>
-          <!-- Bottom: result pill + score + status pip -->
-          <div class="match-row-bottom">
-            <span class="result-pill" [ngClass]="resultClass(m)">{{ resultLabel(m) }}</span>
-            <span class="score-inline">{{ scoreLabel(m) }}</span>
-            <span class="status-pip" [ngClass]="statusClass(m)">{{ statusLabel(m) }}</span>
-          </div>
-          <!-- Delta (spans both rows) -->
-          <div class="match-row-delta">
-            <span class="delta-value" [ngClass]="deltaClass(m)">{{ deltaLabel(m) }}</span>
-          </div>
-        </div>
-
-        <!-- Loading -->
-        <div *ngIf="loading" style="text-align:center;color:var(--color-text-secondary);font-size:13px;padding:16px">
-          Caricamento…
-        </div>
-
-        <!-- Load more -->
-        <button *ngIf="hasMore && !loading" class="btn-load-more" (click)="loadMore()">
-          Carica altre
-        </button>
-
-      </main>
+        }
+      }
     </div>
   `,
   styles: [`
@@ -78,6 +165,7 @@ type Filter = 'all' | 'pending' | 'disputed';
       border-radius: 9999px;
       padding: 3px;
       gap: 2px;
+      margin-bottom: 16px;
     }
     .filter-tab {
       flex: 1;
@@ -96,82 +184,6 @@ type Filter = 'all' | 'pending' | 'disputed';
       color: var(--color-text-primary);
       font-weight: 700;
     }
-    .match-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      grid-template-rows: auto auto;
-      gap: 4px 0;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: 8px;
-      padding: 12px 16px;
-      border-left-width: 3px;
-    }
-    .match-row.row-win      { border-left-color: #22C55E; }
-    .match-row.row-loss     { border-left-color: #FF4444; }
-    .match-row.row-pending  { border-left-color: #F59E0B; }
-    .match-row.row-disputed { border-left-color: #FF4444; }
-    .match-row-top {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .circle-tag {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--color-text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .sport-pip { font-size: 11px; color: var(--color-text-placeholder); }
-    .match-date-small { font-size: 11px; color: var(--color-text-placeholder); margin-left: auto; }
-    .match-row-bottom {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .result-pill {
-      font-size: 11px;
-      font-weight: 900;
-      letter-spacing: 0.06em;
-      padding: 2px 8px;
-      border-radius: 4px;
-      flex-shrink: 0;
-    }
-    .result-win  { background: rgba(34,197,94,0.10);  color: #22C55E; }
-    .result-loss { background: rgba(255,68,68,0.10);  color: #FF4444; }
-    .result-dash { background: none; color: var(--color-text-placeholder); font-weight: 400; }
-    .score-inline { font-size: 13px; font-weight: 500; flex: 1; }
-    .status-pip {
-      font-size: 11px;
-      font-weight: 500;
-      padding: 2px 8px;
-      border-radius: 9999px;
-    }
-    .status-confirmed { background: rgba(34,197,94,0.10);  color: #22C55E; }
-    .status-pending   { background: rgba(245,158,11,0.10); color: #F59E0B; }
-    .status-disputed  { background: rgba(255,68,68,0.10);  color: #FF4444; }
-    .match-row-delta {
-      grid-row: 1 / 3;
-      grid-column: 2;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding-left: 12px;
-    }
-    .delta-value { font-size: 18px; font-weight: 900; line-height: 1; }
-    .delta-pos  { color: #22C55E; }
-    .delta-neg  { color: #FF4444; }
-    .delta-none { color: var(--color-text-placeholder); font-size: 14px; font-weight: 400; }
-    .empty-state {
-      text-align: center;
-      padding: 32px 24px;
-      color: var(--color-text-placeholder);
-      font-size: 13px;
-      border: 1px dashed var(--color-border);
-      border-radius: 14px;
-    }
     .btn-load-more {
       background: none;
       border: 1px solid var(--color-border);
@@ -182,6 +194,7 @@ type Filter = 'all' | 'pending' | 'disputed';
       border-radius: 9999px;
       cursor: pointer;
       width: 100%;
+      font-family: var(--font-family);
     }
   `]
 })
@@ -192,6 +205,8 @@ export class MyMatchesPageComponent implements OnInit {
   totalCount = 0;
   loading = false;
   hasMore = false;
+  disputing: string | null = null;
+  actionError = '';
 
   constructor(private matchService: MatchService) {}
 
@@ -225,43 +240,28 @@ export class MyMatchesPageComponent implements OnInit {
     });
   }
 
-  rowClass(m: MyMatchSummary): string {
-    if (m.status === 'pending')   return 'row-pending';
-    if (m.status === 'disputed')  return 'row-disputed';
-    return m.winnerTeam === m.myTeam ? 'row-win' : 'row-loss';
+  confirmDots(m: MyMatchSummary): ('filled' | 'you' | 'empty')[] {
+    const confirmed = m.confirmationsCount;
+    return Array.from({ length: 4 }, (_, i) => {
+      if (i >= confirmed) return 'empty';
+      if (m.hasCurrentUserConfirmed && i === confirmed - 1) return 'you';
+      return 'filled';
+    });
   }
 
-  resultLabel(m: MyMatchSummary): string {
-    if (m.status !== 'confirmed') return '—';
-    return m.winnerTeam === m.myTeam ? 'WIN' : 'LOSS';
-  }
-
-  resultClass(m: MyMatchSummary): string {
-    if (m.status !== 'confirmed') return 'result-dash';
-    return m.winnerTeam === m.myTeam ? 'result-win' : 'result-loss';
-  }
-
-  scoreLabel(m: MyMatchSummary): string {
-    return m.sets.map(s => `${s.team1Score}–${s.team2Score}`).join(' / ');
-  }
-
-  statusLabel(m: MyMatchSummary): string {
-    if (m.status === 'confirmed') return 'Confermata';
-    if (m.status === 'pending')   return 'In attesa';
-    return 'Disputata';
-  }
-
-  statusClass(m: MyMatchSummary): string {
-    return `status-${m.status}`;
-  }
-
-  deltaLabel(m: MyMatchSummary): string {
-    if (m.myDelta === null || m.myDelta === undefined) return '—';
-    return m.myDelta >= 0 ? `+${m.myDelta}` : `${m.myDelta}`;
-  }
-
-  deltaClass(m: MyMatchSummary): string {
-    if (m.myDelta === null || m.myDelta === undefined) return 'delta-none';
-    return m.myDelta >= 0 ? 'delta-pos' : 'delta-neg';
+  dispute(circleId: string, matchId: string): void {
+    this.disputing = matchId;
+    this.actionError = '';
+    this.matchService.dispute(circleId, matchId).subscribe({
+      next: () => {
+        this.disputing = null;
+        this.items = [];
+        this.loadPage(1);
+      },
+      error: err => {
+        this.disputing = null;
+        this.actionError = err?.error?.error ?? 'Errore durante la contestazione.';
+      },
+    });
   }
 }

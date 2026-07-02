@@ -72,6 +72,7 @@ export interface MatchDetail extends MatchSummary {
   confirmedByName: string | null;
   isForced: boolean | null;
   deltas: PlayerDelta[] | null;
+  confirmations: string[];
 }
 
 export interface ConfirmDisputeResponse {
@@ -92,7 +93,10 @@ export interface MyMatchSummary {
   myTeam: 1 | 2;
   sets: { team1Score: number; team2Score: number }[];
   myDelta: number | null;
+  confirmationsCount: number;
   hasCurrentUserConfirmed: boolean;
+  team1: PlayerInfo[];
+  team2: PlayerInfo[];
 }
 
 export interface PagedResult<T> {
