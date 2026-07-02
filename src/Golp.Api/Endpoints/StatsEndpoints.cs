@@ -52,16 +52,18 @@ public static class StatsEndpoints
             bool iWon = (iAmTeam1 && m.WinnerTeam == 1) || (!iAmTeam1 && m.WinnerTeam == 2);
 
             var partner = iAmTeam1
-                ? (m.Team1Player1Id == userId ? m.Team1Player2Id : m.Team1Player1Id)
-                : (m.Team2Player1Id == userId ? m.Team2Player2Id : m.Team2Player1Id);
+                ? (m.Team1Player1Id == userId ? m.Team1Player2Id : (Guid?)m.Team1Player1Id)
+                : (m.Team2Player1Id == userId ? m.Team2Player2Id : (Guid?)m.Team2Player1Id);
 
             Guid[] opponents = iAmTeam1
-                ? [m.Team2Player1Id, m.Team2Player2Id]
-                : [m.Team1Player1Id, m.Team1Player2Id];
+                ? new[] { m.Team2Player1Id }.Concat(m.Team2Player2Id.HasValue ? new[] { m.Team2Player2Id.Value } : []).ToArray()
+                : new[] { m.Team1Player1Id }.Concat(m.Team1Player2Id.HasValue ? new[] { m.Team1Player2Id.Value } : []).ToArray();
 
-            if (!partnerStats.TryGetValue(partner, out var ps))
-                ps = (0, 0);
-            partnerStats[partner] = (ps.Total + 1, ps.Wins + (iWon ? 1 : 0));
+            if (partner.HasValue)
+            {
+                if (!partnerStats.TryGetValue(partner.Value, out var ps)) ps = (0, 0);
+                partnerStats[partner.Value] = (ps.Total + 1, ps.Wins + (iWon ? 1 : 0));
+            }
 
             foreach (var opp in opponents)
             {

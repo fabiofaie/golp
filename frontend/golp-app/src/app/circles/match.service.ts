@@ -19,6 +19,7 @@ export interface CreateMatchRequest {
   team1: PlayerSlotDto[];
   team2: PlayerSlotDto[];
   sets: SetScore[];
+  isSingles?: boolean;
 }
 
 export interface ConfirmationLink {
@@ -130,6 +131,7 @@ export interface QuickCheckRequest {
   sport: string;
   userIds: string[];
   guests: GuestCheckDto[];
+  isSingles?: boolean;
 }
 
 export interface CirclePick {
@@ -150,6 +152,7 @@ export interface QuickMatchRequest {
   team1: PlayerSlotDto[];
   team2: PlayerSlotDto[];
   sets: SetScore[];
+  isSingles?: boolean;
 }
 
 export interface QuickMatchResult {

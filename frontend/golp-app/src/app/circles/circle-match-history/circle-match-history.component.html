@@ -36,7 +36,12 @@
 
           <!-- header -->
           <div class="match-card-header">
-            <span class="match-date">{{ m.createdAt | date:'dd/MM, HH:mm' }}</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="match-date">{{ m.createdAt | date:'dd/MM, HH:mm' }}</span>
+              @if (isSingles(m)) {
+                <span style="font-size:10px; font-weight:700; color:var(--color-accent, #6366f1); background:rgba(99,102,241,0.1); border-radius:4px; padding:2px 6px;">1v1</span>
+              }
+            </div>
             <div style="display:flex; align-items:center; gap:6px;">
               @if (m.status !== 'confirmed') {
                 <span class="status-badge"
@@ -90,7 +95,7 @@
                   </div>
                 }
               </div>
-              <span class="confirm-label">{{ m.confirmationsCount }} di 4 conferme</span>
+              <span class="confirm-label">{{ m.confirmationsCount }} di {{ isSingles(m) ? 2 : 4 }} conferme</span>
             </div>
           }
 

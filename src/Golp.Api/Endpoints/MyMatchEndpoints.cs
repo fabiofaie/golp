@@ -63,7 +63,8 @@ public static class MyMatchEndpoints
             .ToDictionaryAsync(x => x.MatchId, x => x.Count);
 
         var playerIds = matches
-            .SelectMany(m => new[] { m.Team1Player1Id, m.Team1Player2Id, m.Team2Player1Id, m.Team2Player2Id })
+            .SelectMany(m => new[] { m.Team1Player1Id, m.Team2Player1Id }
+                .Concat(new[] { m.Team1Player2Id, m.Team2Player2Id }.Where(id => id.HasValue).Select(id => id!.Value)))
             .Distinct()
             .ToHashSet();
 
@@ -108,16 +109,12 @@ public static class MyMatchEndpoints
                 myDelta,
                 confirmationsCount      = confirmationCounts.GetValueOrDefault(m.Id, 0),
                 hasCurrentUserConfirmed = confirmedByUser.Contains(m.Id),
-                team1 = new[]
-                {
-                    new { userId = m.Team1Player1Id, name = userInfos.GetValueOrDefault(m.Team1Player1Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team1Player1Id)?.IsActivated ?? true },
-                    new { userId = m.Team1Player2Id, name = userInfos.GetValueOrDefault(m.Team1Player2Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team1Player2Id)?.IsActivated ?? true },
-                },
-                team2 = new[]
-                {
-                    new { userId = m.Team2Player1Id, name = userInfos.GetValueOrDefault(m.Team2Player1Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team2Player1Id)?.IsActivated ?? true },
-                    new { userId = m.Team2Player2Id, name = userInfos.GetValueOrDefault(m.Team2Player2Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team2Player2Id)?.IsActivated ?? true },
-                },
+                team1 = m.IsSingles
+                    ? new[] { new { userId = m.Team1Player1Id, name = userInfos.GetValueOrDefault(m.Team1Player1Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team1Player1Id)?.IsActivated ?? true } }
+                    : new[] { new { userId = m.Team1Player1Id, name = userInfos.GetValueOrDefault(m.Team1Player1Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team1Player1Id)?.IsActivated ?? true }, new { userId = m.Team1Player2Id!.Value, name = userInfos.GetValueOrDefault(m.Team1Player2Id.Value)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team1Player2Id.Value)?.IsActivated ?? true } },
+                team2 = m.IsSingles
+                    ? new[] { new { userId = m.Team2Player1Id, name = userInfos.GetValueOrDefault(m.Team2Player1Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team2Player1Id)?.IsActivated ?? true } }
+                    : new[] { new { userId = m.Team2Player1Id, name = userInfos.GetValueOrDefault(m.Team2Player1Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team2Player1Id)?.IsActivated ?? true }, new { userId = m.Team2Player2Id!.Value, name = userInfos.GetValueOrDefault(m.Team2Player2Id.Value)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team2Player2Id.Value)?.IsActivated ?? true } },
             };
         });
 

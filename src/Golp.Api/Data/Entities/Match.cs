@@ -7,10 +7,11 @@ public class Match
     public Guid CreatedById { get; set; }
     public string Status { get; set; } = "pending";
     public int WinnerTeam { get; set; }
+    public bool IsSingles { get; set; }
     public Guid Team1Player1Id { get; set; }
-    public Guid Team1Player2Id { get; set; }
+    public Guid? Team1Player2Id { get; set; }
     public Guid Team2Player1Id { get; set; }
-    public Guid Team2Player2Id { get; set; }
+    public Guid? Team2Player2Id { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     // Delta ELO per giocatore (US-007). Null = non ancora confermata o disputed.

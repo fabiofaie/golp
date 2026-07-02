@@ -89,10 +89,17 @@ type Step = "sport" | "players" | "picker" | "score";
         <main class="qm-main">
           <h2 class="qm-section-title">Squadre</h2>
 
+          @if (selectedSport?.allowsSingles) {
+            <div style="display:flex; gap:8px; margin-bottom:4px;">
+              <button type="button" class="slot-toggle-btn" [class.slot-toggle-btn--active]="!isSingles" (click)="toggleFormat(false)">Doppio</button>
+              <button type="button" class="slot-toggle-btn" [class.slot-toggle-btn--active]="isSingles" (click)="toggleFormat(true)">Singolo</button>
+            </div>
+          }
+
           <div class="qm-teams">
             <div class="qm-team">
               <div class="qm-team-label team-a">Squadra A</div>
-              @for (i of [0, 1]; track i) {
+              @for (i of (isSingles ? [0] : [0, 1]); track i) {
                 <div class="qm-slot" [class.filled]="slots[i].filled" [class.me-slot]="slots[i].isMe">
                   @if (slots[i].filled) {
                     <span class="qm-slot-name">{{ slots[i].displayName }}</span>
@@ -114,7 +121,7 @@ type Step = "sport" | "players" | "picker" | "score";
 
             <div class="qm-team">
               <div class="qm-team-label team-b">Squadra B</div>
-              @for (i of [2, 3]; track i) {
+              @for (i of (isSingles ? [2] : [2, 3]); track i) {
                 <div class="qm-slot" [class.filled]="slots[i].filled">
                   @if (slots[i].filled) {
                     <span class="qm-slot-name">{{ slots[i].displayName }}</span>
@@ -131,7 +138,7 @@ type Step = "sport" | "players" | "picker" | "score";
           </div>
 
           <!-- Search + chip cloud -->
-          @if (filledCount < 4) {
+          @if (!activeFilled) {
             <div class="qm-search-section">
               <input
                 class="qm-search-input"
@@ -194,7 +201,7 @@ type Step = "sport" | "players" | "picker" | "score";
 
           <button
             class="btn-primary qm-cta"
-            [disabled]="filledCount < 4 || checkingCircles"
+            [disabled]="!activeFilled || checkingCircles"
             (click)="proceedFromPlayers()">
             Avanti →
           </button>
@@ -250,7 +257,7 @@ type Step = "sport" | "players" | "picker" | "score";
                 Squadra A
               </div>
               <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.4">
-                {{ slots[0].displayName }}<br />{{ slots[1].displayName }}
+                {{ slots[0].displayName }}@if (!isSingles) {<br />{{ slots[1].displayName }}}
               </div>
             </div>
             <div class="qm-score-vs">VS</div>
@@ -261,7 +268,7 @@ type Step = "sport" | "players" | "picker" | "score";
                 Squadra B
               </div>
               <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.4">
-                {{ slots[2].displayName }}<br />{{ slots[3].displayName }}
+                {{ slots[2].displayName }}@if (!isSingles) {<br />{{ slots[3].displayName }}}
               </div>
             </div>
           </div>
@@ -770,6 +777,24 @@ type Step = "sport" | "players" | "picker" | "score";
         font-size: 13px;
         color: var(--color-text);
       }
+
+      .slot-toggle-btn {
+        flex: 1;
+        padding: 8px 0;
+        border-radius: 6px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        color: var(--color-text-secondary);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .slot-toggle-btn--active {
+        border-color: var(--color-accent);
+        background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface));
+        color: var(--color-accent);
+      }
     `
   ]
 })
@@ -786,6 +811,10 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
   sports: SportConfig[] = [];
 
   selectedSport: SportConfig | null = null;
+  isSingles = false;
+
+  get activeSlotIndices(): number[] { return this.isSingles ? [0, 2] : [0, 1, 2, 3]; }
+  get activeFilled(): boolean { return this.activeSlotIndices.every(i => this.slots[i].filled); }
 
   currentUserId = "";
   currentUserName = "";
@@ -821,8 +850,10 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
   quickMatchResult: QuickMatchResult | null = null;
 
   get filledCount(): number {
-    return this.slots.filter((s) => s.filled).length;
+    return this.activeSlotIndices.filter(i => this.slots[i].filled).length;
   }
+
+  get totalRequired(): number { return this.isSingles ? 2 : 4; }
 
   ngOnInit(): void {
     this.currentUserId = this.authSvc.getCurrentUserId() ?? "";
@@ -859,8 +890,21 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
 
   selectSport(sport: SportConfig): void {
     this.selectedSport = sport;
+    this.isSingles = false;
     this.step = "players";
     this.loadSuggestions("");
+  }
+
+  toggleFormat(singles: boolean): void {
+    this.isSingles = singles;
+    // clear inactive slots when switching to singles
+    if (singles) {
+      this.slots[1] = { filled: false, displayName: '', isMe: false, isGuest: false };
+      this.slots[3] = { filled: false, displayName: '', isMe: false, isGuest: false };
+    }
+    this.checkResult = null;
+    this.selectedCircle = null;
+    if (this.activeFilled) this.runCheck();
   }
 
   onSearch(q: string): void {
@@ -880,8 +924,8 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
   }
 
   addFromSuggestion(s: SuggestionUser): void {
-    const idx = this.slots.findIndex((slot) => !slot.filled);
-    if (idx === -1) return;
+    const idx = this.activeSlotIndices.find(i => !this.slots[i].filled);
+    if (idx === undefined) return;
     this.slots[idx] = {
       filled: true,
       userId: s.userId,
@@ -900,8 +944,8 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
   }
 
   addGuest(): void {
-    const idx = this.slots.findIndex((s) => !s.filled);
-    if (idx === -1 || !this.guestName.trim()) return;
+    const idx = this.activeSlotIndices.find(i => !this.slots[i].filled);
+    if (idx === undefined || !this.guestName.trim()) return;
     this.slots[idx] = {
       filled: true,
       displayName: this.guestName.trim(),
@@ -940,7 +984,7 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
   }
 
   private onSlotsChanged(): void {
-    if (this.filledCount === 4) {
+    if (this.activeFilled) {
       this.runCheck();
     }
   }
@@ -951,8 +995,9 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
     this.checkResult = null;
     this.errorMessage = "";
 
-    const userIds = this.slots.filter((s) => s.filled && !s.isGuest).map((s) => s.userId!);
-    const guests = this.slots
+    const activeSlots = this.activeSlotIndices.map(i => this.slots[i]);
+    const userIds = activeSlots.filter((s) => s.filled && !s.isGuest).map((s) => s.userId!);
+    const guests = activeSlots
       .filter((s) => s.filled && s.isGuest)
       .map((s) => ({ email: s.guestEmail, phone: s.guestPhone }));
 
@@ -960,7 +1005,8 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
       .checkQuickMatch({
         sport: this.selectedSport.sport,
         userIds,
-        guests
+        guests,
+        isSingles: this.isSingles,
       })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -976,7 +1022,7 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
   }
 
   proceedFromPlayers(): void {
-    if (this.filledCount < 4 || this.checkingCircles) return;
+    if (!this.activeFilled || this.checkingCircles) return;
     if (!this.checkResult) return;
 
     const { mode, circles } = this.checkResult;
@@ -1053,9 +1099,10 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
         sport: this.selectedSport.sport,
         circleId: this.selectedCircle?.id,
         circleName: this.selectedCircle ? undefined : this.newCircleName.trim(),
-        team1: [toSlotDto(this.slots[0]), toSlotDto(this.slots[1])],
-        team2: [toSlotDto(this.slots[2]), toSlotDto(this.slots[3])],
-        sets: this.sets.map((s) => ({ team1: s.team1!, team2: s.team2! }))
+        team1: this.isSingles ? [toSlotDto(this.slots[0])] : [toSlotDto(this.slots[0]), toSlotDto(this.slots[1])],
+        team2: this.isSingles ? [toSlotDto(this.slots[2])] : [toSlotDto(this.slots[2]), toSlotDto(this.slots[3])],
+        sets: this.sets.map((s) => ({ team1: s.team1!, team2: s.team2! })),
+        isSingles: this.isSingles,
       })
       .pipe(takeUntil(this.destroy$))
       .subscribe({

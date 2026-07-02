@@ -33,7 +33,9 @@ public static class PublicMatchEndpoints
             return Results.NotFound(new { error = "Partita non trovata" });
 
         var circle = await db.Circles.FindAsync(match.CircleId);
-        var playerIds = new[] { match.Team1Player1Id, match.Team1Player2Id, match.Team2Player1Id, match.Team2Player2Id };
+        var playerIds = new[] { match.Team1Player1Id, match.Team2Player1Id }
+            .Concat(new[] { match.Team1Player2Id, match.Team2Player2Id }.Where(id => id.HasValue).Select(id => id!.Value))
+            .ToArray();
         var playerInfos = await db.Users
             .Where(u => playerIds.Contains(u.Id))
             .Select(u => new { u.Id, u.Name, u.IsActivated })
@@ -59,16 +61,12 @@ public static class PublicMatchEndpoints
             winnerTeam         = match.WinnerTeam,
             confirmationsCount,
             sets,
-            team1 = new[]
-            {
-                new { userId = match.Team1Player1Id, name = playerInfos.GetValueOrDefault(match.Team1Player1Id)?.Name ?? "", isActivated = playerInfos.GetValueOrDefault(match.Team1Player1Id)?.IsActivated ?? true },
-                new { userId = match.Team1Player2Id, name = playerInfos.GetValueOrDefault(match.Team1Player2Id)?.Name ?? "", isActivated = playerInfos.GetValueOrDefault(match.Team1Player2Id)?.IsActivated ?? true },
-            },
-            team2 = new[]
-            {
-                new { userId = match.Team2Player1Id, name = playerInfos.GetValueOrDefault(match.Team2Player1Id)?.Name ?? "", isActivated = playerInfos.GetValueOrDefault(match.Team2Player1Id)?.IsActivated ?? true },
-                new { userId = match.Team2Player2Id, name = playerInfos.GetValueOrDefault(match.Team2Player2Id)?.Name ?? "", isActivated = playerInfos.GetValueOrDefault(match.Team2Player2Id)?.IsActivated ?? true },
-            },
+            team1 = match.IsSingles
+                ? new[] { new { userId = match.Team1Player1Id, name = playerInfos.GetValueOrDefault(match.Team1Player1Id)?.Name ?? "", isActivated = playerInfos.GetValueOrDefault(match.Team1Player1Id)?.IsActivated ?? true } }
+                : new[] { new { userId = match.Team1Player1Id, name = playerInfos.GetValueOrDefault(match.Team1Player1Id)?.Name ?? "", isActivated = playerInfos.GetValueOrDefault(match.Team1Player1Id)?.IsActivated ?? true }, new { userId = match.Team1Player2Id!.Value, name = playerInfos.GetValueOrDefault(match.Team1Player2Id.Value)?.Name ?? "", isActivated = playerInfos.GetValueOrDefault(match.Team1Player2Id.Value)?.IsActivated ?? true } },
+            team2 = match.IsSingles
+                ? new[] { new { userId = match.Team2Player1Id, name = playerInfos.GetValueOrDefault(match.Team2Player1Id)?.Name ?? "", isActivated = playerInfos.GetValueOrDefault(match.Team2Player1Id)?.IsActivated ?? true } }
+                : new[] { new { userId = match.Team2Player1Id, name = playerInfos.GetValueOrDefault(match.Team2Player1Id)?.Name ?? "", isActivated = playerInfos.GetValueOrDefault(match.Team2Player1Id)?.IsActivated ?? true }, new { userId = match.Team2Player2Id!.Value, name = playerInfos.GetValueOrDefault(match.Team2Player2Id.Value)?.Name ?? "", isActivated = playerInfos.GetValueOrDefault(match.Team2Player2Id.Value)?.IsActivated ?? true } },
         };
 
         if (confirmToken.UsedAt != null)

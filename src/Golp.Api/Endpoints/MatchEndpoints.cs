@@ -47,11 +47,17 @@ public static class MatchEndpoints
         if (!existingMemberIds.Contains(userId))
             return Results.Json(new { error = "Non sei membro del circolo" }, statusCode: 403);
 
-        if (req.Team1 == null || req.Team1.Length != 2)
-            return Results.BadRequest(new { error = "Team1 deve avere esattamente 2 giocatori" });
+        var sport = await db.Sports.FirstOrDefaultAsync(s => s.IsActive && s.Key == circle.Sport);
+        if (req.IsSingles && !(sport?.AllowsSingles ?? false))
+            return Results.BadRequest(new { error = "Questo sport non supporta il formato singolo" });
 
-        if (req.Team2 == null || req.Team2.Length != 2)
-            return Results.BadRequest(new { error = "Team2 deve avere esattamente 2 giocatori" });
+        int expectedTeamSize = req.IsSingles ? 1 : 2;
+
+        if (req.Team1 == null || req.Team1.Length != expectedTeamSize)
+            return Results.BadRequest(new { error = $"Team1 deve avere esattamente {expectedTeamSize} giocatore/i" });
+
+        if (req.Team2 == null || req.Team2.Length != expectedTeamSize)
+            return Results.BadRequest(new { error = $"Team2 deve avere esattamente {expectedTeamSize} giocatore/i" });
 
         // Validate each slot structure
         foreach (var slot in req.Team1.Concat(req.Team2))
@@ -61,10 +67,11 @@ public static class MatchEndpoints
                 return Results.BadRequest(new { error = "Slot ospite richiede nome e almeno email o telefono" });
         }
 
-        // Resolve all 4 player IDs (find-or-create for guest slots)
-        var resolvedIds = new Guid[4];
+        // Resolve player IDs (find-or-create for guest slots) — 2 for singles, 4 for doubles
+        int totalSlots = expectedTeamSize * 2;
+        var resolvedIds = new Guid[totalSlots];
         var allSlots = req.Team1.Concat(req.Team2).ToArray();
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < totalSlots; i++)
         {
             var slot = allSlots[i];
             if (slot.UserId.HasValue)
@@ -79,15 +86,15 @@ public static class MatchEndpoints
             }
         }
 
-        if (resolvedIds.Distinct().Count() != 4)
-            return Results.BadRequest(new { error = "I 4 giocatori devono essere tutti distinti" });
+        if (resolvedIds.Distinct().Count() != totalSlots)
+            return Results.BadRequest(new { error = $"I {totalSlots} giocatori devono essere tutti distinti" });
 
-        var team1Ids = resolvedIds[0..2];
-        var team2Ids = resolvedIds[2..4];
+        var team1Ids = resolvedIds[0..expectedTeamSize];
+        var team2Ids = resolvedIds[expectedTeamSize..totalSlots];
 
         var creatorInTeam = team1Ids.Contains(userId) || team2Ids.Contains(userId);
         if (!creatorInTeam && circle.OwnerId != userId)
-            return Results.BadRequest(new { error = "L'inseritore deve essere uno dei 4 giocatori o il proprietario del circolo" });
+            return Results.BadRequest(new { error = "L'inseritore deve essere uno dei giocatori o il proprietario del circolo" });
 
         if (req.Sets == null || req.Sets.Length == 0)
             return Results.BadRequest(new { error = "Il punteggio è obbligatorio" });
@@ -127,10 +134,11 @@ public static class MatchEndpoints
             CircleId       = circleId,
             CreatedById    = userId,
             WinnerTeam     = winnerTeam,
+            IsSingles      = req.IsSingles,
             Team1Player1Id = team1Ids[0],
-            Team1Player2Id = team1Ids[1],
+            Team1Player2Id = req.IsSingles ? null : team1Ids[1],
             Team2Player1Id = team2Ids[0],
-            Team2Player2Id = team2Ids[1],
+            Team2Player2Id = req.IsSingles ? null : team2Ids[1],
         };
 
         var sets = req.Sets.Select((s, i) => new MatchSet
@@ -271,9 +279,10 @@ public static class MatchEndpoints
         if (matches.Count == 0)
             return Results.Ok(Array.Empty<object>());
 
-        // Collect all player IDs to resolve names in one query
+        // Collect all player IDs to resolve names in one query (filter nulls from singles matches)
         var playerIds = matches
-            .SelectMany(m => new[] { m.Team1Player1Id, m.Team1Player2Id, m.Team2Player1Id, m.Team2Player2Id })
+            .SelectMany(m => new[] { m.Team1Player1Id, m.Team2Player1Id }
+                .Concat(new[] { m.Team1Player2Id, m.Team2Player2Id }.Where(id => id.HasValue).Select(id => id!.Value)))
             .Distinct()
             .ToHashSet();
 
@@ -314,16 +323,12 @@ public static class MatchEndpoints
                 myDelta,
                 confirmationsCount       = confirmationCounts.GetValueOrDefault(m.Id, 0),
                 hasCurrentUserConfirmed = userConfirmedSet.Contains(m.Id),
-                team1 = new[]
-                {
-                    new { userId = m.Team1Player1Id, name = userInfos.GetValueOrDefault(m.Team1Player1Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team1Player1Id)?.IsActivated ?? true },
-                    new { userId = m.Team1Player2Id, name = userInfos.GetValueOrDefault(m.Team1Player2Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team1Player2Id)?.IsActivated ?? true },
-                },
-                team2 = new[]
-                {
-                    new { userId = m.Team2Player1Id, name = userInfos.GetValueOrDefault(m.Team2Player1Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team2Player1Id)?.IsActivated ?? true },
-                    new { userId = m.Team2Player2Id, name = userInfos.GetValueOrDefault(m.Team2Player2Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team2Player2Id)?.IsActivated ?? true },
-                },
+                team1 = m.IsSingles
+                    ? new[] { new { userId = m.Team1Player1Id, name = userInfos.GetValueOrDefault(m.Team1Player1Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team1Player1Id)?.IsActivated ?? true } }
+                    : new[] { new { userId = m.Team1Player1Id, name = userInfos.GetValueOrDefault(m.Team1Player1Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team1Player1Id)?.IsActivated ?? true }, new { userId = m.Team1Player2Id!.Value, name = userInfos.GetValueOrDefault(m.Team1Player2Id.Value)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team1Player2Id.Value)?.IsActivated ?? true } },
+                team2 = m.IsSingles
+                    ? new[] { new { userId = m.Team2Player1Id, name = userInfos.GetValueOrDefault(m.Team2Player1Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team2Player1Id)?.IsActivated ?? true } }
+                    : new[] { new { userId = m.Team2Player1Id, name = userInfos.GetValueOrDefault(m.Team2Player1Id)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team2Player1Id)?.IsActivated ?? true }, new { userId = m.Team2Player2Id!.Value, name = userInfos.GetValueOrDefault(m.Team2Player2Id.Value)?.Name ?? "", isActivated = userInfos.GetValueOrDefault(m.Team2Player2Id.Value)?.IsActivated ?? true } },
             };
         });
 
@@ -351,7 +356,9 @@ public static class MatchEndpoints
         if (!isMember)
             return Results.Json(new { error = "Non sei membro del circolo" }, statusCode: 403);
 
-        var playerIds = new[] { match.Team1Player1Id, match.Team1Player2Id, match.Team2Player1Id, match.Team2Player2Id };
+        var playerIds = new[] { match.Team1Player1Id, match.Team2Player1Id }
+            .Concat(new[] { match.Team1Player2Id, match.Team2Player2Id }.Where(id => id.HasValue).Select(id => id!.Value))
+            .ToArray();
         var playerInfos = await db.Users
             .Where(u => playerIds.Contains(u.Id))
             .Select(u => new { u.Id, u.Name, u.IsActivated })
@@ -401,13 +408,17 @@ public static class MatchEndpoints
                 }
             }
 
-            deltas = new[]
+            var deltasList = new List<object>
             {
                 new { userId = match.Team1Player1Id, delta = match.DeltaTeam1Player1 },
-                new { userId = match.Team1Player2Id, delta = match.DeltaTeam1Player2 },
                 new { userId = match.Team2Player1Id, delta = match.DeltaTeam2Player1 },
-                new { userId = match.Team2Player2Id, delta = match.DeltaTeam2Player2 },
             };
+            if (!match.IsSingles)
+            {
+                deltasList.Insert(1, new { userId = match.Team1Player2Id!.Value, delta = match.DeltaTeam1Player2 });
+                deltasList.Add(new { userId = match.Team2Player2Id!.Value, delta = match.DeltaTeam2Player2 });
+            }
+            deltas = deltasList;
         }
 
         // Token link per giocatori non ancora confermati (solo creatore partita o owner circolo, solo se pending)
@@ -447,16 +458,12 @@ public static class MatchEndpoints
             deltas,
             sets,
             confirmationLinks,
-            team1 = new[]
-            {
-                new { userId = match.Team1Player1Id, name = userNames.GetValueOrDefault(match.Team1Player1Id, ""), isActivated = playerInfos.GetValueOrDefault(match.Team1Player1Id)?.IsActivated ?? true },
-                new { userId = match.Team1Player2Id, name = userNames.GetValueOrDefault(match.Team1Player2Id, ""), isActivated = playerInfos.GetValueOrDefault(match.Team1Player2Id)?.IsActivated ?? true },
-            },
-            team2 = new[]
-            {
-                new { userId = match.Team2Player1Id, name = userNames.GetValueOrDefault(match.Team2Player1Id, ""), isActivated = playerInfos.GetValueOrDefault(match.Team2Player1Id)?.IsActivated ?? true },
-                new { userId = match.Team2Player2Id, name = userNames.GetValueOrDefault(match.Team2Player2Id, ""), isActivated = playerInfos.GetValueOrDefault(match.Team2Player2Id)?.IsActivated ?? true },
-            },
+            team1 = match.IsSingles
+                ? new[] { new { userId = match.Team1Player1Id, name = userNames.GetValueOrDefault(match.Team1Player1Id, ""), isActivated = playerInfos.GetValueOrDefault(match.Team1Player1Id)?.IsActivated ?? true } }
+                : new[] { new { userId = match.Team1Player1Id, name = userNames.GetValueOrDefault(match.Team1Player1Id, ""), isActivated = playerInfos.GetValueOrDefault(match.Team1Player1Id)?.IsActivated ?? true }, new { userId = match.Team1Player2Id!.Value, name = userNames.GetValueOrDefault(match.Team1Player2Id.Value, ""), isActivated = playerInfos.GetValueOrDefault(match.Team1Player2Id.Value)?.IsActivated ?? true } },
+            team2 = match.IsSingles
+                ? new[] { new { userId = match.Team2Player1Id, name = userNames.GetValueOrDefault(match.Team2Player1Id, ""), isActivated = playerInfos.GetValueOrDefault(match.Team2Player1Id)?.IsActivated ?? true } }
+                : new[] { new { userId = match.Team2Player1Id, name = userNames.GetValueOrDefault(match.Team2Player1Id, ""), isActivated = playerInfos.GetValueOrDefault(match.Team2Player1Id)?.IsActivated ?? true }, new { userId = match.Team2Player2Id!.Value, name = userNames.GetValueOrDefault(match.Team2Player2Id.Value, ""), isActivated = playerInfos.GetValueOrDefault(match.Team2Player2Id.Value)?.IsActivated ?? true } },
         });
     }
 
@@ -481,7 +488,9 @@ public static class MatchEndpoints
         if (match.Status is "confirmed" or "disputed")
             return Results.Conflict(new { error = $"La partita è già {match.Status}" });
 
-        var playerIds = new[] { match.Team1Player1Id, match.Team1Player2Id, match.Team2Player1Id, match.Team2Player2Id };
+        var playerIds = new[] { match.Team1Player1Id, match.Team2Player1Id }
+            .Concat(new[] { match.Team1Player2Id, match.Team2Player2Id }.Where(id => id.HasValue).Select(id => id!.Value))
+            .ToArray();
         if (!playerIds.Contains(userId))
             return Results.Json(new { error = "Non sei un partecipante di questa partita" }, statusCode: 403);
 
@@ -522,7 +531,9 @@ public static class MatchEndpoints
         if (match.Status is "confirmed" or "disputed")
             return Results.Conflict(new { error = $"La partita è già {match.Status}" });
 
-        var playerIds = new[] { match.Team1Player1Id, match.Team1Player2Id, match.Team2Player1Id, match.Team2Player2Id };
+        var playerIds = new[] { match.Team1Player1Id, match.Team2Player1Id }
+            .Concat(new[] { match.Team1Player2Id, match.Team2Player2Id }.Where(id => id.HasValue).Select(id => id!.Value))
+            .ToArray();
         if (!playerIds.Contains(userId))
             return Results.Json(new { error = "Non sei un partecipante di questa partita" }, statusCode: 403);
 
@@ -574,7 +585,8 @@ public static class MatchEndpoints
         var totalCount = existingCount + (alreadyConfirmed ? 0 : 1);
 
         IReadOnlyList<(Guid UserId, int NewPosition)> improvements = [];
-        if (totalCount == 4 && !alreadyConfirmed)
+        int requiredConfirmations = match.IsSingles ? 2 : 4;
+        if (totalCount == requiredConfirmations && !alreadyConfirmed)
         {
             match.Status = "confirmed";
             improvements = await ratingService.CalculateAndApplyAsync(matchId, db);
@@ -671,5 +683,5 @@ public static class MatchEndpoints
 }
 
 record PlayerSlotDto(Guid? UserId, string? GuestName, string? GuestEmail, string? GuestPhone);
-record CreateMatchRequest(PlayerSlotDto[] Team1, PlayerSlotDto[] Team2, SetScoreDto[] Sets);
+record CreateMatchRequest(PlayerSlotDto[] Team1, PlayerSlotDto[] Team2, SetScoreDto[] Sets, bool IsSingles = false);
 record SetScoreDto(int Team1, int Team2);

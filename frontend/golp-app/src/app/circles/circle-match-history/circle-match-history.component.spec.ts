@@ -366,4 +366,93 @@ describe('CircleMatchHistoryComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Caricamento');
     pending$.complete();
   });
+
+  // ─── US-048: singolo (1v1) ────────────────────────────────────────────────
+
+  it('isSingles() returns true for match with team1.length === 1', () => {
+    matchSvc.getMatches.and.returnValue(of([]));
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+    const comp = fixture.componentInstance;
+
+    const singleMatch = makeMatch({ team1: [{ userId: 'u1', name: 'A' }], team2: [{ userId: 'u2', name: 'B' }] });
+    expect(comp.isSingles(singleMatch)).toBeTrue();
+  });
+
+  it('isSingles() returns false for match with team1.length === 2', () => {
+    matchSvc.getMatches.and.returnValue(of([]));
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+    const comp = fixture.componentInstance;
+
+    expect(comp.isSingles(makeMatch())).toBeFalse();
+  });
+
+  it('confirmDots() returns 2 dots for singles match', () => {
+    matchSvc.getMatches.and.returnValue(of([]));
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+    const comp = fixture.componentInstance;
+
+    const singleMatch = makeMatch({
+      team1: [{ userId: 'u1', name: 'A' }],
+      team2: [{ userId: 'u2', name: 'B' }],
+      confirmationsCount: 1,
+    });
+    expect(comp.confirmDots(singleMatch).length).toBe(2);
+  });
+
+  it('confirmDots() returns 4 dots for doubles match', () => {
+    matchSvc.getMatches.and.returnValue(of([]));
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+    const comp = fixture.componentInstance;
+
+    expect(comp.confirmDots(makeMatch()).length).toBe(4);
+  });
+
+  it('shows "1v1" badge for singles match in list', () => {
+    const singleMatch = makeMatch({
+      team1: [{ userId: CURRENT_USER, name: 'Marco' }],
+      team2: [{ userId: 'user-2', name: 'Luca' }],
+    });
+    matchSvc.getMatches.and.returnValue(of([singleMatch]));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('1v1');
+  });
+
+  it('does not show "1v1" badge for doubles match', () => {
+    matchSvc.getMatches.and.returnValue(of([makeMatch()]));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('1v1');
+  });
+
+  it('shows "di 2 conferme" label for singles match', () => {
+    const singleMatch = makeMatch({
+      team1: [{ userId: CURRENT_USER, name: 'Marco' }],
+      team2: [{ userId: 'user-2', name: 'Luca' }],
+      confirmationsCount: 1,
+    });
+    matchSvc.getMatches.and.returnValue(of([singleMatch]));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('di 2 conferme');
+  });
+
+  it('shows "di 4 conferme" label for doubles match', () => {
+    matchSvc.getMatches.and.returnValue(of([makeMatch()]));
+
+    const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('di 4 conferme');
+  });
 });

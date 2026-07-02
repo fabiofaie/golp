@@ -9,6 +9,7 @@ export interface SportConfig {
   pointUnit: string;
   sets: boolean;
   teamSize: number;
+  allowsSingles: boolean;
 }
 
 export interface CircleSummary {

@@ -176,10 +176,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasIndex(s => s.Key).IsUnique();
 
             e.HasData(
-                new Sport { Id = 1, Key = "padel", DisplayName = "Padel", PointUnit = "games", Sets = true, TeamSize = 2, IsActive = true, SetWeight = 0.4 },
-                new Sport { Id = 2, Key = "beachtennis", DisplayName = "Beach Tennis", PointUnit = "games", Sets = true, TeamSize = 2, IsActive = true, SetWeight = 0.4 },
-                new Sport { Id = 3, Key = "basket2v2", DisplayName = "Basket 2v2", PointUnit = "points", Sets = false, TeamSize = 2, IsActive = true, SetWeight = 0.0 },
-                new Sport { Id = 4, Key = "burraco", DisplayName = "Burraco", PointUnit = "score", Sets = false, TeamSize = 2, IsActive = true, SetWeight = 0.0 }
+                new Sport { Id = 1, Key = "padel", DisplayName = "Padel", PointUnit = "games", Sets = true, TeamSize = 2, IsActive = true, SetWeight = 0.4, AllowsSingles = true },
+                new Sport { Id = 2, Key = "beachtennis", DisplayName = "Beach Tennis", PointUnit = "games", Sets = true, TeamSize = 2, IsActive = true, SetWeight = 0.4, AllowsSingles = true },
+                new Sport { Id = 3, Key = "basket2v2", DisplayName = "Basket 2v2", PointUnit = "points", Sets = false, TeamSize = 2, IsActive = true, SetWeight = 0.0, AllowsSingles = false },
+                new Sport { Id = 4, Key = "burraco", DisplayName = "Burraco", PointUnit = "score", Sets = false, TeamSize = 2, IsActive = true, SetWeight = 0.0, AllowsSingles = false }
             );
         });
     }

@@ -28,12 +28,17 @@ public class AwardsCalculator(AppDbContext db) : IAwardsCalculator
             return new AwardPeriodResult(periodLabel, null);
 
         var top = matches
-            .SelectMany(m => new[]
+            .SelectMany(m =>
             {
-                (UserId: m.Team1Player1Id, Delta: m.DeltaTeam1Player1 ?? 0),
-                (UserId: m.Team1Player2Id, Delta: m.DeltaTeam1Player2 ?? 0),
-                (UserId: m.Team2Player1Id, Delta: m.DeltaTeam2Player1 ?? 0),
-                (UserId: m.Team2Player2Id, Delta: m.DeltaTeam2Player2 ?? 0),
+                var required = new[] {
+                    (UserId: m.Team1Player1Id, Delta: m.DeltaTeam1Player1 ?? 0),
+                    (UserId: m.Team2Player1Id, Delta: m.DeltaTeam2Player1 ?? 0),
+                };
+                if (m.IsSingles) return required;
+                return required.Concat(new[] {
+                    (UserId: m.Team1Player2Id!.Value, Delta: m.DeltaTeam1Player2 ?? 0),
+                    (UserId: m.Team2Player2Id!.Value, Delta: m.DeltaTeam2Player2 ?? 0),
+                });
             })
             .GroupBy(x => x.UserId)
             .Select(g => new

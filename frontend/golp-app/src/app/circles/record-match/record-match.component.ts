@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { CircleService, MemberSummary, CircleSummary } from '../circle.service';
 import { MatchService, MatchCreated, PlayerSlotDto } from '../match.service';
 import { ShareConfirmComponent } from '../share-confirm/share-confirm.component';
@@ -38,6 +39,8 @@ export class RecordMatchComponent implements OnInit {
   circleId = '';
   circle: CircleSummary | null = null;
   members: MemberSummary[] = [];
+  allowsSingles = false;
+  isSingles = false;
 
   slots: PlayerSlot[] = [emptySlot(), emptySlot(), emptySlot(), emptySlot()];
 
@@ -58,15 +61,37 @@ export class RecordMatchComponent implements OnInit {
     return this.circle?.sets ?? true;
   }
 
+  get team1Slots(): number[] {
+    return this.isSingles ? [0] : [0, 1];
+  }
+
+  get team2Slots(): number[] {
+    return this.isSingles ? [2] : [2, 3];
+  }
+
+  get activeSlots(): number[] {
+    return [...this.team1Slots, ...this.team2Slots];
+  }
+
+  toggleFormat(singles: boolean): void {
+    this.isSingles = singles;
+  }
+
   ngOnInit(): void {
     this.circleId = this.route.snapshot.paramMap.get('circleId') ?? '';
 
-    this.circleSvc.getMyCircles().subscribe({
-      next: list => {
-        this.circle = list.find(c => c.id === this.circleId) ?? null;
+    forkJoin({
+      circles: this.circleSvc.getMyCircles(),
+      sports: this.circleSvc.getSports(),
+    }).subscribe({
+      next: ({ circles, sports }) => {
+        this.circle = circles.find(c => c.id === this.circleId) ?? null;
         if (!this.circle) {
           this.errorMessage = 'Circolo non trovato o non sei membro.';
+          return;
         }
+        const sport = sports.find(s => s.sport === this.circle!.sport);
+        this.allowsSingles = sport?.allowsSingles ?? false;
       },
     });
 
@@ -132,7 +157,7 @@ export class RecordMatchComponent implements OnInit {
   }
 
   otherSlotIndexes(index: number): number[] {
-    return [0, 1, 2, 3].filter(i => i !== index);
+    return this.activeSlots.filter(i => i !== index);
   }
 
   availableForSlot(excludeIndexes: number[]): MemberSummary[] {
@@ -146,7 +171,7 @@ export class RecordMatchComponent implements OnInit {
   submit(): void {
     this.errorMessage = '';
 
-    for (let i = 0; i < 4; i++) {
+    for (const i of this.activeSlots) {
       const s = this.slots[i];
       if (s.mode === 'membro' && !s.userId) {
         this.errorMessage = `Seleziona il giocatore ${i + 1} o scegli modalità ospite.`;
@@ -173,15 +198,15 @@ export class RecordMatchComponent implements OnInit {
             guestPhone: s.guestPhone.trim() || undefined,
           };
 
-    const team1 = [toDto(this.slots[0]), toDto(this.slots[1])];
-    const team2 = [toDto(this.slots[2]), toDto(this.slots[3])];
+    const team1 = this.team1Slots.map(i => toDto(this.slots[i]));
+    const team2 = this.team2Slots.map(i => toDto(this.slots[i]));
 
     const setsPayload = this.useSets
       ? this.sets.map(s => ({ team1: s.team1 ?? 0, team2: s.team2 ?? 0 }))
       : [{ team1: this.singleTeam1 ?? 0, team2: this.singleTeam2 ?? 0 }];
 
     this.loading = true;
-    this.matchSvc.createMatch(this.circleId, { team1, team2, sets: setsPayload }).subscribe({
+    this.matchSvc.createMatch(this.circleId, { team1, team2, sets: setsPayload, isSingles: this.isSingles }).subscribe({
       next: result => {
         this.loading = false;
         this.matchCreated = result;

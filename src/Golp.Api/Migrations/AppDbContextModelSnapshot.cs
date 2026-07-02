@@ -235,6 +235,9 @@ namespace Golp.Api.Migrations
                     b.Property<Guid?>("ForceConfirmedById")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("IsSingles")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -243,13 +246,13 @@ namespace Golp.Api.Migrations
                     b.Property<Guid>("Team1Player1Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("Team1Player2Id")
+                    b.Property<Guid?>("Team1Player2Id")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("Team2Player1Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("Team2Player2Id")
+                    b.Property<Guid?>("Team2Player2Id")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("WinnerTeam")
@@ -440,6 +443,9 @@ namespace Golp.Api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("AllowsSingles")
+                        .HasColumnType("bit");
+
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -478,6 +484,7 @@ namespace Golp.Api.Migrations
                         new
                         {
                             Id = 1,
+                            AllowsSingles = true,
                             DisplayName = "Padel",
                             IsActive = true,
                             Key = "padel",
@@ -489,6 +496,7 @@ namespace Golp.Api.Migrations
                         new
                         {
                             Id = 2,
+                            AllowsSingles = true,
                             DisplayName = "Beach Tennis",
                             IsActive = true,
                             Key = "beachtennis",
@@ -500,6 +508,7 @@ namespace Golp.Api.Migrations
                         new
                         {
                             Id = 3,
+                            AllowsSingles = false,
                             DisplayName = "Basket 2v2",
                             IsActive = true,
                             Key = "basket2v2",
@@ -511,6 +520,7 @@ namespace Golp.Api.Migrations
                         new
                         {
                             Id = 4,
+                            AllowsSingles = false,
                             DisplayName = "Burraco",
                             IsActive = true,
                             Key = "burraco",
@@ -630,8 +640,7 @@ namespace Golp.Api.Migrations
                     b.HasOne("Golp.Api.Data.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("Team1Player2Id")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Golp.Api.Data.Entities.User", null)
                         .WithMany()
@@ -642,8 +651,7 @@ namespace Golp.Api.Migrations
                     b.HasOne("Golp.Api.Data.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("Team2Player2Id")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Circle");
 

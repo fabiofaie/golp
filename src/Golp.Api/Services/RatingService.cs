@@ -6,7 +6,7 @@ namespace Golp.Api.Services;
 
 /// <summary>
 /// ELO adattato per squadre (PRD §Algoritmo di ranking):
-///   team_rating      = media dei rating dei membri
+///   team_rating      = media dei rating dei membri (singolo: rating del giocatore)
 ///   E_win            = 1 / (1 + 10^((R_perdenti - R_vincitori) / 400))
 ///   score_ratio      = punti_vincitori / (punti_vincitori + punti_perdenti)  // [0.5, 1.0]
 ///   effective_result = 0.5 + (score_ratio - 0.5) × amplifier
@@ -21,15 +21,15 @@ public class RatingService : IRatingService
     public const int ColdStartMatches = 15;
 
     /// <summary>
-    /// Calcola i delta ELO per i 4 giocatori dato il risultato di una partita.
+    /// Calcola i delta ELO per i giocatori dato il risultato di una partita.
     /// Logica pura, senza accesso al DB — riusabile dal simulatore.
     /// </summary>
-    /// <param name="team1Avg">Rating medio squadra 1</param>
-    /// <param name="team2Avg">Rating medio squadra 2</param>
-    /// <param name="kValues">K per ogni giocatore: [t1p1, t1p2, t2p1, t2p2]</param>
+    /// <param name="team1Avg">Rating medio (o singolo) squadra 1</param>
+    /// <param name="team2Avg">Rating medio (o singolo) squadra 2</param>
+    /// <param name="kValues">K per ogni giocatore: [t1p1, t1p2, t2p1, t2p2] o [t1p1, t2p1] per singolo</param>
     /// <param name="team1Won">true se ha vinto squadra 1</param>
     /// <param name="scoreRatio">score_ratio già clampato in [0.5, 1.0] per il team vincente</param>
-    /// <returns>delta per [t1p1, t1p2, t2p1, t2p2] — positivo se vincitore, negativo se perdente</returns>
+    /// <returns>delta per ogni giocatore in kValues — positivo se vincitore, negativo se perdente</returns>
     public static int[] ComputeDeltas(
         double team1Avg, double team2Avg,
         int[] kValues,
@@ -53,12 +53,13 @@ public class RatingService : IRatingService
             return isWinner ? delta : -delta;
         }
 
-        return [
-            DeltaFor(kValues[0], team1Won),
-            DeltaFor(kValues[1], team1Won),
-            DeltaFor(kValues[2], !team1Won),
-            DeltaFor(kValues[3], !team1Won),
-        ];
+        int half = kValues.Length / 2;
+        var result = new int[kValues.Length];
+        for (int i = 0; i < half; i++)
+            result[i] = DeltaFor(kValues[i], team1Won);
+        for (int i = half; i < kValues.Length; i++)
+            result[i] = DeltaFor(kValues[i], !team1Won);
+        return result;
     }
 
     public async Task<IReadOnlyList<(Guid UserId, int NewPosition)>> CalculateAndApplyAsync(Guid matchId, AppDbContext db)
@@ -81,24 +82,6 @@ public class RatingService : IRatingService
         if (totalTeam1 + totalTeam2 == 0)
             return [];
 
-        var playerIds = new[]
-        {
-            match.Team1Player1Id, match.Team1Player2Id,
-            match.Team2Player1Id, match.Team2Player2Id,
-        };
-
-        var memberships = await db.CircleMemberships
-            .Where(m => m.CircleId == match.CircleId && playerIds.Contains(m.UserId))
-            .ToDictionaryAsync(m => m.UserId);
-
-        if (memberships.Count != 4)
-            return []; // dati incoerenti: nessun aggiornamento parziale
-
-        double team1Rating = (memberships[match.Team1Player1Id].Rating
-                            + memberships[match.Team1Player2Id].Rating) / 2.0;
-        double team2Rating = (memberships[match.Team2Player1Id].Rating
-                            + memberships[match.Team2Player2Id].Rating) / 2.0;
-
         bool team1Won   = match.WinnerTeam == 1;
         int winnerUnits = team1Won ? totalTeam1 : totalTeam2;
 
@@ -106,7 +89,16 @@ public class RatingService : IRatingService
         var sport     = await db.Sports.FirstOrDefaultAsync(s => s.IsActive && s.Key == circleSport);
         bool useBlended = (circle?.Sets == true) && (sport?.SetWeight > 0);
 
-        double scoreRatio;
+        double scoreRatio = ComputeScoreRatio(match, useBlended, sport, team1Won, totalTeam1, totalTeam2, winnerUnits);
+
+        if (match.IsSingles)
+            return await ApplySinglesAsync(match, db, team1Won, scoreRatio);
+
+        return await ApplyDoublesAsync(match, db, team1Won, scoreRatio);
+    }
+
+    private static double ComputeScoreRatio(Match match, bool useBlended, Sport? sport, bool team1Won, int totalTeam1, int totalTeam2, int winnerUnits)
+    {
         if (useBlended)
         {
             int setsWonByWinner = match.Sets.Count(s =>
@@ -121,43 +113,42 @@ public class RatingService : IRatingService
             bool gamesTied = totalTeam1 == totalTeam2;
 
             double effectiveSetWeight = setsTied ? 0.0 : gamesTied ? 1.0 : sport!.SetWeight;
-            scoreRatio = Math.Clamp(effectiveSetWeight * setRatio + (1 - effectiveSetWeight) * gameRatio, 0.5, 1.0);
+            return Math.Clamp(effectiveSetWeight * setRatio + (1 - effectiveSetWeight) * gameRatio, 0.5, 1.0);
         }
         else
         {
             // PRD: score_ratio in [0.5, 1.0]. Clamp difensivo per sport senza set o quando
             // il vincitore ha meno game totali dei perdenti (es. 6-4, 0-6, 7-6).
-            scoreRatio = Math.Clamp((double)winnerUnits / (totalTeam1 + totalTeam2), 0.5, 1.0);
+            return Math.Clamp((double)winnerUnits / (totalTeam1 + totalTeam2), 0.5, 1.0);
         }
+    }
 
-        var kByPlayer = new Dictionary<Guid, int>();
-        foreach (var playerId in playerIds)
-        {
-            var confirmedCount = await db.Matches.CountAsync(m =>
-                m.CircleId == match.CircleId
-                && m.Id != match.Id
-                && m.Status == "confirmed"
-                && (m.Team1Player1Id == playerId || m.Team1Player2Id == playerId
-                 || m.Team2Player1Id == playerId || m.Team2Player2Id == playerId));
-            kByPlayer[playerId] = confirmedCount < ColdStartMatches ? KColdStart : KDefault;
-        }
+    private async Task<IReadOnlyList<(Guid UserId, int NewPosition)>> ApplySinglesAsync(
+        Match match, AppDbContext db, bool team1Won, double scoreRatio)
+    {
+        var p1 = match.Team1Player1Id;
+        var p2 = match.Team2Player1Id;
 
-        var kValues = new[]
-        {
-            kByPlayer[match.Team1Player1Id],
-            kByPlayer[match.Team1Player2Id],
-            kByPlayer[match.Team2Player1Id],
-            kByPlayer[match.Team2Player2Id],
-        };
+        var memberships = await db.CircleMemberships
+            .Where(m => m.CircleId == match.CircleId && (m.UserId == p1 || m.UserId == p2))
+            .ToDictionaryAsync(m => m.UserId);
 
-        var deltas = ComputeDeltas(team1Rating, team2Rating, kValues, team1Won, scoreRatio);
+        if (memberships.Count != 2)
+            return [];
+
+        var k1 = await CountKAsync(db, match, p1);
+        var k2 = await CountKAsync(db, match, p2);
+
+        double r1 = memberships[p1].Rating;
+        double r2 = memberships[p2].Rating;
+
+        var deltas = ComputeDeltas(r1, r2, [k1, k2], team1Won, scoreRatio);
 
         match.DeltaTeam1Player1 = deltas[0];
-        match.DeltaTeam1Player2 = deltas[1];
-        match.DeltaTeam2Player1 = deltas[2];
-        match.DeltaTeam2Player2 = deltas[3];
+        match.DeltaTeam2Player1 = deltas[1];
 
-        // Snapshot ranking pre-update: tutti i membri del circolo ordinati per Rating desc
+        var playerIds = new[] { p1, p2 };
+
         var allRatings = await db.CircleMemberships
             .Where(m => m.CircleId == match.CircleId)
             .Select(m => new { m.UserId, m.Rating })
@@ -167,12 +158,9 @@ public class RatingService : IRatingService
             .Select((m, i) => (m.UserId, Position: i + 1))
             .ToDictionary(x => x.UserId, x => x.Position);
 
-        memberships[match.Team1Player1Id].Rating += match.DeltaTeam1Player1.Value;
-        memberships[match.Team1Player2Id].Rating += match.DeltaTeam1Player2.Value;
-        memberships[match.Team2Player1Id].Rating += match.DeltaTeam2Player1.Value;
-        memberships[match.Team2Player2Id].Rating += match.DeltaTeam2Player2.Value;
+        memberships[p1].Rating += match.DeltaTeam1Player1.Value;
+        memberships[p2].Rating += match.DeltaTeam2Player1.Value;
 
-        // Post-update: applica i nuovi rating dei 4 giocatori per ricalcolare il ranking
         var postRatings = allRatings
             .Select(m => playerIds.Contains(m.UserId)
                 ? new { m.UserId, memberships[m.UserId].Rating }
@@ -181,14 +169,95 @@ public class RatingService : IRatingService
             .Select((m, i) => (m.UserId, Position: i + 1))
             .ToDictionary(x => x.UserId, x => x.Position);
 
-        var improved = playerIds
+        int postPositions(Guid id) => postRatings.GetValueOrDefault(id, int.MaxValue);
+
+        return playerIds
             .Where(id => postPositions(id) < prePositions.GetValueOrDefault(id, int.MaxValue))
             .Select(id => (UserId: id, NewPosition: postPositions(id)))
             .ToList();
+    }
+
+    private async Task<IReadOnlyList<(Guid UserId, int NewPosition)>> ApplyDoublesAsync(
+        Match match, AppDbContext db, bool team1Won, double scoreRatio)
+    {
+        var playerIds = new[]
+        {
+            match.Team1Player1Id, match.Team1Player2Id!.Value,
+            match.Team2Player1Id, match.Team2Player2Id!.Value,
+        };
+
+        var memberships = await db.CircleMemberships
+            .Where(m => m.CircleId == match.CircleId && playerIds.Contains(m.UserId))
+            .ToDictionaryAsync(m => m.UserId);
+
+        if (memberships.Count != 4)
+            return []; // dati incoerenti: nessun aggiornamento parziale
+
+        double team1Rating = (memberships[match.Team1Player1Id].Rating
+                            + memberships[match.Team1Player2Id!.Value].Rating) / 2.0;
+        double team2Rating = (memberships[match.Team2Player1Id].Rating
+                            + memberships[match.Team2Player2Id!.Value].Rating) / 2.0;
+
+        var k1 = await CountKAsync(db, match, match.Team1Player1Id);
+        var k2 = await CountKAsync(db, match, match.Team1Player2Id!.Value);
+        var k3 = await CountKAsync(db, match, match.Team2Player1Id);
+        var k4 = await CountKAsync(db, match, match.Team2Player2Id!.Value);
+        var kValues = new[] { k1, k2, k3, k4 };
+
+        var deltas = ComputeDeltas(team1Rating, team2Rating, kValues, team1Won, scoreRatio);
+
+        match.DeltaTeam1Player1 = deltas[0];
+        match.DeltaTeam1Player2 = deltas[1];
+        match.DeltaTeam2Player1 = deltas[2];
+        match.DeltaTeam2Player2 = deltas[3];
+
+        var allRatings = await db.CircleMemberships
+            .Where(m => m.CircleId == match.CircleId)
+            .Select(m => new { m.UserId, m.Rating })
+            .ToListAsync();
+        var prePositions = allRatings
+            .OrderByDescending(m => m.Rating)
+            .Select((m, i) => (m.UserId, Position: i + 1))
+            .ToDictionary(x => x.UserId, x => x.Position);
+
+        memberships[match.Team1Player1Id].Rating    += match.DeltaTeam1Player1.Value;
+        memberships[match.Team1Player2Id!.Value].Rating += match.DeltaTeam1Player2.Value;
+        memberships[match.Team2Player1Id].Rating    += match.DeltaTeam2Player1.Value;
+        memberships[match.Team2Player2Id!.Value].Rating += match.DeltaTeam2Player2.Value;
+
+        var postRatings = allRatings
+            .Select(m => playerIds.Contains(m.UserId)
+                ? new { m.UserId, memberships[m.UserId].Rating }
+                : m)
+            .OrderByDescending(m => m.Rating)
+            .Select((m, i) => (m.UserId, Position: i + 1))
+            .ToDictionary(x => x.UserId, x => x.Position);
 
         int postPositions(Guid id) => postRatings.GetValueOrDefault(id, int.MaxValue);
 
-        // SaveChangesAsync è responsabilità del caller: stessa transazione della conferma
-        return improved;
+        return playerIds
+            .Where(id => postPositions(id) < prePositions.GetValueOrDefault(id, int.MaxValue))
+            .Select(id => (UserId: id, NewPosition: postPositions(id)))
+            .ToList();
     }
+
+    private static async Task<int> CountKAsync(AppDbContext db, Match match, Guid playerId)
+    {
+        var count = await db.Matches.CountAsync(m =>
+            m.CircleId == match.CircleId
+            && m.Id != match.Id
+            && m.Status == "confirmed"
+            && (m.Team1Player1Id == playerId || m.Team1Player2Id == playerId
+             || m.Team2Player1Id == playerId || m.Team2Player2Id == playerId));
+        return count < ColdStartMatches ? KColdStart : KDefault;
+    }
+
+    // kept for compatibility — unused internally
+    private static async Task<int> CountConfirmedMatches(AppDbContext db, Match match, Guid playerId)
+        => await db.Matches.CountAsync(m =>
+            m.CircleId == match.CircleId
+            && m.Id != match.Id
+            && m.Status == "confirmed"
+            && (m.Team1Player1Id == playerId || m.Team1Player2Id == playerId
+             || m.Team2Player1Id == playerId || m.Team2Player2Id == playerId));
 }

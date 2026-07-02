@@ -10,4 +10,5 @@ public class Sport
     public int TeamSize { get; set; }
     public bool IsActive { get; set; } = true;
     public double SetWeight { get; set; }
+    public bool AllowsSingles { get; set; }
 }

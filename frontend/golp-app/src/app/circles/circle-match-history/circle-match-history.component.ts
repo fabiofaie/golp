@@ -57,11 +57,15 @@ export class CircleMatchHistoryComponent implements OnInit {
     return players.map(p => p.userId === this.currentUserId ? `${p.name} (Tu)` : p.name).join(' & ');
   }
 
+  isSingles(m: MatchSummary): boolean {
+    return m.team1.length === 1;
+  }
+
   confirmDots(m: MatchSummary): ('filled' | 'you' | 'empty')[] {
     const confirmed = m.confirmationsCount;
-    return Array.from({ length: 4 }, (_, i) => {
+    const total = this.isSingles(m) ? 2 : 4;
+    return Array.from({ length: total }, (_, i) => {
       if (i >= confirmed) return 'empty';
-      // mark the last filled dot as "you" if user has confirmed
       if (m.hasCurrentUserConfirmed && i === confirmed - 1) return 'you';
       return 'filled';
     });

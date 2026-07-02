@@ -1,11 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ShareConfirmComponent } from './share-confirm.component';
-import { ConfirmationLink } from '../match.service';
+import { ConfirmationLink, MatchService } from '../match.service';
 
 const linkWithPhone: ConfirmationLink = {
   userId: 'u1',
   name: 'Marco',
   phone: '+39 340 1234567',
+  isActivated: true,
   tokenUrl: 'http://localhost:4200/m/abc-token',
 };
 
@@ -13,6 +14,7 @@ const linkNoPhone: ConfirmationLink = {
   userId: 'u2',
   name: 'Sara',
   phone: null,
+  isActivated: true,
   tokenUrl: 'http://localhost:4200/m/def-token',
 };
 
@@ -21,8 +23,10 @@ describe('ShareConfirmComponent', () => {
   let fixture: ComponentFixture<ShareConfirmComponent>;
 
   beforeEach(async () => {
+    const matchSvcSpy = jasmine.createSpyObj('MatchService', ['patchGuestPhone']);
     await TestBed.configureTestingModule({
       imports: [ShareConfirmComponent],
+      providers: [{ provide: MatchService, useValue: matchSvcSpy }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ShareConfirmComponent);
@@ -38,33 +42,33 @@ describe('ShareConfirmComponent', () => {
 
   describe('waUrl()', () => {
     it('strips non-digits from phone and builds wa.me URL', () => {
-      const url = component.waUrl(linkWithPhone);
+      const url = component.waUrl(linkWithPhone.phone!, linkWithPhone.name, linkWithPhone.tokenUrl);
       expect(url).toContain('wa.me/393401234567');
     });
 
     it('encodes name in the message', () => {
-      const url = component.waUrl(linkWithPhone);
+      const url = component.waUrl(linkWithPhone.phone!, linkWithPhone.name, linkWithPhone.tokenUrl);
       expect(url).toContain(encodeURIComponent('Marco'));
     });
 
     it('encodes sport in the message', () => {
-      const url = component.waUrl(linkWithPhone);
+      const url = component.waUrl(linkWithPhone.phone!, linkWithPhone.name, linkWithPhone.tokenUrl);
       expect(url).toContain(encodeURIComponent('Padel'));
     });
 
     it('encodes circleName in the message', () => {
-      const url = component.waUrl(linkWithPhone);
+      const url = component.waUrl(linkWithPhone.phone!, linkWithPhone.name, linkWithPhone.tokenUrl);
       expect(url).toContain(encodeURIComponent('Tennis Club'));
     });
 
     it('includes tokenUrl in the message', () => {
-      const url = component.waUrl(linkWithPhone);
+      const url = component.waUrl(linkWithPhone.phone!, linkWithPhone.name, linkWithPhone.tokenUrl);
       expect(url).toContain(encodeURIComponent('http://localhost:4200/m/abc-token'));
     });
 
     it('strips leading +', () => {
       const link = { ...linkWithPhone, phone: '+393401234567' };
-      const url = component.waUrl(link);
+      const url = component.waUrl(link.phone!, link.name, link.tokenUrl);
       expect(url).toContain('wa.me/393401234567');
     });
   });

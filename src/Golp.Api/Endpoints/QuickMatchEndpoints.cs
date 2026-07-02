@@ -38,12 +38,16 @@ public static class QuickMatchEndpoints
             .Select(m => new { m.Team1Player1Id, m.Team1Player2Id, m.Team2Player1Id, m.Team2Player2Id, m.CreatedAt })
             .ToListAsync();
 
-        var fromMatches = myMatches.SelectMany(m => new[]
+        var fromMatches = myMatches.SelectMany(m =>
         {
-            (UserId: m.Team1Player1Id, LastAt: m.CreatedAt),
-            (UserId: m.Team1Player2Id, LastAt: m.CreatedAt),
-            (UserId: m.Team2Player1Id, LastAt: m.CreatedAt),
-            (UserId: m.Team2Player2Id, LastAt: m.CreatedAt),
+            var required = new[] {
+                (UserId: m.Team1Player1Id, LastAt: m.CreatedAt),
+                (UserId: m.Team2Player1Id, LastAt: m.CreatedAt),
+            };
+            var optional = new[] { m.Team1Player2Id, m.Team2Player2Id }
+                .Where(id => id.HasValue)
+                .Select(id => (UserId: id!.Value, LastAt: m.CreatedAt));
+            return required.Concat(optional);
         }).Where(x => x.UserId != userId);
 
         // Source B: other members of circles where user is member
@@ -135,7 +139,8 @@ public static class QuickMatchEndpoints
                 unresolvedCount++;
         }
 
-        bool isExact = unresolvedCount == 0 && knownIds.Count == 4;
+        int requiredPlayers = req.IsSingles == true ? 2 : 4;
+        bool isExact = unresolvedCount == 0 && knownIds.Count == requiredPlayers;
         string mode = isExact ? "exact" : "partial";
 
         var circlesRaw = new List<(Guid Id, string Name, DateTimeOffset? LastMatchAt)>();
@@ -145,7 +150,7 @@ public static class QuickMatchEndpoints
             var allIds = knownIds.ToList();
             circlesRaw = await db.Circles
                 .Where(c => c.Sport == req.Sport
-                         && db.CircleMemberships.Count(m => m.CircleId == c.Id && allIds.Contains(m.UserId)) == 4)
+                         && db.CircleMemberships.Count(m => m.CircleId == c.Id && allIds.Contains(m.UserId)) == requiredPlayers)
                 .Select(c => new
                 {
                     c.Id,
@@ -160,10 +165,10 @@ public static class QuickMatchEndpoints
         else if (knownIds.Count > 0)
         {
             var knownIdList = knownIds.ToList();
-            int requiredCount = knownIdList.Count;
+            int partialCount = knownIdList.Count;
             circlesRaw = await db.Circles
                 .Where(c => c.Sport == req.Sport
-                         && db.CircleMemberships.Count(m => m.CircleId == c.Id && knownIdList.Contains(m.UserId)) == requiredCount)
+                         && db.CircleMemberships.Count(m => m.CircleId == c.Id && knownIdList.Contains(m.UserId)) == partialCount)
                 .Select(c => new
                 {
                     c.Id,
@@ -202,10 +207,15 @@ public static class QuickMatchEndpoints
         if (sport == null)
             return Results.BadRequest(new { error = "Sport non valido" });
 
-        if (req.Team1 == null || req.Team1.Length != 2)
-            return Results.BadRequest(new { error = "Team1 deve avere esattamente 2 giocatori" });
-        if (req.Team2 == null || req.Team2.Length != 2)
-            return Results.BadRequest(new { error = "Team2 deve avere esattamente 2 giocatori" });
+        bool isSingles = req.IsSingles == true;
+        if (isSingles && !sport.AllowsSingles)
+            return Results.BadRequest(new { error = "Questo sport non supporta il singolo" });
+
+        int expectedTeamSize = isSingles ? 1 : 2;
+        if (req.Team1 == null || req.Team1.Length != expectedTeamSize)
+            return Results.BadRequest(new { error = $"Team1 deve avere esattamente {expectedTeamSize} giocator{(expectedTeamSize == 1 ? "e" : "i")}" });
+        if (req.Team2 == null || req.Team2.Length != expectedTeamSize)
+            return Results.BadRequest(new { error = $"Team2 deve avere esattamente {expectedTeamSize} giocator{(expectedTeamSize == 1 ? "e" : "i")}" });
         if (req.Sets == null || req.Sets.Length == 0)
             return Results.BadRequest(new { error = "Almeno un set richiesto" });
 
@@ -254,10 +264,11 @@ public static class QuickMatchEndpoints
                 return Results.Json(new { error = "Non sei membro del circolo" }, statusCode: 403);
 
             var resolvedA = await ResolveAllSlotsAsync(allSlots, circle.Id, db);
-            if (resolvedA.Distinct().Count() != 4)
-                return Results.BadRequest(new { error = "I 4 giocatori devono essere distinti" });
+            int expectedTotal = isSingles ? 2 : 4;
+            if (resolvedA.Distinct().Count() != expectedTotal)
+                return Results.BadRequest(new { error = $"I {expectedTotal} giocatori devono essere distinti" });
 
-            var matchA      = BuildMatch(circle.Id, userId, resolvedA, winnerTeam);
+            var matchA      = BuildMatch(circle.Id, userId, resolvedA, winnerTeam, isSingles);
             var setsA       = BuildSets(matchA.Id, req.Sets);
             var tokensA     = BuildTokens(matchA.Id, userId, resolvedA, frontendBase, out var recipientsA, out var linksA);
 
@@ -311,10 +322,11 @@ public static class QuickMatchEndpoints
             await db.SaveChangesAsync(); // flush to materialise newCircle.Id
 
             var resolvedB = await ResolveAllSlotsAsync(allSlots, newCircle.Id, db);
-            if (resolvedB.Distinct().Count() != 4)
-                return Results.BadRequest(new { error = "I 4 giocatori devono essere distinti" });
+            int expectedTotalB = isSingles ? 2 : 4;
+            if (resolvedB.Distinct().Count() != expectedTotalB)
+                return Results.BadRequest(new { error = $"I {expectedTotalB} giocatori devono essere distinti" });
 
-            var matchB   = BuildMatch(newCircle.Id, userId, resolvedB, winnerTeam);
+            var matchB   = BuildMatch(newCircle.Id, userId, resolvedB, winnerTeam, isSingles);
             var setsB    = BuildSets(matchB.Id, req.Sets);
             var tokensB  = BuildTokens(matchB.Id, userId, resolvedB, frontendBase, out var recipientsB, out var linksB);
 
@@ -433,16 +445,17 @@ public static class QuickMatchEndpoints
         return existing.Id;
     }
 
-    private static Match BuildMatch(Guid circleId, Guid userId, Guid[] ids, int winnerTeam) =>
+    private static Match BuildMatch(Guid circleId, Guid userId, Guid[] ids, int winnerTeam, bool isSingles = false) =>
         new()
         {
             CircleId       = circleId,
             CreatedById    = userId,
             WinnerTeam     = winnerTeam,
+            IsSingles      = isSingles,
             Team1Player1Id = ids[0],
-            Team1Player2Id = ids[1],
-            Team2Player1Id = ids[2],
-            Team2Player2Id = ids[3],
+            Team1Player2Id = isSingles ? null : ids[1],
+            Team2Player1Id = isSingles ? ids[1] : ids[2],
+            Team2Player2Id = isSingles ? null : ids[3],
         };
 
     private static List<MatchSet> BuildSets(Guid matchId, SetScoreDto[] sets) =>
@@ -548,6 +561,6 @@ public static class QuickMatchEndpoints
     }
 }
 
-record QuickCheckRequest(string? Sport, Guid[]? UserIds, GuestCheckDto[]? Guests);
+record QuickCheckRequest(string? Sport, Guid[]? UserIds, GuestCheckDto[]? Guests, bool? IsSingles);
 record GuestCheckDto(string? Email, string? Phone);
-record QuickMatchRequest(string? Sport, Guid? CircleId, string? CircleName, PlayerSlotDto[] Team1, PlayerSlotDto[] Team2, SetScoreDto[] Sets);
+record QuickMatchRequest(string? Sport, Guid? CircleId, string? CircleName, PlayerSlotDto[] Team1, PlayerSlotDto[] Team2, SetScoreDto[] Sets, bool? IsSingles);

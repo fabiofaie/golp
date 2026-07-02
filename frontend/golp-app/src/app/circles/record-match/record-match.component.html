@@ -33,9 +33,20 @@
   <h1 class="auth-title">Registra<br>Partita.</h1>
 
   @if (circle) {
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:24px;">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
       <span class="sport-badge" [class]="'sport-badge--' + circle.sport">{{ circle.sport }}</span>
       <span style="font-size:13px; color:var(--color-text-secondary);">{{ circle.name }}</span>
+    </div>
+  }
+
+  @if (allowsSingles) {
+    <div style="display:flex; gap:8px; margin-bottom:16px;">
+      <button type="button" class="slot-toggle-btn"
+              [class.slot-toggle-btn--active]="!isSingles"
+              (click)="toggleFormat(false)">Doppio</button>
+      <button type="button" class="slot-toggle-btn"
+              [class.slot-toggle-btn--active]="isSingles"
+              (click)="toggleFormat(true)">Singolo</button>
     </div>
   }
 
@@ -52,7 +63,7 @@
     <div class="team-block team-block--team1">
       <p class="team-label team-label--team1">Squadra 1</p>
       <div style="display:flex; flex-direction:column; gap:12px;">
-        @for (slotIndex of [0, 1]; track slotIndex) {
+        @for (slotIndex of team1Slots; track slotIndex) {
           <div class="player-slot-card"
                [style.border-color]="slots[slotIndex].mode === 'ospite' ? 'rgba(245,158,11,0.25)' : ''">
             <div class="slot-toggle" style="margin-bottom:8px;">
@@ -120,7 +131,7 @@
     <div class="team-block team-block--team2">
       <p class="team-label team-label--team2">Squadra 2</p>
       <div style="display:flex; flex-direction:column; gap:12px;">
-        @for (slotIndex of [2, 3]; track slotIndex) {
+        @for (slotIndex of team2Slots; track slotIndex) {
           <div class="player-slot-card"
                [style.border-color]="slots[slotIndex].mode === 'ospite' ? 'rgba(245,158,11,0.25)' : ''">
             <div class="slot-toggle" style="margin-bottom:8px;">
@@ -258,7 +269,7 @@
   </button>
 
   <p style="font-size:11px; color:var(--color-text-placeholder); text-align:center; margin-top:12px;">
-    La partita sarà in attesa di conferma degli altri 3 giocatori.
+    La partita sarà in attesa di conferma dagli altri partecipanti.
   </p>
 
   } <!-- end @else -->

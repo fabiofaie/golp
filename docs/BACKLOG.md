@@ -1,12 +1,12 @@
 ﻿# Backlog — GOLP
 
-**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-07-01
+**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-07-02
 
 ## Riepilogo
 
 - Epic totali: 6
-- Storie totali: 44
-- Storie TODO: 16 | PLANNED: 1 | IN_PROGRESS: 1 | REVIEW: 5 | DONE: 22
+- Storie totali: 46
+- Storie TODO: 18 | PLANNED: 1 | IN_PROGRESS: 1 | REVIEW: 5 | DONE: 22
 
 ---
 
@@ -1652,3 +1652,70 @@ Avviando l'app nei tre ambienti, il logo in alto a destra mostra colori distinti
 > **PROSSIMO PASSO:** avvia il piano tecnico con `/eq-plan US-046`.
 
 ---
+
+#### US-047: Backend — supporto partite singolo (1v1)
+
+**Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 5 | **Status:** DONE
+**Blocked by:** -
+**Approved (2026-07-02):** Review umana OK.
+**Review note (2026-07-02):** Codice in `src/Golp.Api/`, test in `src/Golp.Tests/Integration/SinglesMatchTests.cs`. Reviewer APPROVE.
+
+**Story**
+Come giocatore, voglio poter registrare una partita singolo (1v1) in un circolo il cui sport lo consente, così che il risultato venga convalidato dai 2 partecipanti e il ranking si aggiorni correttamente.
+
+**Demonstrates**
+Tramite API si registra una partita singolo in un circolo con sport `AllowsSingles=true`. La partita risulta `pending` con 2 slot giocatore invece di 4. Dopo 2 conferme lo status diventa `confirmed` e i rating ELO dei 2 giocatori si aggiornano. Registrare singolo su sport con `AllowsSingles=false` restituisce 400.
+
+**Acceptance Criteria**
+- [ ] La tabella `Sports` ha colonna `AllowsSingles` (bool, default `false`); gli sport che la supportano (padel, beachtennis) hanno `AllowsSingles=true` via migration seed
+- [ ] `SportDto` espone `AllowsSingles` alla frontend
+- [ ] `Match` entity: `Team1Player2Id` e `Team2Player2Id` diventano `Guid?` (nullable); aggiunta colonna `IsSingles` (bool, default `false`)
+- [ ] Endpoint `POST /circles/{id}/matches`: accetta `isSingles: true` nel body; se `true`, valida che sport.AllowsSingles=true e che `team1` e `team2` abbiano esattamente 1 elemento ciascuno; se `false` o assente, comportamento invariato (2 player per squadra)
+- [ ] Il numero di conferme richieste per `confirmed` è `IsSingles ? 2 : 4` — non hard-coded
+- [ ] `RatingService`: per partite singolo, team rating = rating del singolo giocatore (no media); calcola 2 delta invece di 4; check `memberships.Count` usa il numero corretto in base a `IsSingles`
+- [ ] Lista partite e dettaglio partita restituiscono correttamente `team1` e `team2` con 1 o 2 elementi in base a `IsSingles`
+- [ ] I test di integrazione coprono: registrazione singolo valida, registrazione singolo su sport non supportato (400), conferma con 2 giocatori, calcolo ELO singolo
+
+**Out of scope**
+- Classifica separata per singolo vs doppio (ELO unificato — scelta consapevole)
+- Modifiche al frontend (coperte da US-048)
+- Nuovi sport: si abilitano via `AllowsSingles=true` su sport esistenti, non si aggiungono key nuove
+
+**Open questions**
+- (nessuna)
+
+---
+
+#### US-048: Frontend — registrazione e visualizzazione partite singolo
+
+**Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 3 | **Status:** DONE
+**Blocked by:** US-047
+**Approved (2026-07-02):** Review umana OK.
+**Review note (2026-07-02):** Codice in `frontend/golp-app/src/app/circles/`, test in `*.spec.ts`. Reviewer APPROVE. 3 test pre-esistenti rimangono rossi (non causati da US-048).
+
+**Story**
+Come giocatore, voglio che il form di registrazione partita mostri 1 o 2 slot per squadra in base al formato scelto, e che la lista partite indichi chiaramente se una partita è stata giocata in singolo o doppio.
+
+**Demonstrates**
+In un circolo con sport `AllowsSingles=true`, il form "registra partita" mostra un toggle singolo/doppio. Scegliendo singolo, ogni squadra ha un solo campo giocatore. La partita salvata appare nella lista con un badge "1v1". Nei circoli con sport `AllowsSingles=false` il toggle non compare e il form rimane invariato.
+
+**Acceptance Criteria**
+- [ ] Il form "registra partita" legge `sport.allowsSingles` dall'API; se `false`, nessun cambiamento visivo rispetto all'attuale
+- [ ] Se `allowsSingles=true`, compare un toggle/selector "Singolo / Doppio" (default: doppio)
+- [ ] Scegliendo "Singolo", ogni squadra mostra 1 solo campo giocatore; scegliendo "Doppio", 2 campi (comportamento attuale)
+- [ ] Il body della chiamata `POST /circles/{id}/matches` include `isSingles: true/false` in base alla selezione
+- [ ] Nella lista partite del circolo, le partite singolo mostrano un badge o etichetta "1v1" distinguibile dal doppio
+- [ ] Il dettaglio partita singolo mostra correttamente 1 giocatore per squadra (no slot vuoti o null visibili)
+- [ ] Regressione: nei circoli con sport senza singolo, il flusso di registrazione è identico all'attuale
+
+**Out of scope**
+- Filtro lista partite per formato (singolo/doppio)
+- Statistiche separate singolo vs doppio
+- Quick Match in modalità singolo (estensione futura)
+
+**Open questions**
+- (nessuna)
+
+---
+
+> **PROSSIMO PASSO:** avvia il piano tecnico con `/eq-plan US-047` per il backend del singolo.
