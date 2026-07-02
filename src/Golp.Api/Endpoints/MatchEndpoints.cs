@@ -179,12 +179,12 @@ public static class MatchEndpoints
         // US-042: dati dei destinatari per il componente share (nome + phone per wa.me / Web Share).
         var recipientData = await db.Users
             .Where(u => recipientIds.Contains(u.Id))
-            .Select(u => new { u.Id, u.Name, u.Phone })
+            .Select(u => new { u.Id, u.Name, u.Phone, u.IsActivated })
             .ToListAsync();
         var confirmationLinks = confirmationTokens.Select(t =>
         {
             var u = recipientData.First(x => x.Id == t.UserId);
-            return new { userId = u.Id, name = u.Name, phone = u.Phone, tokenUrl = tokenLinkByUser[t.UserId] };
+            return new { userId = u.Id, name = u.Name, phone = u.Phone, isActivated = u.IsActivated, tokenUrl = tokenLinkByUser[t.UserId] };
         }).ToList();
 
         _ = Task.Run(async () =>
@@ -336,7 +336,8 @@ public static class MatchEndpoints
         Guid circleId,
         Guid matchId,
         ClaimsPrincipal user,
-        AppDbContext db)
+        AppDbContext db,
+        IConfiguration configuration)
     {
         var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
@@ -409,6 +410,27 @@ public static class MatchEndpoints
             };
         }
 
+        // Token link per giocatori non ancora confermati (solo creatore partita o owner circolo, solo se pending)
+        object? confirmationLinks = null;
+        if (match.Status == "pending")
+        {
+            var isCreator = match.CreatedById == userId;
+            var isCircleOwner = await db.Circles.AnyAsync(c => c.Id == circleId && c.OwnerId == userId);
+            if (isCreator || isCircleOwner)
+            {
+                var unconfirmedIds = playerIds.Except(confirmedUserIds).ToArray();
+                var tokens = await db.MatchConfirmationTokens
+                    .Where(t => t.MatchId == matchId && unconfirmedIds.Contains(t.UserId) && t.UsedAt == null)
+                    .ToListAsync();
+                var frontendBase = configuration["Cors:AllowedOrigins:0"] ?? "http://localhost:4200";
+                confirmationLinks = tokens.Select(t => new
+                {
+                    userId   = t.UserId,
+                    tokenUrl = $"{frontendBase}/m/{t.Token}",
+                }).ToList();
+            }
+        }
+
         return Results.Ok(new
         {
             id                      = match.Id,
@@ -424,6 +446,7 @@ public static class MatchEndpoints
             isForced,
             deltas,
             sets,
+            confirmationLinks,
             team1 = new[]
             {
                 new { userId = match.Team1Player1Id, name = userNames.GetValueOrDefault(match.Team1Player1Id, ""), isActivated = playerInfos.GetValueOrDefault(match.Team1Player1Id)?.IsActivated ?? true },

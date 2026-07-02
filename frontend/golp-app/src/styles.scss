@@ -992,6 +992,24 @@ body.has-pwa-install-banner {
   color: var(--color-text-placeholder);
 }
 
+.btn-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 4px 10px;
+  border-radius: var(--r-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-elevated);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  text-decoration: none;
+  cursor: pointer;
+  &:hover { border-color: var(--color-accent); color: var(--color-accent); }
+}
+
 .status-badge {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);

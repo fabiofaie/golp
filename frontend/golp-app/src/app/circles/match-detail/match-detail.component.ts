@@ -55,4 +55,8 @@ export class MatchDetailComponent implements OnInit {
     if (!this.match) return [];
     return [...this.match.team1, ...this.match.team2];
   }
+
+  tokenUrlFor(userId: string): string | null {
+    return this.match?.confirmationLinks?.find(l => l.userId === userId)?.tokenUrl ?? null;
+  }
 }

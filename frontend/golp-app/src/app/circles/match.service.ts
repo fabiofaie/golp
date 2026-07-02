@@ -25,6 +25,7 @@ export interface ConfirmationLink {
   userId: string;
   name: string;
   phone: string | null;
+  isActivated: boolean;
   tokenUrl: string;
 }
 
@@ -65,6 +66,11 @@ export interface PlayerDelta {
   delta: number | null;
 }
 
+export interface ConfirmationTokenLink {
+  userId: string;
+  tokenUrl: string;
+}
+
 export interface MatchDetail extends MatchSummary {
   isParticipant: boolean;
   sets: MatchSetScore[];
@@ -73,6 +79,7 @@ export interface MatchDetail extends MatchSummary {
   isForced: boolean | null;
   deltas: PlayerDelta[] | null;
   confirmations: string[];
+  confirmationLinks: ConfirmationTokenLink[] | null;
 }
 
 export interface ConfirmDisputeResponse {
@@ -244,5 +251,9 @@ export class MatchService {
 
   disputeViaToken(token: string): Observable<PublicConfirmDisputeResponse> {
     return this.http.post<PublicConfirmDisputeResponse>(`${this.base}/m/${token}/dispute`, null);
+  }
+
+  patchGuestPhone(userId: string, phone: string): Observable<{ phone: string }> {
+    return this.http.patch<{ phone: string }>(`${this.base}/auth/guests/${userId}/phone`, { phone });
   }
 }

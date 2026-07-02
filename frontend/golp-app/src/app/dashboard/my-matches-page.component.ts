@@ -62,12 +62,7 @@ type Filter = "all" | "pending" | "disputed";
               <!-- header: data + circolo/sport | badge -->
               <div class="match-card-header">
                 <div>
-                  <a
-                    [routerLink]="['/circles', m.circleId, 'matches', m.matchId, 'detail']"
-                    class="match-date"
-                    style="text-decoration:underline;">
-                    {{ m.createdAt | date: "dd/MM, HH:mm" }}
-                  </a>
+                  <span class="match-date">{{ m.createdAt | date: "dd/MM, HH:mm" }}</span>
                   <div style="margin-top:3px; display:flex; gap:6px; align-items:center;">
                     <span
                       style="font-size:11px; font-weight:700; color:var(--color-text-secondary); text-transform:uppercase; letter-spacing:0.04em;"
@@ -94,6 +89,11 @@ type Filter = "all" | "pending" | "disputed";
                       {{ m.myDelta! >= 0 ? "+" : "" }}{{ m.myDelta }} pt
                     </span>
                   }
+                  <a
+                    [routerLink]="['/circles', m.circleId, 'matches', m.matchId, 'detail']"
+                    class="btn-detail">
+                    Dettagli
+                  </a>
                 </div>
               </div>
 

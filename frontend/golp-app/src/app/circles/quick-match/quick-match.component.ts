@@ -267,21 +267,68 @@ type Step = "sport" | "players" | "picker" | "score";
           </div>
 
           <!-- Sets -->
-          <h2 class="qm-section-title">Risultato</h2>
-          @for (set of sets; track $index) {
-            <div class="qm-set-row">
-              <span class="qm-set-label">{{ selectedSport?.sets ? "Set " + ($index + 1) : "Punteggio" }}</span>
-              <input class="qm-score-input" type="number" min="0" [(ngModel)]="set.team1" placeholder="A" />
-              <span class="qm-score-sep">–</span>
-              <input class="qm-score-input" type="number" min="0" [(ngModel)]="set.team2" placeholder="B" />
-              @if (selectedSport?.sets && sets.length > 1) {
-                <button class="qm-remove-set" (click)="removeSet($index)">×</button>
+          <div>
+            <p class="section-label">Punteggio{{ selectedSport?.sets ? " (set)" : "" }}</p>
+
+            @if (selectedSport?.sets) {
+              <!-- header Sq.1 / Sq.2 -->
+              <div class="score-row" style="margin-bottom:4px;">
+                <span style="width:36px; flex-shrink:0;"></span>
+                <div class="score-inputs">
+                  <div class="score-input-wrap" style="text-align:center;">
+                    <span class="score-team-label score-team-label--t1">SQ.1</span>
+                  </div>
+                  <span style="visibility:hidden;" class="score-dash">—</span>
+                  <div class="score-input-wrap" style="text-align:center;">
+                    <span class="score-team-label score-team-label--t2">SQ.2</span>
+                  </div>
+                </div>
+                <span style="width:24px; flex-shrink:0;"></span>
+              </div>
+
+              @for (set of sets; track $index; let i = $index) {
+                <div class="score-row">
+                  <span class="score-set-label">Set {{ i + 1 }}</span>
+                  <div class="score-inputs">
+                    <div class="score-input-wrap">
+                      <input type="number" class="score-input score-input--team1"
+                             placeholder="0" min="0" [(ngModel)]="set.team1" />
+                    </div>
+                    <span class="score-dash">—</span>
+                    <div class="score-input-wrap">
+                      <input type="number" class="score-input score-input--team2"
+                             placeholder="0" min="0" [(ngModel)]="set.team2" />
+                    </div>
+                  </div>
+                  <button type="button" class="score-remove-btn"
+                          (click)="removeSet(i)" [disabled]="sets.length <= 1">×</button>
+                </div>
               }
-            </div>
-          }
-          @if (selectedSport?.sets) {
-            <button class="qm-add-set" (click)="addSet()">+ Aggiungi set</button>
-          }
+
+              <button type="button" class="add-set-btn" (click)="addSet()">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                Aggiungi set
+              </button>
+
+            } @else {
+              <!-- single score mode -->
+              <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
+                <div style="flex:1; text-align:center;">
+                  <div class="score-team-label score-team-label--t1" style="margin-bottom:8px;">Squadra A</div>
+                  <input type="number" class="score-single-input score-single-input--t1"
+                         placeholder="0" min="0" [(ngModel)]="sets[0].team1" />
+                </div>
+                <span class="score-dash" style="font-size:var(--font-size-xl); margin-top:20px;">–</span>
+                <div style="flex:1; text-align:center;">
+                  <div class="score-team-label score-team-label--t2" style="margin-bottom:8px;">Squadra B</div>
+                  <input type="number" class="score-single-input score-single-input--t2"
+                         placeholder="0" min="0" [(ngModel)]="sets[0].team2" />
+                </div>
+              </div>
+            }
+          </div>
 
           <!-- Step 4: circle name (new group only) -->
           @if (!selectedCircle) {
@@ -705,67 +752,6 @@ type Step = "sport" | "players" | "picker" | "score";
         font-weight: 700;
         color: var(--color-text-secondary);
         flex-shrink: 0;
-      }
-
-      .qm-set-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 12px;
-      }
-
-      .qm-set-label {
-        font-size: 12px;
-        color: var(--color-text-secondary);
-        width: 36px;
-        flex-shrink: 0;
-      }
-
-      .qm-score-input {
-        flex: 1;
-        min-width: 0;
-        box-sizing: border-box;
-        padding: 12px 8px;
-        text-align: center;
-        border-radius: 10px;
-        border: 1px solid var(--color-border);
-        background: var(--color-surface);
-        color: var(--color-text);
-        font-size: 24px;
-        font-weight: 900;
-        outline: none;
-        transition: border-color 0.15s;
-      }
-
-      .qm-score-input:focus {
-        border-color: var(--color-accent);
-      }
-
-      .qm-score-sep {
-        font-size: 14px;
-        font-weight: 700;
-        color: var(--color-text-secondary);
-        width: 16px;
-        text-align: center;
-        flex-shrink: 0;
-      }
-
-      .qm-remove-set {
-        background: none;
-        border: none;
-        color: var(--color-text-secondary);
-        cursor: pointer;
-        font-size: 16px;
-      }
-
-      .qm-add-set {
-        align-self: flex-start;
-        background: none;
-        border: none;
-        color: var(--color-accent);
-        font-size: 13px;
-        cursor: pointer;
-        padding: 0;
       }
 
       .qm-name-section {

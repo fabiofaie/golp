@@ -270,12 +270,12 @@ public static class QuickMatchEndpoints
             // US-042: nomi+phone per il componente share lato frontend.
             var recipientDataA = await db.Users
                 .Where(u => recipientsA.Contains(u.Id))
-                .Select(u => new { u.Id, u.Name, u.Phone })
+                .Select(u => new { u.Id, u.Name, u.Phone, u.IsActivated })
                 .ToListAsync();
             var confirmationLinksA = tokensA.Select(t =>
             {
                 var u = recipientDataA.First(x => x.Id == t.UserId);
-                return new { userId = u.Id, name = u.Name, phone = u.Phone, tokenUrl = linksA[t.UserId] };
+                return new { userId = u.Id, name = u.Name, phone = u.Phone, isActivated = u.IsActivated, tokenUrl = linksA[t.UserId] };
             }).ToList();
 
             FireNotifications(scopeFactory, loggerFactory, matchA.Id, circle.Id, circle.Name, recipientsA, linksA);
@@ -328,12 +328,12 @@ public static class QuickMatchEndpoints
             // US-042: nomi+phone per il componente share lato frontend.
             var recipientDataB = await db.Users
                 .Where(u => recipientsB.Contains(u.Id))
-                .Select(u => new { u.Id, u.Name, u.Phone })
+                .Select(u => new { u.Id, u.Name, u.Phone, u.IsActivated })
                 .ToListAsync();
             var confirmationLinksB = tokensB.Select(t =>
             {
                 var u = recipientDataB.First(x => x.Id == t.UserId);
-                return new { userId = u.Id, name = u.Name, phone = u.Phone, tokenUrl = linksB[t.UserId] };
+                return new { userId = u.Id, name = u.Name, phone = u.Phone, isActivated = u.IsActivated, tokenUrl = linksB[t.UserId] };
             }).ToList();
 
             FireNotifications(scopeFactory, loggerFactory, matchB.Id, newCircle.Id, newCircle.Name, recipientsB, linksB);

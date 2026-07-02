@@ -21,6 +21,7 @@ public static class AuthEndpoints
         group.MapGet("/me", GetMeAsync).RequireAuthorization();
         group.MapPut("/me", UpdateMeAsync).RequireAuthorization();
         group.MapPost("/me/delete", DeleteAccountAsync).RequireAuthorization();
+        group.MapPatch("/guests/{userId:guid}/phone", PatchGuestPhoneAsync).RequireAuthorization();
         group.MapPost("/password-reset/request", RequestPasswordResetAsync);
         group.MapPost("/password-reset/confirm", ConfirmPasswordResetAsync);
 
@@ -279,6 +280,30 @@ public static class AuthEndpoints
         return Results.Ok();
     }
 
+    // PATCH /auth/guests/{userId}/phone
+    private static async Task<IResult> PatchGuestPhoneAsync(
+        Guid userId,
+        PatchGuestPhoneRequest req,
+        ClaimsPrincipal caller,
+        AppDbContext db)
+    {
+        if (string.IsNullOrWhiteSpace(req.Phone))
+            return Results.BadRequest(new { error = "Numero di telefono obbligatorio" });
+
+        var guest = await db.Users.FindAsync(userId);
+        if (guest == null)
+            return Results.NotFound(new { error = "Utente non trovato" });
+
+        if (guest.IsActivated)
+            return Results.Json(new { error = "Operazione non consentita per utenti registrati" }, statusCode: 403);
+
+        guest.Phone = req.Phone.Trim();
+        guest.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new { phone = guest.Phone });
+    }
+
     private static bool IsValidEmail(string email) =>
         new EmailAddressAttribute().IsValid(email);
 }
@@ -291,3 +316,4 @@ record DeleteAccountRequest(string Password);
 record PasswordResetRequestRequest(string Email);
 record PasswordResetConfirmRequest(string Token, string NewPassword);
 record UpdateMeRequest(string Name);
+record PatchGuestPhoneRequest(string Phone);

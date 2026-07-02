@@ -36,9 +36,7 @@
 
           <!-- header -->
           <div class="match-card-header">
-            <a [routerLink]="['/circles', circleId, 'matches', m.id, 'detail']" class="match-date" style="text-decoration:underline;">
-              {{ m.createdAt | date:'dd/MM, HH:mm' }}
-            </a>
+            <span class="match-date">{{ m.createdAt | date:'dd/MM, HH:mm' }}</span>
             <div style="display:flex; align-items:center; gap:6px;">
               @if (m.status !== 'confirmed') {
                 <span class="status-badge"
@@ -55,6 +53,7 @@
                   {{ m.myDelta! >= 0 ? '+' : '' }}{{ m.myDelta }} pt
                 </span>
               }
+              <a [routerLink]="['/circles', circleId, 'matches', m.id, 'detail']" class="btn-detail">Dettagli</a>
             </div>
           </div>
 

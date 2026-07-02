@@ -1,6 +1,6 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ConfirmationLink } from '../match.service';
+import { ConfirmationLink, MatchService } from '../match.service';
 
 @Component({
   selector: 'app-share-confirm',
@@ -21,7 +21,7 @@ import { ConfirmationLink } from '../match.service';
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
+      gap: 12px;
       padding: 14px 16px;
       border-bottom: 1px solid var(--color-border);
     }
@@ -40,8 +40,16 @@ import { ConfirmationLink } from '../match.service';
       white-space: nowrap;
     }
 
+    .share-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
     .btn-share,
-    .btn-whatsapp {
+    .btn-whatsapp,
+    .btn-whatsapp-ghost {
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -53,6 +61,7 @@ import { ConfirmationLink } from '../match.service';
       cursor: pointer;
       text-decoration: none;
       transition: opacity 0.15s;
+      border: none;
     }
 
     .btn-share {
@@ -68,12 +77,20 @@ import { ConfirmationLink } from '../match.service';
 
     .btn-whatsapp {
       background: #25D366;
-      border: none;
       color: #fff;
     }
 
-    .btn-whatsapp:hover {
-      opacity: 0.88;
+    .btn-whatsapp:hover { opacity: 0.88; }
+
+    .btn-whatsapp-ghost {
+      background: none;
+      border: 1px solid var(--color-border);
+      color: var(--color-text-placeholder);
+    }
+
+    .btn-whatsapp-ghost:hover {
+      border-color: #25D366;
+      color: #25D366;
     }
 
     .share-fallback {
@@ -105,9 +122,7 @@ import { ConfirmationLink } from '../match.service';
       white-space: nowrap;
     }
 
-    .btn-copy:hover {
-      border-color: var(--color-accent);
-    }
+    .btn-copy:hover { border-color: var(--color-accent); }
   `]
 })
 export class ShareConfirmComponent {
@@ -115,17 +130,53 @@ export class ShareConfirmComponent {
   @Input() sport = '';
   @Input() circleName = '';
 
-  readonly hasShare =
-    typeof navigator !== 'undefined' && 'share' in navigator;
+  private readonly matchSvc = inject(MatchService);
+
+  readonly hasShare = typeof navigator !== 'undefined' && 'share' in navigator;
+  readonly hasContactPicker =
+    typeof navigator !== 'undefined' &&
+    'contacts' in navigator &&
+    'ContactsManager' in window;
 
   copiedUserId: string | null = null;
 
-  waUrl(link: ConfirmationLink): string {
-    const phone = link.phone!.replace(/\D/g, '');
+  waUrl(phone: string, name: string, tokenUrl: string): string {
+    const cleaned = phone.replace(/\D/g, '');
     const text = encodeURIComponent(
-      `Ciao ${link.name}! Ho registrato una partita di ${this.sport} nel circolo ${this.circleName}. Conferma il risultato qui: ${link.tokenUrl}`
+      `Ciao ${name}! Ho registrato una partita di ${this.sport} nel circolo ${this.circleName}. Conferma il risultato qui: ${tokenUrl}`
     );
-    return `https://wa.me/${phone}?text=${text}`;
+    return `https://wa.me/${cleaned}?text=${text}`;
+  }
+
+  async onWaGhostClick(link: ConfirmationLink): Promise<void> {
+    if (!this.hasContactPicker) return;
+    try {
+      const contacts: Array<{ name?: string[]; tel?: string[] }> =
+        await (navigator as any).contacts.select(['name', 'tel'], { multiple: false });
+      if (!contacts.length || !contacts[0].tel?.length) return;
+
+      const phone = contacts[0].tel[0].trim();
+
+      if (!link.isActivated) {
+        // ospite: salva nel DB
+        this.matchSvc.patchGuestPhone(link.userId, phone).subscribe({
+          next: (res) => {
+            const idx = this.links.findIndex(l => l.userId === link.userId);
+            if (idx !== -1) {
+              this.links = this.links.map((l, i) =>
+                i === idx ? { ...l, phone: res.phone } : l
+              );
+            }
+            window.open(this.waUrl(phone, link.name, link.tokenUrl), '_blank', 'noopener');
+          },
+        });
+      } else {
+        // utente registrato: apri WA senza salvare
+        window.open(this.waUrl(phone, link.name, link.tokenUrl), '_blank', 'noopener');
+      }
+    } catch {
+      // utente ha annullato — no-op
+    }
   }
 
   async shareLink(link: ConfirmationLink): Promise<void> {
@@ -136,7 +187,7 @@ export class ShareConfirmComponent {
         url: link.tokenUrl,
       });
     } catch {
-      // user cancelled or share not supported — no-op
+      // utente ha annullato — no-op
     }
   }
 
@@ -146,7 +197,7 @@ export class ShareConfirmComponent {
       this.copiedUserId = link.userId;
       setTimeout(() => { this.copiedUserId = null; }, 2000);
     } catch {
-      // clipboard not available — no-op
+      // clipboard non disponibile — no-op
     }
   }
 }
