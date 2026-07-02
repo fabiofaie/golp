@@ -522,6 +522,7 @@ Come proprietario del circolo, voglio una conferma esplicita con avviso di irrev
 Quando il proprietario preme "Forza conferma" su una partita `pending`, prima dell'esecuzione viene mostrato un passaggio di conferma esplicito (es. dialog) con il testo che l'azione è definitiva e la partita non potrà più essere modificata. Solo dopo la conferma esplicita la chiamata di forzatura viene eseguita; annullando il dialog non succede nulla.
 
 **Acceptance Criteria**
+
 - [ ] Cliccando "Forza conferma" appare un passaggio di conferma esplicito separato dal click iniziale (non un singolo click diretto sull'azione)
 - [ ] Il testo del passaggio di conferma indica chiaramente che una volta forzata la partita non è più modificabile
 - [ ] Annullando il passaggio di conferma, nessuna chiamata API viene effettuata e la partita resta `pending`
@@ -529,10 +530,12 @@ Quando il proprietario preme "Forza conferma" su una partita `pending`, prima de
 - [ ] Il vincolo "partita forzata non più modificabile" è già vero lato backend (nessuna modifica al modello di stato richiesta) — questa storia copre solo l'avviso esplicito lato UI prima dell'azione
 
 **Out of scope**
+
 - Introdurre un meccanismo di modifica/riapertura partite forzate (resta non previsto, come da US-013)
 - Nota/motivazione testuale obbligatoria per la forzatura (questione aperta separata in US-013)
 
 **Open questions**
+
 - (nessuna)
 
 ---
@@ -551,6 +554,7 @@ Come giocatore, voglio poter cliccare su una partita nell'elenco e vedere una pa
 Dall'elenco partite del circolo, cliccando su una partita (in qualsiasi stato: `pending`, `confirmed`, `disputed`) si naviga a una pagina dedicata che mostra: risultato per set/game o punteggio secondo lo sport, data di registrazione della partita, data di conferma (se confermata) e da chi è stata confermata l'ultima conferma necessaria (4° giocatore o forzatura del proprietario, vedi US-013), e la variazione di rating (delta) introdotta dalla partita per ciascuno dei 4 giocatori. Per partite `pending`, la pagina non mostra delta (non ancora calcolato).
 
 **Acceptance Criteria**
+
 - [ ] Cliccando una riga dell'elenco partite si naviga a una pagina dedicata `/circles/:circleId/matches/:matchId/detail` (o rotta equivalente, distinta da quella di conferma US-005)
 - [ ] La pagina mostra il risultato della partita (set/game o punteggio secondo `point_unit` dello sport)
 - [ ] La pagina mostra la data di registrazione della partita
@@ -560,11 +564,13 @@ Dall'elenco partite del circolo, cliccando su una partita (in qualsiasi stato: `
 - [ ] La pagina rispetta la multi-tenancy: un utente non membro del circolo non può accedere al dettaglio (403/404)
 
 **Out of scope**
+
 - Modifica dei dati della partita dalla pagina di dettaglio (resta read-only)
 - Storico delle modifiche di rating per il giocatore nel tempo (grafico andamento) — eventuale storia futura
 - Sostituire `MatchConfirmComponent` (US-005): quello resta il flusso di conferma per partite `pending`, questa è una vista di sola lettura aggiuntiva
 
 **Open questions**
+
 - (risolta in `/eq-plan`: derivabile da `MatchConfirmation`, `Match.ForceConfirmedById/At` e `Match.DeltaTeamXPlayerY` — nessuna nuova persistenza richiesta. Vedi `docs/planning/US-037.md`)
 
 ---
@@ -830,6 +836,7 @@ Come Marco, voglio che il calcolo del rating riconosca correttamente le partite 
 Per uno sport a set (es. padel), se una partita finisce 1-1 nei set ma con game totali diversi, la creazione partita è ora ammessa (il vincitore è deciso dai game) e il delta ELO viene calcolato usando solo la differenza di game (il contributo "set" del margine è azzerato). Se invece la partita finisce con lo stesso numero di game totali ma set diversi, il delta viene calcolato usando solo la differenza di reti/punti (point_unit dello sport). Un delta che arrotonderebbe a 0 per una partita con vincitore reale viene forzato a ±1. Il vero pareggio totale (set pari e game pari) resta bloccato in creazione come oggi, quindi non genera mai un delta.
 
 **Acceptance Criteria**
+
 - [ ] La creazione partita per sport a set ammette un pareggio di set (es. 1-1) quando i game totali decidono un vincitore: in questo caso il vincitore è la squadra con più game totali
 - [ ] La creazione partita resta bloccata con 400 solo per il vero pareggio totale (set pari E game totali pari) - invariato rispetto a oggi
 - [ ] Per sport a set: se i set vinti dalle due squadre sono uguali (ma i game decidono), il margine usato nella formula ELO si basa esclusivamente sulla differenza di game totali, ignorando la componente set
@@ -839,6 +846,7 @@ Per uno sport a set (es. padel), se una partita finisce 1-1 nei set ma con game 
 - [ ] La formula esistente (amplifier 0.7, K 32/48, rating iniziale 1000) resta invariata nei casi non di pareggio parziale
 
 **Out of scope**
+
 - Ricalcolo retroattivo dei rating storici già applicati con la formula precedente
 - Modifica dei parametri amplifier/K/rating iniziale
 - Esposizione della formula o del criterio di pareggio all'utente (algoritmo resta opaco)
@@ -846,6 +854,7 @@ Per uno sport a set (es. padel), se una partita finisce 1-1 nei set ma con game 
 - Estensione del concetto di pareggio parziale a sport senza set (burraco, basket2v2)
 
 **Open questions**
+
 - (nessuna — ambiguità risolte: pareggio di set ammesso solo se i game decidono il vincitore; pareggio totale resta bloccato per tutti gli sport)
 
 ---
@@ -1091,10 +1100,12 @@ Esiste un secondo set di token CSS (tema chiaro) accanto a quello scuro esistent
 - [ ] Nessuna pagina esistente applica ancora il tema chiaro in questa storia (solo i token sono definiti, l'attivazione è in US-028)
 
 **Out of scope**
+
 - Attivazione/switch del tema (vedi US-028)
 - Modifiche al layout o alla struttura dei componenti, solo colori
 
 **Open questions**
+
 - (nessuna)
 
 ---
@@ -1123,11 +1134,13 @@ Una nuova pagina "Profilo" (raggiungibile dall'area autenticata) mostra un contr
 - [ ] Su un device/browser diverso (o dopo pulizia localStorage), l'app torna al default scuro
 
 **Out of scope**
+
 - Sincronizzazione della preferenza tra device diversi o legata all'account (richiederebbe backend, non in questa storia)
 - Tema automatico basato su `prefers-color-scheme` del sistema operativo
 - Pagina impostazioni con altre opzioni oltre al tema (resta minimale, solo il toggle tema in questa storia)
 
 **Open questions**
+
 - (nessuna)
 
 ---
@@ -1159,11 +1172,13 @@ Nella pagina Profilo (introdotta in US-028) appare un toggle "Notifiche push" ol
 - [ ] Se l'app non è installata come PWA (rilevabile come in US-024), al posto del toggle/pulsante di test viene mostrato un pulsante o link guida per installare l'app, riusando il meccanismo di US-024 dove possibile
 
 **Out of scope**
+
 - Granularità per tipo di notifica (es. solo conferme partita vs solo inviti) — è on/off globale
 - Notifiche push su più device contemporaneamente gestite da questa storia (ogni device gestisce la propria subscription)
 - Invio di notifiche di test ad altri utenti (solo a se stessi)
 
 **Open questions**
+
 - (nessuna)
 
 ---
@@ -1190,11 +1205,13 @@ Nella pagina Profilo (introdotta in US-028) appare un campo con il nome visualiz
 - [ ] Un nome troppo lungo (oltre il limite definito lato backend) viene rifiutato con messaggio di errore prima del salvataggio
 
 **Out of scope**
+
 - Modifica di email o password da questa storia (restano flussi separati)
 - Cronologia/audit dei cambi nome
 - Unicità del nome visualizzato tra utenti (non è un vincolo richiesto)
 
 **Open questions**
+
 - (nessuna)
 
 ---
@@ -1221,10 +1238,12 @@ Nella pagina Profilo appare un'azione "Esci da tutti i device". Attivandola, tut
 - [ ] Un nuovo login dopo la revoca funziona normalmente ed emette un token valido
 
 **Out of scope**
+
 - Elenco dettagliato delle sessioni/device attivi con possibilità di revocarne una singola (qui è "tutte o nessuna")
 - Notifica email all'utente quando l'azione viene eseguita
 
 **Open questions**
+
 - (nessuna)
 
 ---
@@ -1253,11 +1272,13 @@ Nella pagina Profilo appare un'azione "Elimina account" che richiede conferma es
 - [ ] L'eliminazione è irreversibile dal punto di vista utente: non esiste un endpoint di "ripristino" account, anche se i dati restano anonimizzati in DB
 
 **Out of scope**
+
 - Periodo di grazia/soft-delete con possibilità di annullare l'eliminazione entro N giorni
 - Export dei propri dati prima della cancellazione (GDPR data portability) — eventuale storia futura
 - Hard delete fisico della riga utente (scelta esplicita: si anonimizza, non si rimuove)
 
 **Open questions**
+
 - (nessuna — confermata anonimizzazione/soft-delete, non hard delete)
 
 ---
@@ -1529,25 +1550,28 @@ Dalla pagina di dettaglio di una partita in stato `pending`, l'utente vede per o
 Come giocatore, voglio vedere sulla dashboard un elenco di tutte le mie partite (di tutti i circoli), ordinate dalla più recente alla più vecchia, così che posso monitorare i miei risultati e delta ELO senza entrare nei singoli circoli.
 
 **Demonstrates**
-Apro la dashboard e vedo una lista paginata delle mie partite con: nome circolo, sport, data, score (set), esito Win/Loss, delta ELO (se disponibile), stato (confermata / in attesa / disputata). Posso filtrare con tre toggle: Tutte / In attesa / Disputate. Le partite Quick Match (circoli auto-creati) sono incluse.
+Apro la dashboard e vedo una lista paginata delle mie partite con: nome circolo, sport, data, score (set), esito Win/Loss, delta ELO (se disponibile), stato (confermata / in attesa / disputata). Posso filtrare con tre toggle: Tutte / In attesa / Contestate. Le partite Quick Match (circoli auto-creati) sono incluse.
 
 **Acceptance Criteria**
+
 - [ ] Nuovo endpoint `GET /matches/mine?page=1&pageSize=20` restituisce partite dell'utente autenticato su tutti i circoli, ordinate per `CreatedAt` desc, con campi: `matchId`, `circleId`, `circleName`, `sport`, `createdAt`, `status`, `winnerTeam`, `myTeam` (1 o 2), `sets` (array score), `myDelta` (int? — null se pending/disputed), `hasCurrentUserConfirmed`
 - [ ] Response include `totalCount` e `page` per supportare paginazione lato client (load-more o pagine)
 - [ ] La dashboard mostra la lista partite sotto i link di navigazione esistenti
 - [ ] Ogni riga mostra: nome circolo, data, esito (Win/Loss o "—" se non confermata), score sintetico (es. "6-3 / 7-5"), delta ELO (es. "+12" verde / "-8" rosso / "—" se null), badge stato (confermata / in attesa / disputata)
-- [ ] Tre toggle di filtro: **Tutte** (default) | **In attesa** (`pending`) | **Disputate** (`disputed`)
+- [ ] Tre toggle di filtro: **Tutte** (default) | **In attesa** (`pending`) | **Contestate** (`disputed`)
 - [ ] Paginazione: bottone "Carica altre" appende la pagina successiva alla lista (infinite scroll-style, non replace)
 - [ ] Partite Quick Match (in circoli auto-creati) incluse nella lista
 - [ ] Se l'utente non ha partite, mostra empty state "Nessuna partita ancora"
 
 **Out of scope**
+
 - Dettaglio partita cliccabile (già US-037)
 - Filtro per singolo circolo o per sport
 - Grafici o trend ELO (feature separata)
 - Notifiche push per nuove partite
 
 **Open questions**
+
 - (nessuna)
 
 ---
@@ -1568,6 +1592,7 @@ Come giocatore, voglio vedere nella dashboard un pulsante che mi porta direttame
 Accedo alla dashboard e vedo un pulsante con scritto "⚡ Padel Roma" (o il nome del mio ultimo circolo). Cliccando vado a `/circles/{circleId}`. Se non ho mai giocato nessuna partita, il pulsante non appare.
 
 **Acceptance Criteria**
+
 - [ ] Nuovo endpoint `GET /matches/mine/last-circle` restituisce `{ circleId, circleName }` dell'ultimo circolo in cui l'utente ha giocato (ordinato per `Match.CreatedAt` desc), oppure 204 se nessuna partita esiste
 - [ ] La dashboard mostra il pulsante solo se la chiamata restituisce un circolo (no 204)
 - [ ] L'etichetta del pulsante mostra il nome del circolo (es. "Padel Roma")
@@ -1575,11 +1600,13 @@ Accedo alla dashboard e vedo un pulsante con scritto "⚡ Padel Roma" (o il nome
 - [ ] Se non ho partite, il pulsante è assente (niente placeholder o skeleton)
 
 **Out of scope**
+
 - Mostrare l'ultimo circolo dove sono membro ma non ho giocato
 - Storico degli ultimi N circoli
 - Badge con partite pending nel pulsante (feature separata)
 
 **Open questions**
+
 - (nessuna)
 
 ---
@@ -1602,6 +1629,7 @@ Come sviluppatore/amministratore, voglio che il logo nell'header e l'icona sul m
 Avviando l'app nei tre ambienti, il logo in alto a destra mostra colori distinti: arancione (#FF6B35 o simile) in prod, giallo in test, verde in dev. Installando la PWA su mobile, l'icona home-screen riflette lo stesso colore ambiente.
 
 **Acceptance Criteria**
+
 - [ ] In ambiente `production` il logo nell'header è arancione (colore attuale — nessuna regressione)
 - [ ] In ambiente `test` il logo nell'header è giallo
 - [ ] In ambiente `dev` (development) il logo nell'header è verde
@@ -1610,11 +1638,13 @@ Avviando l'app nei tre ambienti, il logo in alto a destra mostra colori distinti
 - [ ] Il cambio di colore/icona è guidato da `environment.ts` (o equivalente Angular), non da un flag runtime in build
 
 **Out of scope**
+
 - Splash screen o tema colore dell'intera UI (solo logo + icona manifest)
 - Ambienti aggiuntivi oltre dev/test/prod
 - Generazione automatica delle icone (le icone colorate si creano manualmente o con script esterno)
 
 **Open questions**
+
 - (nessuna)
 
 ---

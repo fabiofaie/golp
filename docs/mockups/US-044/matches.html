@@ -1,48 +1,45 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>GOLP — Le mie partite (US-044)</title>
-  <link rel="stylesheet" href="shared.css" />
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>GOLP — Le mie partite (US-044)</title>
+    <link rel="stylesheet" href="shared.css" />
+  </head>
+  <body>
+    <div class="page">
+      <!-- ===== HEADER ===== -->
+      <header class="app-header">
+        <a href="index.html" class="back-btn" aria-label="Indietro">←</a>
+        <span class="page-title">Le mie partite</span>
+        <div style="width: 40px"></div>
+        <!-- spacer -->
+      </header>
 
-<div class="page">
+      <!-- ===== SCROLLABLE CONTENT ===== -->
+      <div class="scroll-content">
+        <section>
+          <!-- Filter segmented control -->
+          <div class="filter-tabs" role="group" aria-label="Filtro partite">
+            <button class="filter-tab active" onclick="setFilter('all', this)">Tutte</button>
+            <button class="filter-tab" onclick="setFilter('pending', this)">In attesa</button>
+            <button class="filter-tab" onclick="setFilter('disputed', this)">Contestate</button>
+          </div>
 
-  <!-- ===== HEADER ===== -->
-  <header class="app-header">
-    <a href="index.html" class="back-btn" aria-label="Indietro">←</a>
-    <span class="page-title">Le mie partite</span>
-    <div style="width:40px"></div><!-- spacer -->
-  </header>
+          <!-- Total count -->
+          <div class="match-count" id="total-label"></div>
 
-  <!-- ===== SCROLLABLE CONTENT ===== -->
-  <div class="scroll-content">
+          <!-- Match list -->
+          <div class="match-list" id="match-list"></div>
 
-    <section>
-      <!-- Filter segmented control -->
-      <div class="filter-tabs" role="group" aria-label="Filtro partite">
-        <button class="filter-tab active" onclick="setFilter('all', this)">Tutte</button>
-        <button class="filter-tab" onclick="setFilter('pending', this)">In attesa</button>
-        <button class="filter-tab" onclick="setFilter('disputed', this)">Disputate</button>
+          <!-- Load more -->
+          <div class="load-more-wrap" id="load-more-wrap" style="display: none">
+            <button class="btn-load-more" onclick="loadMore()">Carica altre</button>
+          </div>
+        </section>
       </div>
+    </div>
 
-      <!-- Total count -->
-      <div class="match-count" id="total-label"></div>
-
-      <!-- Match list -->
-      <div class="match-list" id="match-list"></div>
-
-      <!-- Load more -->
-      <div class="load-more-wrap" id="load-more-wrap" style="display:none">
-        <button class="btn-load-more" onclick="loadMore()">Carica altre</button>
-      </div>
-    </section>
-
-  </div>
-</div>
-
-<script src="app.js"></script>
-</body>
+    <script src="app.js"></script>
+  </body>
 </html>
