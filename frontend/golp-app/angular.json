@@ -68,7 +68,7 @@
             "testing": {
               "outputHashing": "all",
               "serviceWorker": "ngsw-config.json",
-              "index": "src/index.testing.html",
+              "index": { "input": "src/index.testing.html", "output": "index.html" },
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
