@@ -5,11 +5,11 @@ export const environment = {
   brandColor: '#EAB308',
   apiUrl: 'https://golpapitest.eqproject.it',
   firebaseConfig: {
-    apiKey: '',
-    authDomain: '',
-    projectId: '',
-    messagingSenderId: '',
-    appId: '',
+    apiKey: 'AIzaSyCuAqF2kkBDbGBPSno-j3RlV7_DRmvOpJw',
+    authDomain: 'golp-30704.firebaseapp.com',
+    projectId: 'golp-30704',
+    messagingSenderId: '507888745564',
+    appId: '1:507888745564:web:8c61ac277eb28857d6ba99',
   },
-  vapidKey: '',
+  vapidKey: 'BO_2P0f2FoKqd6r5n5Vp5cvvXJFmyxRrmZFw-PGw1D_x9E55Z2TMe6euVAtYx0eYxSNAHsOiUzR18mx-XuXXlMo',
 };

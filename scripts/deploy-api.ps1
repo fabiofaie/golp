@@ -13,7 +13,7 @@ param(
     [string]$Env,
 
     # Path al serviceAccountKey.json (vedi docs/firebase-setup.md, step 4).
-    # Se omesso, le push notification restano disabilitate nel pacchetto pubblicato.
+    # Se omesso, viene letto dai user-secrets di Golp.Api (Firebase:ServiceAccountKeyPath).
     [string]$FirebaseServiceAccountKeyPath
 )
 
@@ -57,6 +57,15 @@ $vapidNode.SetAttribute("name", "Firebase__VapidPublicKey")
 $vapidNode.SetAttribute("value", $FirebaseVapidPublicKey)
 $envVarsNode.AppendChild($vapidNode) | Out-Null
 
+if (-not $FirebaseServiceAccountKeyPath) {
+    $secretLines = dotnet user-secrets list --project $project 2>$null
+    $keyLine = $secretLines | Where-Object { $_ -match '^Firebase:ServiceAccountKeyPath\s*=\s*(.+)$' }
+    if ($keyLine) {
+        $FirebaseServiceAccountKeyPath = $Matches[1].Trim()
+        Write-Host "Firebase:ServiceAccountKeyPath letto dai user-secrets: $FirebaseServiceAccountKeyPath" -ForegroundColor DarkCyan
+    }
+}
+
 if ($FirebaseServiceAccountKeyPath) {
     if (-not (Test-Path $FirebaseServiceAccountKeyPath)) {
         throw "FirebaseServiceAccountKeyPath non trovato: $FirebaseServiceAccountKeyPath"
@@ -69,7 +78,7 @@ if ($FirebaseServiceAccountKeyPath) {
     $envVarsNode.AppendChild($saNode) | Out-Null
 }
 else {
-    Write-Host "FirebaseServiceAccountKeyPath non specificato: push notification disabilitate in questo pacchetto." -ForegroundColor Yellow
+    Write-Host "Firebase:ServiceAccountKeyPath non trovato (né parametro né user-secrets): push notification disabilitate in questo pacchetto." -ForegroundColor Yellow
 }
 
 $xml.Save($webConfigPath)
