@@ -1,12 +1,12 @@
 ﻿# Backlog — GOLP
 
-**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-07-02
+**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-07-06
 
 ## Riepilogo
 
-- Epic totali: 6
-- Storie totali: 46
-- Storie TODO: 18 | PLANNED: 1 | IN_PROGRESS: 1 | REVIEW: 5 | DONE: 22
+- Epic totali: 9
+- Storie totali: 50
+- Storie TODO: 4 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 4 | DONE: 42
 
 ---
 
@@ -364,6 +364,352 @@ Registrando un nuovo account giocatore (US-001) arriva una email a `iscrizioni.g
 **Open questions**
 
 - Provider SMTP/transazionale di produzione da usare (es. SMTP relay esistente, SendGrid, ecc.) — da chiarire in `/eq-plan`
+
+---
+
+#### US-022: Numero di versione visibile in login e dashboard
+
+**Epic:** EP-005 | **Priority:** LOW | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-06-22):** Review umana OK.
+**Review note (2026-06-22):** Codice in `frontend/golp-app/scripts/generate-version.js` (generator), `frontend/golp-app/src/app/shared/version/app-version.component.ts` (componente condiviso + test), wiring in `scripts/deploy-frontend.ps1`. Verificato manualmente: determinismo stesso-commit (doppia esecuzione → stesso output), build+zip end-to-end con version.ts rigenerato (v38/d11eb98), unit test 2/2 verdi. Reviewer APPROVE — no critical aperti. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-022` (o aggiorna manualmente lo status a `DONE`).
+**Blocked by:** -
+
+**Story**
+Come amministratore/sviluppatore del progetto, voglio che la schermata di login e la dashboard mostrino un numero di versione del software, così che possa verificare rapidamente quale build è in esecuzione su ciascun ambiente (prod/test) senza dover ispezionare manualmente il deploy.
+
+**Demonstrates**
+Login e dashboard mostrano una piccola label di versione (es. in footer), non invasiva. La versione è derivata in modo deterministico dall'ultimo commit (hash o data) tramite un algoritmo riconoscibile da chi conosce la logica ma non deducibile dall'utente finale guardando solo il numero. Lo stesso commit produce sempre lo stesso numero di versione.
+
+**Acceptance Criteria**
+
+- [ ] La schermata di login mostra un numero di versione (es. in un footer discreto)
+- [ ] La dashboard mostra lo stesso numero di versione
+- [ ] Il numero di versione è generato automaticamente ad ogni build, senza intervento manuale (es. da script di build/CI, non da un valore hardcoded da aggiornare a mano)
+- [ ] Lo stesso commit produce sempre lo stesso numero di versione, in build diverse (deterministico)
+- [ ] Build di commit diversi producono numeri di versione diversi, così è possibile verificare se due ambienti (prod/test) eseguono lo stesso codice
+- [ ] Il formato mostrato all'utente è semplice da leggere e comunicare (es. pattern tipo semver o build counter), senza esporre direttamente hash o data del commit
+
+**Out of scope**
+
+- Changelog visibile all'utente collegato alla versione
+- Versioning semantico "vero" con incrementi manuali di major/minor per breaking change
+- Sincronizzazione di versione tra frontend e backend come requisito vincolante (possono avere numeri propri, da chiarire in piano tecnico)
+
+**Open questions**
+
+- Algoritmo esatto di trasformazione commit→numero versione (idee da valutare in `/eq-plan`: contatore commit via `git rev-list --count HEAD`, data ultimo commit in formato `YY.MM.DD`, oppure hash troncato mappato a base36/base62)
+- Frontend (build Angular) e backend (assembly .NET) mostrano versioni indipendenti o devono combaciare in un unico numero condiviso?
+
+---
+
+#### US-023: Aggiornamento automatico dei client dopo un rilascio
+
+**Epic:** EP-005 | **Priority:** LOW | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-22):** Review umana OK.
+**Review note (2026-06-22):** Codice in `frontend/golp-app/src/app/shared/update/` (`AppUpdateService` + `AppUpdateBannerComponent`, con test), wiring in `app.component.ts` (visibilitychange + NavigationEnd), cache hardening in `frontend/golp-app/public/web.config`. 12 unit test nuovi (6 service + 3 banner + 2 wiring AppComponent + build verificato). Test suite: 9 fail pre-esistenti (non toccati da questa storia), 78 verdi. Reviewer APPROVE — no critical aperti. Nota non bloccante: header HTTP reali (`index.html` no-cache, bundle cache lunga) verificati solo a livello build/struttura XML, non su IIS reale — da confermare al primo deploy su Testing. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-023` (o aggiorna manualmente lo status a `DONE`).
+**Blocked by:** -
+
+**Story**
+Come Marco (giocatore amatoriale che usa la PWA installata sul telefono) voglio che l'app mi avvisi quando è disponibile una nuova versione e mi lasci aggiornare con un click, così che dopo un rilascio non resti bloccato su una versione vecchia senza saperlo. Come amministratore/sviluppatore voglio che il meccanismo di cache HTTP non impedisca ai client di scoprire le nuove versioni.
+
+**Demonstrates**
+Dopo un deploy, un utente che ha l'app già aperta (o la riapre dopo averla lasciata in background) vede entro breve tempo un banner non invasivo "Nuova versione disponibile — Aggiorna"; al click, l'app si aggiorna e mostra il nuovo numero di versione (US-022). Nessun reload automatico forzato senza preavviso.
+
+**Acceptance Criteria**
+
+- [ ] `index.html` viene servito da IIS con cache non persistente (no-cache/validazione), così che un client non resti bloccato su un `index.html` vecchio che referenzia bundle non più esistenti
+- [ ] I bundle con hash di contenuto (JS/CSS generati da Angular CLI) hanno una politica di cache lunga esplicita (gli hash già garantiscono invalidazione automatica ad ogni build diversa)
+- [ ] Quando l'app torna in foreground (utente riapre il tab/la PWA dopo averla lasciata in background) o l'utente naviga tra le pagine principali, l'app verifica se è disponibile una versione più recente
+- [ ] Se una versione più recente è pronta, l'utente vede un banner/avviso non bloccante (niente `confirm()`/`alert()`) con un'azione esplicita per aggiornare
+- [ ] Al click sull'azione di aggiornamento, l'app attiva la nuova versione e si ricarica, mostrando il nuovo numero di versione (coerente con US-022)
+- [ ] Se non è disponibile nessuna versione nuova, non viene mostrato nessun banner (nessun falso positivo)
+- [ ] Il meccanismo di check non genera errori bloccanti se l'app è offline al momento del controllo
+
+**Out of scope**
+
+- Reload automatico forzato senza interazione dell'utente (si avvisa, non si interrompe il lavoro in corso)
+- Polling continuo a intervalli fissi in background (il check è legato a eventi: ritorno in foreground / navigazione tra pagine principali, non un timer sempre attivo)
+- Versione del backend (.NET API) — fuori scope come già per US-022
+- Un pulsante manuale "Aggiorna applicazione" sempre visibile indipendente dal banner (può essere una storia futura se il banner via eventi si rivela insufficiente)
+
+**Open questions**
+
+- Posizione e stile del banner di avviso: va deciso in fase di piano/design (toast in alto, barra in dashboard, badge vicino al numero di versione di US-022).
+- `web.config` (`frontend/golp-app/public/web.config`) oggi non ha nessuna direttiva di cache: va aggiunta una regola che tenga `index.html` sempre non-cacheable e dia cache lunga ai bundle hashati — la sintassi IIS esatta (override per singolo file dentro `<staticContent>`) va verificata in fase di piano tecnico.
+- Il meccanismo si basa su `SwUpdate` di `@angular/service-worker` (già registrato in `app.config.ts`, mai usato esplicitamente finora) — va confermato che la versione installata supporti l'API `versionUpdates`/`checkForUpdate()`/`activateUpdate()` usata nel piano.
+
+---
+
+#### US-027: Palette colori tema chiaro con contrasto verificato
+
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-23):** Review umana OK. Token validati live dal tema chiaro funzionante di US-028.
+**Review note (2026-06-23):** Codice in `frontend/golp-app/src/styles.scss` (nuovo blocco `:root.theme-light` con tutte le 65 `--color-*` ridefinite, parallele a quelle scure — verificato 1:1 via grep, nessuna var orfana). Token derivati da `docs/mockups/US-027/style-tokens.json` (mockup comparativo scuro/chiaro in `docs/mockups/US-027/index.html`). Blocco inerte: nessun componente applica la classe `theme-light` in questa storia (attivazione = US-028). Test suite frontend: 115/124 verdi, 9 fail pre-esistenti non toccati (PushNotificationService/AuthService/AppComponent). Reviewer APPROVE — no critical aperti. Nota non bloccante: alcuni valori hardcoded fuori da `:root` (`.score-input`, breakpoint desktop `body`, `.btn-action-primary`, `.feedback-icon`) restano scuri e andranno gestiti quando US-028 attiva il toggle. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-027` (o aggiorna manualmente lo status a `DONE`).
+**Blocked by:** -
+
+**Story**
+Come utente dell'app, voglio una palette colori chiara alternativa a quella scura attuale, così che possa scegliere il tema più leggibile per me senza perdere distinzione visiva tra elementi (oro/argento/bronzo, partner/avversario, sport, stati di errore/successo).
+
+**Demonstrates**
+Esiste un secondo set di token CSS (tema chiaro) accanto a quello scuro esistente in `styles.scss`: sfondo, superfici, testo, border invertiti su base chiara; i colori semantici (accent, oro/argento/bronzo, partner/avversario, sport, errore/successo) sono ricalibrati per garantire contrasto leggibile (AA) su sfondo chiaro, pur restando riconoscibili come "lo stesso colore" del tema scuro.
+
+**Acceptance Criteria**
+
+- [ ] Esiste un set completo di token colore per il tema chiaro, parallelo a quello scuro esistente (stessa lista di variabili `--color-*`)
+- [ ] Testo primario/secondario su sfondo chiaro rispetta un contrasto minimo WCAG AA (4.5:1 per testo normale, 3:1 per testo grande)
+- [ ] I colori oro/argento/bronzo (classifica) restano distinguibili tra loro su sfondo chiaro
+- [ ] I colori partner/avversario (statistiche) restano distinguibili tra loro su sfondo chiaro
+- [ ] I colori per sport (padel/beach tennis/basket/burraco) restano distinguibili tra loro su sfondo chiaro
+- [ ] I colori di errore/successo restano riconoscibili (non confondibili con altri stati) su sfondo chiaro
+- [ ] Nessuna pagina esistente applica ancora il tema chiaro in questa storia (solo i token sono definiti, l'attivazione è in US-028)
+
+**Out of scope**
+
+- Attivazione/switch del tema (vedi US-028)
+- Modifiche al layout o alla struttura dei componenti, solo colori
+
+**Open questions**
+
+- (nessuna)
+
+---
+
+#### US-028: Switch manuale tema chiaro/scuro con persistenza per device
+
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-23):** Review umana OK.
+**Review note (2026-06-23):** Nuovo `frontend/golp-app/src/app/theme/theme.service.ts` (signal + effect che applica classe `theme-light` su `document.documentElement`, default scuro, persistenza `localStorage` chiave `golp_theme`), inject in `app.component.ts` per attivazione al bootstrap. Nuovo `profile/profile.component.ts` (pagina Profilo con toggle Scuro/Chiaro, classi esistenti), rotta `/profilo` protetta in `app.routes.ts`, link in `dashboard.component.ts`. Test: 5 unit (ThemeService) + 3 component (ProfileComponent) + 2 e2e (`e2e/profile-theme.spec.ts`: default scuro, toggle chiaro, persistenza post-reload, cross-pagina) tutti verdi. Suite: 123/132 verdi, 9 fail pre-esistenti non toccati (PushNotificationService/AuthService/AppComponent `should render title` cerca boilerplate Angular rimosso). Reviewer APPROVE — no critical. Nota non bloccante: valori hardcoded fuori `:root` (`.score-input`, breakpoint desktop `body`, `.feedback-icon`) restano scuri anche in tema chiaro (rischio già noto da US-027) — follow-up per renderli tema-aware. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-028` (o aggiorna manualmente lo status a `DONE`).
+**Visual evidence (2026-06-23):** docs/test-results/US-028/report.md — verdetto **APPROVE** dopo fix. Il difetto iniziale (tema chiaro illeggibile su desktop ≥600px per valori CSS hardcoded fuori da `:root`) è stato corretto in reopen: nuovi token `--color-bg-deep`/`--color-input-bg`/`--color-input-border` in `styles.scss` + `style-tokens.json`, `.page{background:var(--color-bg)}`, media query desktop e score-input ora tema-aware. Re-verifica: screenshot `AC-3-FIXED-*` mostrano Profilo e dashboard leggibili in chiaro su desktop, e2e 2/2, suite 123/132 (9 pre-esistenti).
+**Blocked by:** US-027
+
+**Story**
+Come utente dell'app, voglio poter scegliere tra tema scuro e tema chiaro da una pagina impostazioni, così che la mia scelta resti applicata ad ogni mia visita successiva su questo dispositivo.
+
+**Demonstrates**
+Una nuova pagina "Profilo" (raggiungibile dall'area autenticata) mostra un controllo per scegliere tema scuro/chiaro. L'app parte sempre in tema scuro di default per un utente che non ha mai scelto; cambiando il controllo, l'interfaccia si aggiorna immediatamente con i token di US-027; la scelta resta valida nelle visite successive sullo stesso browser/device, anche dopo logout/login.
+
+**Acceptance Criteria**
+
+- [ ] Esiste una pagina/sezione "Profilo" raggiungibile dall'area autenticata con un controllo tema scuro/chiaro
+- [ ] Senza una scelta precedente salvata, l'app applica il tema scuro di default
+- [ ] Cambiando il controllo, l'interfaccia applica immediatamente la palette corrispondente (tutte le pagine, non solo quella impostazioni) senza reload manuale
+- [ ] La scelta di tema viene salvata in `localStorage` (non sul backend, non legata all'account)
+- [ ] Ricaricando la pagina o tornando sull'app in una sessione successiva sullo stesso device, il tema scelto resta applicato
+- [ ] Su un device/browser diverso (o dopo pulizia localStorage), l'app torna al default scuro
+
+**Out of scope**
+
+- Sincronizzazione della preferenza tra device diversi o legata all'account (richiederebbe backend, non in questa storia)
+- Tema automatico basato su `prefers-color-scheme` del sistema operativo
+- Pagina impostazioni con altre opzioni oltre al tema (resta minimale, solo il toggle tema in questa storia)
+
+**Open questions**
+
+- (nessuna)
+
+---
+
+#### US-029: Attivazione/disattivazione notifiche push dalla pagina Profilo
+
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-06-25):** Review umana OK.
+**Review note (2026-06-24):** Backend: `POST /api/push/test` autenticato in `PushEndpoints.cs` + `SendTestNotificationAsync` in `PushNotificationService.cs` (riusa `FcmTokens`/`IFcmSender` esistenti, isolamento per `userId` da claim JWT). Frontend: `profile.component.ts` con sezione "Notifiche push" (toggle on/off, test-send, guida installazione condizionale riusando `PwaInstallGuideComponent` di US-024). Test: backend 198/198 verdi (5 nuovi); frontend unit 129/140 (11 fail pre-esistenti non toccati, causa nota: `environment.apiUrl` assoluto non sostituito dal target `test` in `angular.json`); e2e `profile-push.spec.ts` 2/2 verdi + regressione `profile-theme`/`pwa-install` 3/3 verdi. Reviewer APPROVE — no Critical. 2 note non bloccanti: (1) test-send ritorna 404 sia per "nessun token" sia per "invio FCM fallito"; (2) nessun rate limiting su `/api/push/test`. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-029` (o aggiorna manualmente lo status a `DONE`).
+**Blocked by:** US-028
+
+**Story**
+Come utente dell'app, voglio attivare o disattivare le notifiche push dalla pagina Profilo, così che possa controllare se ricevere notifiche del browser senza dover modificare i permessi del browser stesso.
+
+**Demonstrates**
+Nella pagina Profilo (introdotta in US-028) appare un toggle "Notifiche push" oltre al tema. Attivandolo, viene richiesto il permesso del browser (se non già concesso) e si registra la subscription esistente (`PushNotificationService`); disattivandolo, la subscription viene rimossa e l'utente non riceve più notifiche su quel device. Lo stato del toggle riflette sempre lo stato reale del permesso/subscription al caricamento della pagina. Se l'app è installata come PWA, accanto al toggle c'è un pulsante "Invia notifica di test" che invia all'utente stesso una push di prova, insieme a un testo breve che spiega come abilitare le notifiche a livello di sistema operativo e di app sul telefono. Se l'app non è installata, al posto del toggle/pulsante viene mostrata una guida/pulsante per installarla, con il testo che chiarisce che le notifiche push funzionano solo da app installata.
+
+**Acceptance Criteria**
+
+- [ ] La pagina Profilo mostra un toggle "Notifiche push" accanto al selettore tema
+- [ ] Attivando il toggle quando il permesso browser non è ancora stato richiesto, viene mostrato il prompt nativo del browser; se l'utente nega, il toggle torna su "off" e mostra un messaggio che spiega come riattivarlo dalle impostazioni del browser
+- [ ] Attivando il toggle con permesso già concesso, viene creata/registrata la subscription push tramite `PushNotificationService` esistente
+- [ ] Disattivando il toggle, la subscription push lato browser/backend viene rimossa
+- [ ] Al caricamento della pagina, il toggle riflette lo stato reale corrente (subscription attiva sì/no), non solo un valore salvato localmente
+- [ ] Se il browser non supporta le notifiche push, il toggle è disabilitato con un messaggio esplicativo invece di fallire silenziosamente
+- [ ] Se l'app è installata come PWA e la subscription è attiva, è presente un pulsante "Invia notifica di test" che invia una push di prova al device corrente dell'utente stesso
+- [ ] Vicino al pulsante di test è presente un testo breve che spiega come abilitare le notifiche a livello di sistema operativo (es. permessi notifiche iOS/Android) e a livello di app, nel caso non arrivino
+- [ ] Il testo chiarisce esplicitamente che le notifiche push funzionano solo se l'app è installata come PWA, non da semplice tab del browser
+- [ ] Se l'app non è installata come PWA (rilevabile come in US-024), al posto del toggle/pulsante di test viene mostrato un pulsante o link guida per installare l'app, riusando il meccanismo di US-024 dove possibile
+
+**Out of scope**
+
+- Granularità per tipo di notifica (es. solo conferme partita vs solo inviti) — è on/off globale
+- Notifiche push su più device contemporaneamente gestite da questa storia (ogni device gestisce la propria subscription)
+- Invio di notifiche di test ad altri utenti (solo a se stessi)
+
+**Open questions**
+
+- (nessuna)
+
+---
+
+#### US-030: Modifica nome visualizzato dalla pagina Profilo
+
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
+**Blocked by:** US-028
+**Review note (2026-06-26):** Codice in `src/Golp.Api/Endpoints/AuthEndpoints.cs`, `frontend/golp-app/src/app/auth/current-user.service.ts`, `frontend/golp-app/src/app/profile/profile.component.ts`. Test in `src/Golp.Tests/Integration/AuthIntegrationTests.cs` (+6 test), `frontend/golp-app/src/app/auth/current-user.service.spec.ts` (4), `frontend/golp-app/src/app/profile/profile.component.spec.ts` (+5), `frontend/golp-app/e2e/profile-name.spec.ts` (2 e2e). Reviewer APPROVE.
+**Approved (2026-06-26):** Review umana OK.
+
+**Story**
+Come utente dell'app, voglio poter modificare il mio nome visualizzato dalla pagina Profilo, così che non resti fissato a quello scelto in fase di registrazione se cambia o lo sbaglio.
+
+**Demonstrates**
+Nella pagina Profilo (introdotta in US-028) appare un campo con il nome visualizzato attuale (`User.Name`), modificabile e salvabile. Dopo il salvataggio, il nuovo nome è visibile ovunque venga mostrato il nome utente (classifica, profilo, conferme partita) senza richiedere logout/login.
+
+**Acceptance Criteria**
+
+- [ ] La pagina Profilo mostra un campo "Nome visualizzato" precompilato con il valore attuale
+- [ ] Salvando un nuovo valore valido, viene chiamato un endpoint dedicato che aggiorna `User.Name` e l'interfaccia mostra una conferma di salvataggio
+- [ ] Il nuovo nome compare subito (senza re-login) in tutte le viste che mostrano il nome utente nella sessione corrente (es. header, classifica, lista partite)
+- [ ] Un nome vuoto o solo spazi viene rifiutato con un messaggio di errore, nessuna chiamata API viene fatta
+- [ ] Un nome troppo lungo (oltre il limite definito lato backend) viene rifiutato con messaggio di errore prima del salvataggio
+
+**Out of scope**
+
+- Modifica di email o password da questa storia (restano flussi separati)
+- Cronologia/audit dei cambi nome
+- Unicità del nome visualizzato tra utenti (non è un vincolo richiesto)
+
+**Open questions**
+
+- (nessuna)
+
+---
+
+#### US-031: Logout da tutti i device dal Profilo
+
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-25):** Review umana OK.
+**Review note (2026-06-25):** Backend: `User.SecurityStamp` (Guid) + migration; claim `security_stamp` nel JWT (`JwtService.GenerateToken`); validato in `Program.cs` (`OnTokenValidated`) contro DB. `POST /auth/logout-all` autenticato in `AuthEndpoints.cs`: rigenera stamp + `RevokeAllForUserAsync`. Frontend: `auth.service.ts` `logoutAllDevices()`, `profile.component.ts` con conferma inline a due step (nessun dialog riusabile esistente in progetto) + redirect login. Test: backend 207/207 verdi (5 nuovi unit/integration); frontend unit `profile.component` 16/16 verdi; `auth.service` 2 nuovi test falliscono per bug pre-esistente env (`environment.apiUrl`, stesso noto da US-029), logica corretta; e2e `profile-logout-all.spec.ts` 1/1 verde + regressione auth/profile-theme/profile-push 10/10 verdi. Reviewer APPROVE — no Critical. 1 nota non bloccante: query DB extra per ogni richiesta autenticata (validazione stamp), accettabile per MVP. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-031` (o aggiorna manualmente lo status a `DONE`).
+**Blocked by:** US-028
+
+**Story**
+Come utente dell'app, voglio poter disconnettere tutte le sessioni attive su qualsiasi device dalla pagina Profilo, così che possa proteggere il mio account se temo accessi non autorizzati o ho perso un device.
+
+**Demonstrates**
+Nella pagina Profilo appare un'azione "Esci da tutti i device". Attivandola, tutti i JWT emessi finora per l'utente diventano invalidi (anche quello della sessione corrente), e l'utente viene riportato al login. Un nuovo login emette un token valido normalmente.
+
+**Acceptance Criteria**
+
+- [ ] Esiste un meccanismo di revoca lato backend (es. versione/`security stamp` su `User`, controllato ad ogni validazione JWT) dato che oggi i token non sono revocabili
+- [ ] L'azione "Esci da tutti i device" richiede una conferma esplicita prima di eseguire (azione distruttiva per le sessioni)
+- [ ] Dopo l'azione, qualsiasi richiesta autenticata con un token emesso prima della revoca viene rifiutata con 401, incluso quello del device che ha eseguito l'azione
+- [ ] Dopo l'azione, l'utente che l'ha eseguita viene reindirizzato al login sul device corrente
+- [ ] Un nuovo login dopo la revoca funziona normalmente ed emette un token valido
+
+**Out of scope**
+
+- Elenco dettagliato delle sessioni/device attivi con possibilità di revocarne una singola (qui è "tutte o nessuna")
+- Notifica email all'utente quando l'azione viene eseguita
+
+**Open questions**
+
+- (nessuna)
+
+---
+
+#### US-032: Eliminazione account dal Profilo
+
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 8 | **Status:** DONE
+**Approved (2026-06-25):** Review umana OK.
+**Review note (2026-06-25):** Backend: `POST /auth/me/delete` in `AuthEndpoints.cs` — verifica password (BCrypt), anonimizza `User` (nome/email/password), rimuove `CircleMembership`, annulla `Match` pending con l'utente, rigenera `SecurityStamp` + revoca refresh token (riuso US-031). Match confirmed storici intatti per costruzione. Frontend: `auth.service.ts` `deleteAccount(password)`, `profile.component.ts` con conferma a due step + password. Bug reale trovato e fixato in `auth.interceptor.ts`: il 401 di password-errata veniva trattato come token scaduto (refresh+retry+logout spurio) — escluso `/auth/me/delete` dal flusso refresh, con test di regressione. Test: backend 213/213 verdi (6 nuovi `AccountDeletionIntegrationTests`); frontend unit `profile.component` 21/21, `auth.interceptor` 5/5 verdi; e2e `profile-delete-account` 1/1 + regressione 10/10 verdi (8 fail in suite scollegate add-member/circle-awards/circle-match-history/invite, pre-esistenti, nessun file di quelle aree toccato). Reviewer APPROVE — no Critical. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-032` (o aggiorna manualmente lo status a `DONE`).
+**Blocked by:** US-028
+
+**Story**
+Come utente dell'app, voglio poter eliminare il mio account dalla pagina Profilo, così che possa smettere di usare il servizio e non lasciare i miei dati personali accessibili.
+
+**Demonstrates**
+Nella pagina Profilo appare un'azione "Elimina account" che richiede conferma esplicita (es. ridigitare la password). Dopo la conferma, l'account viene anonimizzato (soft-delete: nome sostituito con "Utente eliminato", email/password invalidate, riga utente mantenuta) e l'utente non può più fare login con quelle credenziali. Le partite storiche confermate restano coerenti per gli altri 3 giocatori coinvolti (rating e storico non si rompono).
+
+**Acceptance Criteria**
+
+- [ ] L'azione "Elimina account" richiede conferma esplicita con re-inserimento password, non un solo click
+- [ ] L'eliminazione è soft/anonimizzazione: la riga `User` resta nel DB ma email e password vengono invalidate/rimpiazzate e il nome visualizzato diventa "Utente eliminato" (nessuna FK rotta verso match/membership storici)
+- [ ] Dopo l'eliminazione, login con le vecchie credenziali fallisce in modo esplicito
+- [ ] Le `CircleMembership` dell'utente eliminato vengono rimosse: l'utente non appare più come membro in nessun circolo
+- [ ] Le partite storiche `confirmed` in cui l'utente eliminato era coinvolto restano consultabili dagli altri 3 giocatori (nome mostrato "Utente eliminato"), senza alterare il loro rating già calcolato
+- [ ] Partite `pending` che richiedono ancora la conferma dell'utente eliminato vengono gestite in modo esplicito (es. annullate o auto-confermate), non restano bloccate indefinitamente
+- [ ] L'eliminazione è irreversibile dal punto di vista utente: non esiste un endpoint di "ripristino" account, anche se i dati restano anonimizzati in DB
+
+**Out of scope**
+
+- Periodo di grazia/soft-delete con possibilità di annullare l'eliminazione entro N giorni
+- Export dei propri dati prima della cancellazione (GDPR data portability) — eventuale storia futura
+- Hard delete fisico della riga utente (scelta esplicita: si anonimizza, non si rimuove)
+
+**Open questions**
+
+- (nessuna — confermata anonimizzazione/soft-delete, non hard delete)
+
+---
+
+#### US-033: Riepilogo rating per circolo nel Profilo
+
+**Epic:** EP-005 | **Priority:** LOW | **Story Points:** 2 | **Status:** DONE
+**Approved (2026-06-29):** Review umana OK.
+**Review note (2026-06-29):** Codice in `frontend/golp-app/src/app/profile/profile.component.ts` (sezione "I tuoi circoli" con `circleService.getMyCircles()`, signal `myCircles`/`circlesLoading`, metodo `goToCircle()`). Test unit in `profile.component.spec.ts` (3 nuovi, 29/29 verdi), e2e in `e2e/profile-circles-summary.spec.ts` (2/2 verdi). Suite completa: 185/185 unit. Reviewer APPROVE — no Critical aperti. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-033`.
+**Blocked by:** US-028
+
+**Story**
+Come utente dell'app, voglio vedere nel mio Profilo il rating attuale in ciascun circolo a cui appartengo, così che abbia una vista d'insieme senza dover entrare in ogni circolo singolarmente.
+
+**Demonstrates**
+La pagina Profilo mostra un elenco dei circoli dell'utente con, per ciascuno, il rating attuale (dato già esposto da `GET /circles/me`) e il nome del circolo. Cliccando un circolo si naviga alla sua vista dedicata.
+
+**Acceptance Criteria**
+
+- [ ] Il Profilo mostra un elenco con nome circolo + rating attuale per ogni circolo di cui l'utente è membro
+- [ ] L'elenco usa i dati già disponibili da `GET /circles/me` (nessun nuovo endpoint backend necessario)
+- [ ] Cliccando una riga dell'elenco, l'utente viene portato alla pagina del circolo corrispondente
+- [ ] Se l'utente non è membro di nessun circolo, viene mostrato un messaggio chiaro invece di una lista vuota muta
+
+**Out of scope**
+
+- Grafici storici di andamento rating (resta nella sezione statistiche esistente, se presente)
+- Confronto tra circoli o classifiche aggregate
+
+**Open questions**
+
+- (nessuna)
+
+---
+
+#### US-016: Sport configurabili da database
+
+**Epic:** EP-005 | **Priority:** HIGH | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-06-29):** Review umana OK.
+**Review note (2026-06-29):** Codice in `src/Golp.Api/{Data/Entities/Sport.cs, Data/AppDbContext.cs, Services/{ISportsService,SportsService}.cs, Endpoints/CircleEndpoints.cs, Services/RatingService.cs}`, migration `20260624145528_AddSportsTable`, test in `src/Golp.Tests/{Services/SportsServiceTests.cs, Integration/CircleIntegrationTests.cs, +17 test factory fixes}`. Reviewer APPROVE.
+**Blocked by:** -
+
+**Story**
+Come amministratore della piattaforma, voglio gestire l'elenco degli sport supportati tramite database, così che possa aggiungere o modificare sport senza rilasciare una nuova versione della PWA.
+
+**Demonstrates**
+Un amministratore aggiunge un nuovo sport (`padel 4v4`) direttamente sul DB. Senza alcun deploy, l'endpoint `/sports` lo restituisce già e i giocatori possono selezionarlo durante la registrazione di una partita.
+
+**Acceptance Criteria**
+
+- [ ] Esiste una tabella `Sports` nel DB con colonne: `Id`, `Key`, `DisplayName`, `PointUnit`, `Sets`, `TeamSize`, `IsActive`
+- [ ] L'endpoint `GET /sports` legge da DB (non da `SportsConfig` statico) e restituisce solo sport con `IsActive = true`
+- [ ] `SportsConfig` statico viene rimosso o deprecato: nessun endpoint lo usa più direttamente
+- [ ] Una migration EF popola la tabella con gli sport attualmente definiti in `SportsConfig` (dati iniziali idempotenti)
+- [ ] Il frontend riceve e visualizza correttamente la lista sport proveniente da DB, senza modifiche al contratto API esistente
+- [ ] La validazione sport nelle partite (`MatchEndpoints`) usa i valori da DB, non dalla classe statica
+- [ ] La colonna `Key` è solo display/lookup: il riferimento allo sport nei circoli/match resta come oggi (nessuna modifica al modo in cui `Circle` referenzia lo sport), `Key` serve solo a mappare la riga DB ai valori `SportsConfig` esistenti durante la migration
+
+**Out of scope**
+
+- UI di amministrazione per gestire sport (CRUD via interfaccia grafica)
+- Autenticazione/autorizzazione per la modifica della tabella Sports (gestita solo via accesso diretto al DB)
+- Parametri ELO (K, amplifier) in database
+
+**Open questions**
+
+- (nessuna — `Key` confermata come solo display/lookup, non FK)
 
 ---
 
@@ -894,10 +1240,6 @@ Quando una partita `confirmed` aggiorna il rating di un giocatore e questo aggio
 
 ---
 
-## EP-004 — Premi e Statistiche
-
-_Gamification leggera e insight personali: giocatore del mese/anno e statistiche su compagni e avversari. (da PRD §RF-5, §RF-6)_
-
 #### US-010: Giocatore del mese e dell'anno
 
 **Epic:** EP-004 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
@@ -996,356 +1338,6 @@ Un job schedulato calcola, alla chiusura di ogni mese/anno, il vincitore di cias
 **Open questions**
 
 - (nessuna — job in-process via `BackgroundService` in `Golp.Api`, stesso App Service esistente)
-
----
-
-## EP-005 — Configurazione e Amministrazione
-
-_Funzionalità per gestire la piattaforma senza dover rilasciare nuove versioni: sport, parametri ELO, configurazioni operative._
-
-#### US-022: Numero di versione visibile in login e dashboard
-
-**Epic:** EP-005 | **Priority:** LOW | **Story Points:** 3 | **Status:** DONE
-**Approved (2026-06-22):** Review umana OK.
-**Review note (2026-06-22):** Codice in `frontend/golp-app/scripts/generate-version.js` (generator), `frontend/golp-app/src/app/shared/version/app-version.component.ts` (componente condiviso + test), wiring in `scripts/deploy-frontend.ps1`. Verificato manualmente: determinismo stesso-commit (doppia esecuzione → stesso output), build+zip end-to-end con version.ts rigenerato (v38/d11eb98), unit test 2/2 verdi. Reviewer APPROVE — no critical aperti. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-022` (o aggiorna manualmente lo status a `DONE`).
-**Blocked by:** -
-
-**Story**
-Come amministratore/sviluppatore del progetto, voglio che la schermata di login e la dashboard mostrino un numero di versione del software, così che possa verificare rapidamente quale build è in esecuzione su ciascun ambiente (prod/test) senza dover ispezionare manualmente il deploy.
-
-**Demonstrates**
-Login e dashboard mostrano una piccola label di versione (es. in footer), non invasiva. La versione è derivata in modo deterministico dall'ultimo commit (hash o data) tramite un algoritmo riconoscibile da chi conosce la logica ma non deducibile dall'utente finale guardando solo il numero. Lo stesso commit produce sempre lo stesso numero di versione.
-
-**Acceptance Criteria**
-
-- [ ] La schermata di login mostra un numero di versione (es. in un footer discreto)
-- [ ] La dashboard mostra lo stesso numero di versione
-- [ ] Il numero di versione è generato automaticamente ad ogni build, senza intervento manuale (es. da script di build/CI, non da un valore hardcoded da aggiornare a mano)
-- [ ] Lo stesso commit produce sempre lo stesso numero di versione, in build diverse (deterministico)
-- [ ] Build di commit diversi producono numeri di versione diversi, così è possibile verificare se due ambienti (prod/test) eseguono lo stesso codice
-- [ ] Il formato mostrato all'utente è semplice da leggere e comunicare (es. pattern tipo semver o build counter), senza esporre direttamente hash o data del commit
-
-**Out of scope**
-
-- Changelog visibile all'utente collegato alla versione
-- Versioning semantico "vero" con incrementi manuali di major/minor per breaking change
-- Sincronizzazione di versione tra frontend e backend come requisito vincolante (possono avere numeri propri, da chiarire in piano tecnico)
-
-**Open questions**
-
-- Algoritmo esatto di trasformazione commit→numero versione (idee da valutare in `/eq-plan`: contatore commit via `git rev-list --count HEAD`, data ultimo commit in formato `YY.MM.DD`, oppure hash troncato mappato a base36/base62)
-- Frontend (build Angular) e backend (assembly .NET) mostrano versioni indipendenti o devono combaciare in un unico numero condiviso?
-
----
-
-#### US-023: Aggiornamento automatico dei client dopo un rilascio
-
-**Epic:** EP-005 | **Priority:** LOW | **Story Points:** 5 | **Status:** DONE
-**Approved (2026-06-22):** Review umana OK.
-**Review note (2026-06-22):** Codice in `frontend/golp-app/src/app/shared/update/` (`AppUpdateService` + `AppUpdateBannerComponent`, con test), wiring in `app.component.ts` (visibilitychange + NavigationEnd), cache hardening in `frontend/golp-app/public/web.config`. 12 unit test nuovi (6 service + 3 banner + 2 wiring AppComponent + build verificato). Test suite: 9 fail pre-esistenti (non toccati da questa storia), 78 verdi. Reviewer APPROVE — no critical aperti. Nota non bloccante: header HTTP reali (`index.html` no-cache, bundle cache lunga) verificati solo a livello build/struttura XML, non su IIS reale — da confermare al primo deploy su Testing. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-023` (o aggiorna manualmente lo status a `DONE`).
-**Blocked by:** -
-
-**Story**
-Come Marco (giocatore amatoriale che usa la PWA installata sul telefono) voglio che l'app mi avvisi quando è disponibile una nuova versione e mi lasci aggiornare con un click, così che dopo un rilascio non resti bloccato su una versione vecchia senza saperlo. Come amministratore/sviluppatore voglio che il meccanismo di cache HTTP non impedisca ai client di scoprire le nuove versioni.
-
-**Demonstrates**
-Dopo un deploy, un utente che ha l'app già aperta (o la riapre dopo averla lasciata in background) vede entro breve tempo un banner non invasivo "Nuova versione disponibile — Aggiorna"; al click, l'app si aggiorna e mostra il nuovo numero di versione (US-022). Nessun reload automatico forzato senza preavviso.
-
-**Acceptance Criteria**
-
-- [ ] `index.html` viene servito da IIS con cache non persistente (no-cache/validazione), così che un client non resti bloccato su un `index.html` vecchio che referenzia bundle non più esistenti
-- [ ] I bundle con hash di contenuto (JS/CSS generati da Angular CLI) hanno una politica di cache lunga esplicita (gli hash già garantiscono invalidazione automatica ad ogni build diversa)
-- [ ] Quando l'app torna in foreground (utente riapre il tab/la PWA dopo averla lasciata in background) o l'utente naviga tra le pagine principali, l'app verifica se è disponibile una versione più recente
-- [ ] Se una versione più recente è pronta, l'utente vede un banner/avviso non bloccante (niente `confirm()`/`alert()`) con un'azione esplicita per aggiornare
-- [ ] Al click sull'azione di aggiornamento, l'app attiva la nuova versione e si ricarica, mostrando il nuovo numero di versione (coerente con US-022)
-- [ ] Se non è disponibile nessuna versione nuova, non viene mostrato nessun banner (nessun falso positivo)
-- [ ] Il meccanismo di check non genera errori bloccanti se l'app è offline al momento del controllo
-
-**Out of scope**
-
-- Reload automatico forzato senza interazione dell'utente (si avvisa, non si interrompe il lavoro in corso)
-- Polling continuo a intervalli fissi in background (il check è legato a eventi: ritorno in foreground / navigazione tra pagine principali, non un timer sempre attivo)
-- Versione del backend (.NET API) — fuori scope come già per US-022
-- Un pulsante manuale "Aggiorna applicazione" sempre visibile indipendente dal banner (può essere una storia futura se il banner via eventi si rivela insufficiente)
-
-**Open questions**
-
-- Posizione e stile del banner di avviso: va deciso in fase di piano/design (toast in alto, barra in dashboard, badge vicino al numero di versione di US-022).
-- `web.config` (`frontend/golp-app/public/web.config`) oggi non ha nessuna direttiva di cache: va aggiunta una regola che tenga `index.html` sempre non-cacheable e dia cache lunga ai bundle hashati — la sintassi IIS esatta (override per singolo file dentro `<staticContent>`) va verificata in fase di piano tecnico.
-- Il meccanismo si basa su `SwUpdate` di `@angular/service-worker` (già registrato in `app.config.ts`, mai usato esplicitamente finora) — va confermato che la versione installata supporti l'API `versionUpdates`/`checkForUpdate()`/`activateUpdate()` usata nel piano.
-
----
-
-#### US-027: Palette colori tema chiaro con contrasto verificato
-
-**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
-**Approved (2026-06-23):** Review umana OK. Token validati live dal tema chiaro funzionante di US-028.
-**Review note (2026-06-23):** Codice in `frontend/golp-app/src/styles.scss` (nuovo blocco `:root.theme-light` con tutte le 65 `--color-*` ridefinite, parallele a quelle scure — verificato 1:1 via grep, nessuna var orfana). Token derivati da `docs/mockups/US-027/style-tokens.json` (mockup comparativo scuro/chiaro in `docs/mockups/US-027/index.html`). Blocco inerte: nessun componente applica la classe `theme-light` in questa storia (attivazione = US-028). Test suite frontend: 115/124 verdi, 9 fail pre-esistenti non toccati (PushNotificationService/AuthService/AppComponent). Reviewer APPROVE — no critical aperti. Nota non bloccante: alcuni valori hardcoded fuori da `:root` (`.score-input`, breakpoint desktop `body`, `.btn-action-primary`, `.feedback-icon`) restano scuri e andranno gestiti quando US-028 attiva il toggle. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-027` (o aggiorna manualmente lo status a `DONE`).
-**Blocked by:** -
-
-**Story**
-Come utente dell'app, voglio una palette colori chiara alternativa a quella scura attuale, così che possa scegliere il tema più leggibile per me senza perdere distinzione visiva tra elementi (oro/argento/bronzo, partner/avversario, sport, stati di errore/successo).
-
-**Demonstrates**
-Esiste un secondo set di token CSS (tema chiaro) accanto a quello scuro esistente in `styles.scss`: sfondo, superfici, testo, border invertiti su base chiara; i colori semantici (accent, oro/argento/bronzo, partner/avversario, sport, errore/successo) sono ricalibrati per garantire contrasto leggibile (AA) su sfondo chiaro, pur restando riconoscibili come "lo stesso colore" del tema scuro.
-
-**Acceptance Criteria**
-
-- [ ] Esiste un set completo di token colore per il tema chiaro, parallelo a quello scuro esistente (stessa lista di variabili `--color-*`)
-- [ ] Testo primario/secondario su sfondo chiaro rispetta un contrasto minimo WCAG AA (4.5:1 per testo normale, 3:1 per testo grande)
-- [ ] I colori oro/argento/bronzo (classifica) restano distinguibili tra loro su sfondo chiaro
-- [ ] I colori partner/avversario (statistiche) restano distinguibili tra loro su sfondo chiaro
-- [ ] I colori per sport (padel/beach tennis/basket/burraco) restano distinguibili tra loro su sfondo chiaro
-- [ ] I colori di errore/successo restano riconoscibili (non confondibili con altri stati) su sfondo chiaro
-- [ ] Nessuna pagina esistente applica ancora il tema chiaro in questa storia (solo i token sono definiti, l'attivazione è in US-028)
-
-**Out of scope**
-
-- Attivazione/switch del tema (vedi US-028)
-- Modifiche al layout o alla struttura dei componenti, solo colori
-
-**Open questions**
-
-- (nessuna)
-
----
-
-#### US-028: Switch manuale tema chiaro/scuro con persistenza per device
-
-**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
-**Approved (2026-06-23):** Review umana OK.
-**Review note (2026-06-23):** Nuovo `frontend/golp-app/src/app/theme/theme.service.ts` (signal + effect che applica classe `theme-light` su `document.documentElement`, default scuro, persistenza `localStorage` chiave `golp_theme`), inject in `app.component.ts` per attivazione al bootstrap. Nuovo `profile/profile.component.ts` (pagina Profilo con toggle Scuro/Chiaro, classi esistenti), rotta `/profilo` protetta in `app.routes.ts`, link in `dashboard.component.ts`. Test: 5 unit (ThemeService) + 3 component (ProfileComponent) + 2 e2e (`e2e/profile-theme.spec.ts`: default scuro, toggle chiaro, persistenza post-reload, cross-pagina) tutti verdi. Suite: 123/132 verdi, 9 fail pre-esistenti non toccati (PushNotificationService/AuthService/AppComponent `should render title` cerca boilerplate Angular rimosso). Reviewer APPROVE — no critical. Nota non bloccante: valori hardcoded fuori `:root` (`.score-input`, breakpoint desktop `body`, `.feedback-icon`) restano scuri anche in tema chiaro (rischio già noto da US-027) — follow-up per renderli tema-aware. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-028` (o aggiorna manualmente lo status a `DONE`).
-**Visual evidence (2026-06-23):** docs/test-results/US-028/report.md — verdetto **APPROVE** dopo fix. Il difetto iniziale (tema chiaro illeggibile su desktop ≥600px per valori CSS hardcoded fuori da `:root`) è stato corretto in reopen: nuovi token `--color-bg-deep`/`--color-input-bg`/`--color-input-border` in `styles.scss` + `style-tokens.json`, `.page{background:var(--color-bg)}`, media query desktop e score-input ora tema-aware. Re-verifica: screenshot `AC-3-FIXED-*` mostrano Profilo e dashboard leggibili in chiaro su desktop, e2e 2/2, suite 123/132 (9 pre-esistenti).
-**Blocked by:** US-027
-
-**Story**
-Come utente dell'app, voglio poter scegliere tra tema scuro e tema chiaro da una pagina impostazioni, così che la mia scelta resti applicata ad ogni mia visita successiva su questo dispositivo.
-
-**Demonstrates**
-Una nuova pagina "Profilo" (raggiungibile dall'area autenticata) mostra un controllo per scegliere tema scuro/chiaro. L'app parte sempre in tema scuro di default per un utente che non ha mai scelto; cambiando il controllo, l'interfaccia si aggiorna immediatamente con i token di US-027; la scelta resta valida nelle visite successive sullo stesso browser/device, anche dopo logout/login.
-
-**Acceptance Criteria**
-
-- [ ] Esiste una pagina/sezione "Profilo" raggiungibile dall'area autenticata con un controllo tema scuro/chiaro
-- [ ] Senza una scelta precedente salvata, l'app applica il tema scuro di default
-- [ ] Cambiando il controllo, l'interfaccia applica immediatamente la palette corrispondente (tutte le pagine, non solo quella impostazioni) senza reload manuale
-- [ ] La scelta di tema viene salvata in `localStorage` (non sul backend, non legata all'account)
-- [ ] Ricaricando la pagina o tornando sull'app in una sessione successiva sullo stesso device, il tema scelto resta applicato
-- [ ] Su un device/browser diverso (o dopo pulizia localStorage), l'app torna al default scuro
-
-**Out of scope**
-
-- Sincronizzazione della preferenza tra device diversi o legata all'account (richiederebbe backend, non in questa storia)
-- Tema automatico basato su `prefers-color-scheme` del sistema operativo
-- Pagina impostazioni con altre opzioni oltre al tema (resta minimale, solo il toggle tema in questa storia)
-
-**Open questions**
-
-- (nessuna)
-
----
-
-#### US-029: Attivazione/disattivazione notifiche push dalla pagina Profilo
-
-**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
-**Approved (2026-06-25):** Review umana OK.
-**Review note (2026-06-24):** Backend: `POST /api/push/test` autenticato in `PushEndpoints.cs` + `SendTestNotificationAsync` in `PushNotificationService.cs` (riusa `FcmTokens`/`IFcmSender` esistenti, isolamento per `userId` da claim JWT). Frontend: `profile.component.ts` con sezione "Notifiche push" (toggle on/off, test-send, guida installazione condizionale riusando `PwaInstallGuideComponent` di US-024). Test: backend 198/198 verdi (5 nuovi); frontend unit 129/140 (11 fail pre-esistenti non toccati, causa nota: `environment.apiUrl` assoluto non sostituito dal target `test` in `angular.json`); e2e `profile-push.spec.ts` 2/2 verdi + regressione `profile-theme`/`pwa-install` 3/3 verdi. Reviewer APPROVE — no Critical. 2 note non bloccanti: (1) test-send ritorna 404 sia per "nessun token" sia per "invio FCM fallito"; (2) nessun rate limiting su `/api/push/test`. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-029` (o aggiorna manualmente lo status a `DONE`).
-**Blocked by:** US-028
-
-**Story**
-Come utente dell'app, voglio attivare o disattivare le notifiche push dalla pagina Profilo, così che possa controllare se ricevere notifiche del browser senza dover modificare i permessi del browser stesso.
-
-**Demonstrates**
-Nella pagina Profilo (introdotta in US-028) appare un toggle "Notifiche push" oltre al tema. Attivandolo, viene richiesto il permesso del browser (se non già concesso) e si registra la subscription esistente (`PushNotificationService`); disattivandolo, la subscription viene rimossa e l'utente non riceve più notifiche su quel device. Lo stato del toggle riflette sempre lo stato reale del permesso/subscription al caricamento della pagina. Se l'app è installata come PWA, accanto al toggle c'è un pulsante "Invia notifica di test" che invia all'utente stesso una push di prova, insieme a un testo breve che spiega come abilitare le notifiche a livello di sistema operativo e di app sul telefono. Se l'app non è installata, al posto del toggle/pulsante viene mostrata una guida/pulsante per installarla, con il testo che chiarisce che le notifiche push funzionano solo da app installata.
-
-**Acceptance Criteria**
-
-- [ ] La pagina Profilo mostra un toggle "Notifiche push" accanto al selettore tema
-- [ ] Attivando il toggle quando il permesso browser non è ancora stato richiesto, viene mostrato il prompt nativo del browser; se l'utente nega, il toggle torna su "off" e mostra un messaggio che spiega come riattivarlo dalle impostazioni del browser
-- [ ] Attivando il toggle con permesso già concesso, viene creata/registrata la subscription push tramite `PushNotificationService` esistente
-- [ ] Disattivando il toggle, la subscription push lato browser/backend viene rimossa
-- [ ] Al caricamento della pagina, il toggle riflette lo stato reale corrente (subscription attiva sì/no), non solo un valore salvato localmente
-- [ ] Se il browser non supporta le notifiche push, il toggle è disabilitato con un messaggio esplicativo invece di fallire silenziosamente
-- [ ] Se l'app è installata come PWA e la subscription è attiva, è presente un pulsante "Invia notifica di test" che invia una push di prova al device corrente dell'utente stesso
-- [ ] Vicino al pulsante di test è presente un testo breve che spiega come abilitare le notifiche a livello di sistema operativo (es. permessi notifiche iOS/Android) e a livello di app, nel caso non arrivino
-- [ ] Il testo chiarisce esplicitamente che le notifiche push funzionano solo se l'app è installata come PWA, non da semplice tab del browser
-- [ ] Se l'app non è installata come PWA (rilevabile come in US-024), al posto del toggle/pulsante di test viene mostrato un pulsante o link guida per installare l'app, riusando il meccanismo di US-024 dove possibile
-
-**Out of scope**
-
-- Granularità per tipo di notifica (es. solo conferme partita vs solo inviti) — è on/off globale
-- Notifiche push su più device contemporaneamente gestite da questa storia (ogni device gestisce la propria subscription)
-- Invio di notifiche di test ad altri utenti (solo a se stessi)
-
-**Open questions**
-
-- (nessuna)
-
----
-
-#### US-030: Modifica nome visualizzato dalla pagina Profilo
-
-**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
-**Blocked by:** US-028
-**Review note (2026-06-26):** Codice in `src/Golp.Api/Endpoints/AuthEndpoints.cs`, `frontend/golp-app/src/app/auth/current-user.service.ts`, `frontend/golp-app/src/app/profile/profile.component.ts`. Test in `src/Golp.Tests/Integration/AuthIntegrationTests.cs` (+6 test), `frontend/golp-app/src/app/auth/current-user.service.spec.ts` (4), `frontend/golp-app/src/app/profile/profile.component.spec.ts` (+5), `frontend/golp-app/e2e/profile-name.spec.ts` (2 e2e). Reviewer APPROVE.
-**Approved (2026-06-26):** Review umana OK.
-
-**Story**
-Come utente dell'app, voglio poter modificare il mio nome visualizzato dalla pagina Profilo, così che non resti fissato a quello scelto in fase di registrazione se cambia o lo sbaglio.
-
-**Demonstrates**
-Nella pagina Profilo (introdotta in US-028) appare un campo con il nome visualizzato attuale (`User.Name`), modificabile e salvabile. Dopo il salvataggio, il nuovo nome è visibile ovunque venga mostrato il nome utente (classifica, profilo, conferme partita) senza richiedere logout/login.
-
-**Acceptance Criteria**
-
-- [ ] La pagina Profilo mostra un campo "Nome visualizzato" precompilato con il valore attuale
-- [ ] Salvando un nuovo valore valido, viene chiamato un endpoint dedicato che aggiorna `User.Name` e l'interfaccia mostra una conferma di salvataggio
-- [ ] Il nuovo nome compare subito (senza re-login) in tutte le viste che mostrano il nome utente nella sessione corrente (es. header, classifica, lista partite)
-- [ ] Un nome vuoto o solo spazi viene rifiutato con un messaggio di errore, nessuna chiamata API viene fatta
-- [ ] Un nome troppo lungo (oltre il limite definito lato backend) viene rifiutato con messaggio di errore prima del salvataggio
-
-**Out of scope**
-
-- Modifica di email o password da questa storia (restano flussi separati)
-- Cronologia/audit dei cambi nome
-- Unicità del nome visualizzato tra utenti (non è un vincolo richiesto)
-
-**Open questions**
-
-- (nessuna)
-
----
-
-#### US-031: Logout da tutti i device dal Profilo
-
-**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
-**Approved (2026-06-25):** Review umana OK.
-**Review note (2026-06-25):** Backend: `User.SecurityStamp` (Guid) + migration; claim `security_stamp` nel JWT (`JwtService.GenerateToken`); validato in `Program.cs` (`OnTokenValidated`) contro DB. `POST /auth/logout-all` autenticato in `AuthEndpoints.cs`: rigenera stamp + `RevokeAllForUserAsync`. Frontend: `auth.service.ts` `logoutAllDevices()`, `profile.component.ts` con conferma inline a due step (nessun dialog riusabile esistente in progetto) + redirect login. Test: backend 207/207 verdi (5 nuovi unit/integration); frontend unit `profile.component` 16/16 verdi; `auth.service` 2 nuovi test falliscono per bug pre-esistente env (`environment.apiUrl`, stesso noto da US-029), logica corretta; e2e `profile-logout-all.spec.ts` 1/1 verde + regressione auth/profile-theme/profile-push 10/10 verdi. Reviewer APPROVE — no Critical. 1 nota non bloccante: query DB extra per ogni richiesta autenticata (validazione stamp), accettabile per MVP. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-031` (o aggiorna manualmente lo status a `DONE`).
-**Blocked by:** US-028
-
-**Story**
-Come utente dell'app, voglio poter disconnettere tutte le sessioni attive su qualsiasi device dalla pagina Profilo, così che possa proteggere il mio account se temo accessi non autorizzati o ho perso un device.
-
-**Demonstrates**
-Nella pagina Profilo appare un'azione "Esci da tutti i device". Attivandola, tutti i JWT emessi finora per l'utente diventano invalidi (anche quello della sessione corrente), e l'utente viene riportato al login. Un nuovo login emette un token valido normalmente.
-
-**Acceptance Criteria**
-
-- [ ] Esiste un meccanismo di revoca lato backend (es. versione/`security stamp` su `User`, controllato ad ogni validazione JWT) dato che oggi i token non sono revocabili
-- [ ] L'azione "Esci da tutti i device" richiede una conferma esplicita prima di eseguire (azione distruttiva per le sessioni)
-- [ ] Dopo l'azione, qualsiasi richiesta autenticata con un token emesso prima della revoca viene rifiutata con 401, incluso quello del device che ha eseguito l'azione
-- [ ] Dopo l'azione, l'utente che l'ha eseguita viene reindirizzato al login sul device corrente
-- [ ] Un nuovo login dopo la revoca funziona normalmente ed emette un token valido
-
-**Out of scope**
-
-- Elenco dettagliato delle sessioni/device attivi con possibilità di revocarne una singola (qui è "tutte o nessuna")
-- Notifica email all'utente quando l'azione viene eseguita
-
-**Open questions**
-
-- (nessuna)
-
----
-
-#### US-032: Eliminazione account dal Profilo
-
-**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 8 | **Status:** DONE
-**Approved (2026-06-25):** Review umana OK.
-**Review note (2026-06-25):** Backend: `POST /auth/me/delete` in `AuthEndpoints.cs` — verifica password (BCrypt), anonimizza `User` (nome/email/password), rimuove `CircleMembership`, annulla `Match` pending con l'utente, rigenera `SecurityStamp` + revoca refresh token (riuso US-031). Match confirmed storici intatti per costruzione. Frontend: `auth.service.ts` `deleteAccount(password)`, `profile.component.ts` con conferma a due step + password. Bug reale trovato e fixato in `auth.interceptor.ts`: il 401 di password-errata veniva trattato come token scaduto (refresh+retry+logout spurio) — escluso `/auth/me/delete` dal flusso refresh, con test di regressione. Test: backend 213/213 verdi (6 nuovi `AccountDeletionIntegrationTests`); frontend unit `profile.component` 21/21, `auth.interceptor` 5/5 verdi; e2e `profile-delete-account` 1/1 + regressione 10/10 verdi (8 fail in suite scollegate add-member/circle-awards/circle-match-history/invite, pre-esistenti, nessun file di quelle aree toccato). Reviewer APPROVE — no Critical. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-032` (o aggiorna manualmente lo status a `DONE`).
-**Blocked by:** US-028
-
-**Story**
-Come utente dell'app, voglio poter eliminare il mio account dalla pagina Profilo, così che possa smettere di usare il servizio e non lasciare i miei dati personali accessibili.
-
-**Demonstrates**
-Nella pagina Profilo appare un'azione "Elimina account" che richiede conferma esplicita (es. ridigitare la password). Dopo la conferma, l'account viene anonimizzato (soft-delete: nome sostituito con "Utente eliminato", email/password invalidate, riga utente mantenuta) e l'utente non può più fare login con quelle credenziali. Le partite storiche confermate restano coerenti per gli altri 3 giocatori coinvolti (rating e storico non si rompono).
-
-**Acceptance Criteria**
-
-- [ ] L'azione "Elimina account" richiede conferma esplicita con re-inserimento password, non un solo click
-- [ ] L'eliminazione è soft/anonimizzazione: la riga `User` resta nel DB ma email e password vengono invalidate/rimpiazzate e il nome visualizzato diventa "Utente eliminato" (nessuna FK rotta verso match/membership storici)
-- [ ] Dopo l'eliminazione, login con le vecchie credenziali fallisce in modo esplicito
-- [ ] Le `CircleMembership` dell'utente eliminato vengono rimosse: l'utente non appare più come membro in nessun circolo
-- [ ] Le partite storiche `confirmed` in cui l'utente eliminato era coinvolto restano consultabili dagli altri 3 giocatori (nome mostrato "Utente eliminato"), senza alterare il loro rating già calcolato
-- [ ] Partite `pending` che richiedono ancora la conferma dell'utente eliminato vengono gestite in modo esplicito (es. annullate o auto-confermate), non restano bloccate indefinitamente
-- [ ] L'eliminazione è irreversibile dal punto di vista utente: non esiste un endpoint di "ripristino" account, anche se i dati restano anonimizzati in DB
-
-**Out of scope**
-
-- Periodo di grazia/soft-delete con possibilità di annullare l'eliminazione entro N giorni
-- Export dei propri dati prima della cancellazione (GDPR data portability) — eventuale storia futura
-- Hard delete fisico della riga utente (scelta esplicita: si anonimizza, non si rimuove)
-
-**Open questions**
-
-- (nessuna — confermata anonimizzazione/soft-delete, non hard delete)
-
----
-
-#### US-033: Riepilogo rating per circolo nel Profilo
-
-**Epic:** EP-005 | **Priority:** LOW | **Story Points:** 2 | **Status:** DONE
-**Approved (2026-06-29):** Review umana OK.
-**Review note (2026-06-29):** Codice in `frontend/golp-app/src/app/profile/profile.component.ts` (sezione "I tuoi circoli" con `circleService.getMyCircles()`, signal `myCircles`/`circlesLoading`, metodo `goToCircle()`). Test unit in `profile.component.spec.ts` (3 nuovi, 29/29 verdi), e2e in `e2e/profile-circles-summary.spec.ts` (2/2 verdi). Suite completa: 185/185 unit. Reviewer APPROVE — no Critical aperti. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-033`.
-**Blocked by:** US-028
-
-**Story**
-Come utente dell'app, voglio vedere nel mio Profilo il rating attuale in ciascun circolo a cui appartengo, così che abbia una vista d'insieme senza dover entrare in ogni circolo singolarmente.
-
-**Demonstrates**
-La pagina Profilo mostra un elenco dei circoli dell'utente con, per ciascuno, il rating attuale (dato già esposto da `GET /circles/me`) e il nome del circolo. Cliccando un circolo si naviga alla sua vista dedicata.
-
-**Acceptance Criteria**
-
-- [ ] Il Profilo mostra un elenco con nome circolo + rating attuale per ogni circolo di cui l'utente è membro
-- [ ] L'elenco usa i dati già disponibili da `GET /circles/me` (nessun nuovo endpoint backend necessario)
-- [ ] Cliccando una riga dell'elenco, l'utente viene portato alla pagina del circolo corrispondente
-- [ ] Se l'utente non è membro di nessun circolo, viene mostrato un messaggio chiaro invece di una lista vuota muta
-
-**Out of scope**
-
-- Grafici storici di andamento rating (resta nella sezione statistiche esistente, se presente)
-- Confronto tra circoli o classifiche aggregate
-
-**Open questions**
-
-- (nessuna)
-
----
-
-#### US-016: Sport configurabili da database
-
-**Epic:** EP-005 | **Priority:** HIGH | **Story Points:** 5 | **Status:** DONE
-**Approved (2026-06-29):** Review umana OK.
-**Review note (2026-06-24):** Codice in `src/Golp.Api/{Data/Entities/Sport.cs, Data/AppDbContext.cs, Services/{ISportsService,SportsService}.cs, Endpoints/CircleEndpoints.cs, Services/RatingService.cs}`, migration `20260624145528_AddSportsTable`, test in `src/Golp.Tests/{Services/SportsServiceTests.cs, Integration/CircleIntegrationTests.cs, +17 test factory fixes}`. Reviewer APPROVE.
-**Blocked by:** -
-
-**Story**
-Come amministratore della piattaforma, voglio gestire l'elenco degli sport supportati tramite database, così che possa aggiungere o modificare sport senza rilasciare una nuova versione della PWA.
-
-**Demonstrates**
-Un amministratore aggiunge un nuovo sport (`padel 4v4`) direttamente sul DB. Senza alcun deploy, l'endpoint `/sports` lo restituisce già e i giocatori possono selezionarlo durante la registrazione di una partita.
-
-**Acceptance Criteria**
-
-- [ ] Esiste una tabella `Sports` nel DB con colonne: `Id`, `Key`, `DisplayName`, `PointUnit`, `Sets`, `TeamSize`, `IsActive`
-- [ ] L'endpoint `GET /sports` legge da DB (non da `SportsConfig` statico) e restituisce solo sport con `IsActive = true`
-- [ ] `SportsConfig` statico viene rimosso o deprecato: nessun endpoint lo usa più direttamente
-- [ ] Una migration EF popola la tabella con gli sport attualmente definiti in `SportsConfig` (dati iniziali idempotenti)
-- [ ] Il frontend riceve e visualizza correttamente la lista sport proveniente da DB, senza modifiche al contratto API esistente
-- [ ] La validazione sport nelle partite (`MatchEndpoints`) usa i valori da DB, non dalla classe statica
-- [ ] La colonna `Key` è solo display/lookup: il riferimento allo sport nei circoli/match resta come oggi (nessuna modifica al modo in cui `Circle` referenzia lo sport), `Key` serve solo a mappare la riga DB ai valori `SportsConfig` esistenti durante la migration
-
-**Out of scope**
-
-- UI di amministrazione per gestire sport (CRUD via interfaccia grafica)
-- Autenticazione/autorizzazione per la modifica della tabella Sports (gestita solo via accesso diretto al DB)
-- Parametri ELO (K, amplifier) in database
-
-**Open questions**
-
-- (nessuna — `Key` confermata come solo display/lookup, non FK)
 
 ---
 
@@ -1718,4 +1710,86 @@ In un circolo con sport `AllowsSingles=true`, il form "registra partita" mostra 
 
 ---
 
-> **PROSSIMO PASSO:** avvia il piano tecnico con `/eq-plan US-047` per il backend del singolo.
+## EP-007 — Campionato del Circolo
+
+_Il circolo come campionato vivo: GOLP propone gli accoppiamenti migliori in base a chi è fisicamente presente e alimenta una classifica stagionale a punti solo positivi. Risolve la demotivazione del giocatore attivo scavalcato da chi non gioca e trasforma l'app da registro a organizzatore di serate. (da discussione classifica 2026-07-06, docs/proposte-classifica.txt opzione 17)_
+
+#### US-049: Serata al circolo — proposta accoppiamenti dai presenti e punti campionato
+
+**Epic:** EP-007 | **Priority:** MEDIUM | **Story Points:** 8 | **Status:** TODO
+**Blocked by:** US-008
+
+**Story**
+Come giocatore presente al circolo, voglio segnalare chi c'è in questo momento e ricevere dall'app la proposta di accoppiamenti migliore per la serata, così che le partite giocate facciano avanzare un campionato a punti che premia chi gioca davvero.
+
+**Demonstrates**
+Quattro o più membri risultano presenti in una "serata" del circolo. L'app propone gli accoppiamenti (coppie e sfida) privilegiando le combinazioni non ancora giocate in stagione e, a parità, l'equilibrio dei rating. La partita viene giocata e confermata col flusso esistente: oltre al delta ELO, i giocatori ricevono punti campionato solo positivi (es. 3 vittoria / 1 sconfitta). La classifica campionato del circolo mostra i punti accumulati; chi non gioca resta a zero e non può essere scavalcato "da fermo".
+
+**Acceptance Criteria**
+
+- [ ] Un membro può aprire la "serata" del circolo e selezionare i presenti dalla lista membri (check-in per conto di tutti, un tap per giocatore)
+- [ ] Con almeno 4 presenti, l'app propone accoppiamenti: criterio primario le combinazioni coppia/avversari meno giocate nella stagione corrente, tie-break l'equilibrio della somma rating tra le due squadre
+- [ ] Con presenti non multipli di 4, l'app indica chi riposa nel turno e lo prioritizza nel turno successivo della stessa serata
+- [ ] La proposta è modificabile prima di avviare la partita (suggerita, non vincolante)
+- [ ] La partita creata dalla proposta segue il ciclo esistente pending → confirmed (conferma 4/4 o forzatura) e alla conferma assegna sia delta ELO sia punti campionato
+- [ ] I punti campionato sono solo positivi (vittoria > sconfitta > 0) e non vengono mai sottratti; chi non gioca non accumula nulla
+- [ ] Il circolo ha una classifica campionato separata dalla classifica rating, ordinata per punti stagionali
+- [ ] Uno slot presente può essere un ospite (flusso ospite esistente): entra nel matchmaking con rating 1000
+
+**Out of scope**
+
+- Calendario e giornate fisse di campionato (il campionato avanza solo per serate opportunistiche)
+- Chiusura stagione, premi di fine stagione, reset automatico dei punti (storia futura)
+- Check-in automatico via geolocalizzazione o QR code
+- Gestione multi-campo (assegnazione a campi specifici)
+- Notifiche push "si sta formando una serata al circolo"
+
+**Open questions**
+
+- Check-in: solo una persona spunta i presenti (organizzatore di fatto) o ognuno può fare check-in da sé? Nel dubbio l'AC 1 assume il primo modello (più semplice)
+- I punti campionato valgono solo per partite proposte dall'app o per tutte le partite confermate nella stagione (eventualmente con bonus per quelle proposte)?
+- Valori punti: 3/1 fissi, o bonus per sconfitta combattuta (es. 2 punti se il margine è sotto soglia)?
+- Durata stagione: allineata al "giocatore dell'anno" (anno solare) o configurabile per circolo?
+
+---
+
+#### US-050: Torneo one-shot del circolo (formato Americano/Mexicano)
+
+**Epic:** EP-007 | **Priority:** MEDIUM | **Story Points:** 8 | **Status:** TODO
+**Blocked by:** US-049
+
+**Story**
+Come organizzatore di un circolo, voglio creare un torneo in giornata (formato Americano o Mexicano) con membri e ospiti, così che l'app generi i round, tenga la classifica live e proclami un vincitore senza che io debba gestire nulla a mano.
+
+**Demonstrates**
+L'organizzatore crea un torneo indicando formato, numero campi, punti per round e partecipanti (membri + ospiti). L'app genera i round con rotazione dei compagni (Americano) o accoppiamenti da classifica corrente (Mexicano). I risultati inseriti dall'organizzatore valgono subito (auto-confirmed) e aggiornano la classifica live del torneo. A fine round finale l'app proclama il podio. Le partite del torneo non modificano il rating ELO; i partecipanti ricevono punti campionato stagionale (partecipazione + bonus piazzamento).
+
+**Acceptance Criteria**
+
+- [ ] Creazione torneo con: formato (Americano o Mexicano), numero campi, punti per round, lista partecipanti (membri del circolo e/o ospiti via flusso ospite esistente)
+- [ ] L'app genera automaticamente tutti i round: in Americano rotazione dei compagni da schema fisso; in Mexicano accoppiamenti dal 2° round in base alla classifica corrente
+- [ ] Ogni giocatore vede il proprio prossimo match: campo, compagno, avversari
+- [ ] I risultati delle partite di torneo sono inseriti dall'organizzatore e diventano subito validi (auto-confirmed, nessuna conferma 4/4)
+- [ ] Classifica live del torneo aggiornata a ogni risultato (somma punti individuali fatti nei round)
+- [ ] Le partite di torneo non modificano il rating ELO dei giocatori
+- [ ] Alla chiusura, l'app mostra il podio e assegna punti campionato stagionale: bonus per piazzamento + punti partecipazione a tutti
+- [ ] Il ritiro di un partecipante a torneo in corso rigenera i round rimanenti senza invalidare i risultati già giocati
+
+**Out of scope**
+
+- Formati a coppie fisse, gironi + eliminazione, tabelloni knockout (evoluzione futura per tornei weekend)
+- Tornei multi-circolo o aperti al pubblico
+- Iscrizione self-service con pagamento
+- Gestione tempi/prenotazione campi reale (l'app assegna il campo, non gestisce l'orologio)
+- Proiezione/condivisione pubblica della classifica live (schermata dedicata futura)
+
+**Open questions**
+
+- Il torneo lo crea solo il proprietario del circolo o qualsiasi membro?
+- ELO davvero intatto, o opzione per-circolo "il torneo pesa a K ridotto"?
+- Valori punti campionato per piazzamento (es. 15/10/5 podio + 3 a tutti): da definire coi test user
+- Torneo weekend (gironi sabato + finali domenica): serve nel primo rilascio o basta la giornata singola?
+
+---
+
+> **PROSSIMO PASSO:** avvia il piano tecnico con `/eq-plan US-049` per il campionato serata, oppure `/eq-plan US-047` per il backend del singolo.

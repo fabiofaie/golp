@@ -1,0 +1,125 @@
+🏆 *PROPOSTE PER MIGLIORARE LA CLASSIFICA*
+
+*Il problema*
+Oggi la classifica funziona così: ogni partita vinta fa guadagnare punti, ogni partita persa ne fa perdere. Chi non gioca, però, non perde nulla: i suoi punti restano congelati.
+
+Risultato: un giocatore che gioca spesso e ogni tanto perde può ritrovarsi in classifica *sotto* a qualcuno che ha smesso di giocare da mesi. Questo demotiva proprio chi tiene vivo il circolo giocando.
+
+Qui sotto 17 possibili soluzioni, divise in 4 gruppi. Per ognuna: come funziona, pro e contro.
+
+━━━━━━━━━━━━━━━
+📉 *GRUPPO 1 — CHI NON GIOCA PERDE PUNTI COL TEMPO*
+━━━━━━━━━━━━━━━
+
+*1️⃣ Perdita di punti fissa per chi sta fermo*
+Se non giochi per più di 2 settimane, ogni settimana successiva perdi automaticamente qualche punto (es. 2 a settimana). Appena torni a giocare la perdita si ferma, ma i punti persi non tornano.
+✅ Regola semplicissima: "se non giochi, cali". Chi gioca con costanza non viene mai scavalcato da chi sta fermo.
+❌ Punisce anche chi ha una buona ragione per fermarsi (vacanza, infortunio, lavoro). Il punteggio non riflette più solo quanto sei bravo.
+
+*2️⃣ I punti di chi sta fermo tornano lentamente verso il centro*
+Chi non gioca vede il punteggio scivolare piano piano verso il punteggio di partenza (1000). Funziona in entrambe le direzioni: chi era a 1200 scende verso 1000, ma chi era a 800 _sale_ verso 1000. L'idea: se non giochi da tanto, non sappiamo più quanto vali davvero.
+✅ La soluzione più "giusta": senza partite recenti il punteggio vecchio vale sempre meno. Non umilia i giocatori deboli fermi (anzi, li avvicina alla media).
+❌ Il giocatore forte che sta fermo percepirà comunque che "gli rubano i punti".
+
+*3️⃣ Perdita di punti che aumenta col tempo*
+Le prime 2 settimane di pausa non succede nulla. Poi la perdita parte piccola e cresce: -1, poi -2, poi -4, poi -8 a settimana (con un tetto massimo). Una vacanza non costa quasi nulla, un abbandono lungo costa parecchio.
+✅ Distingue bene tra "vacanza" e "ha smesso di giocare".
+❌ Più difficile da spiegare e ricordare. Bisogna azzeccare i numeri, altrimenti sembra arbitraria.
+
+━━━━━━━━━━━━━━━
+⚖️ *GRUPPO 2 — I PUNTI NON SI TOCCANO, MA LA POSIZIONE TIENE CONTO DI QUANTO GIOCHI*
+━━━━━━━━━━━━━━━
+
+*4️⃣ Punteggio e posizione diventano due cose separate*
+Il punteggio (quanto sei bravo) non viene mai toccato dall'inattività. Ma la posizione in classifica combina punteggio E attività recente: chi non gioca da un mese scende di qualche posizione, anche se i punti restano uguali. Appena rigioca, risale subito dove merita.
+✅ Nessuno "perde punti": scende solo di posizione, e la risalita è immediata.
+❌ Può confondere: "come mai lui ha meno punti di me ma sta sopra?"
+
+*5️⃣ Il punteggio diventa una "stima" che perde precisione*
+Il sistema tiene traccia di quanto il punteggio è affidabile. Giochi spesso = stima precisa. Fermo a lungo = stima incerta ("varrà ancora 1200? Boh, è fermo da 3 mesi"). La classifica usa una stima prudente: chi è fermo da tanto finisce più in basso perché il suo punteggio è meno affidabile. (È il sistema dei videogiochi competitivi più famosi.)
+✅ Il metodo più corretto matematicamente. Bonus: i nuovi iscritti non schizzano subito in vetta.
+❌ Difficile da spiegare. Per noi la modifica più impegnativa da realizzare.
+
+*6️⃣ Piccolo bonus di posizione per chi è attivo*
+La classifica ordina per punteggio, ma chi ha giocato di recente riceve un piccolo vantaggio di posizione. A parità o quasi parità di punti, l'attivo sta sopra il fermo.
+✅ Intervento leggero: la bravura conta comunque di più.
+❌ Può sembrare "punti regalati". Se il divario è grande, non cambia nulla.
+
+━━━━━━━━━━━━━━━
+🚪 *GRUPPO 3 — CHI NON GIOCA ESCE DALLA CLASSIFICA (O LA CLASSIFICA RIPARTE)*
+━━━━━━━━━━━━━━━
+
+*7️⃣ Classifica divisa: attivi e inattivi*
+Per stare in classifica devi aver giocato almeno una partita negli ultimi 30 giorni. Chi non l'ha fatto finisce in una sezione separata in fondo, in grigio, senza numero di posizione ("Inattivi"). Appena rigioca, rientra con i suoi punti intatti.
+✅ Semplicissima: "la classifica è di chi gioca". Nessuno perde punti, mai.
+❌ Effetto scalino: al giorno 31 sparisci di colpo. (Rimediabile con un avviso "tra 5 giorni diventi inattivo".)
+
+*8️⃣ La classifica considera solo le partite recenti*
+Si contano solo le partite degli ultimi 3 mesi. Le più vecchie "escono" dal conteggio man mano. Chi non gioca da 3 mesi non ha più partite valide e sparisce dalla classifica.
+✅ La classifica fotografa sempre il presente, mai il passato.
+❌ Il punteggio può cambiare anche senza giocare (quando una vecchia partita esce dal conteggio). Tecnicamente complicata.
+
+*9️⃣ Stagioni: la classifica riparte ogni tot mesi*
+Come nei campionati. Ogni 3-6 mesi la stagione si chiude, si premia il vincitore, e i punteggi vengono in parte riavvicinati per la stagione nuova (chi era a 1300 riparte ad es. da 1150: vantaggio mantenuto ma ridotto). Chi ha smesso viene riassorbito nel gruppo a ogni stagione.
+✅ Formula collaudata in tutti gli sport. A ogni stagione tutti hanno un motivo per ricominciare. Si sposa coi premi "giocatore del mese/anno".
+❌ Durante la stagione il problema resta. Chi era in alto può vivere male il "taglio".
+
+━━━━━━━━━━━━━━━
+💡 *GRUPPO 4 — IDEE CREATIVE*
+━━━━━━━━━━━━━━━
+
+*🔟 "Difendi il trono"*
+I punti non calano mai. Ma le prime posizioni (es. le prime 5) vanno difese: se chi sta in testa non gioca entro un certo numero di giorni, chi gli sta subito dietro con punteggio vicino e gioca regolarmente lo scavalca. Come nella boxe: il campione deve difendere il titolo.
+✅ Nessun punto perso, solo sorpassi "sul campo". Racconto avvincente.
+❌ La regola dello scavalcamento va definita molto bene, altrimenti sembra arbitraria.
+
+*1️⃣1️⃣ La "batteria" di attività* 🔋
+Accanto a ogni giocatore c'è un'icona a batteria. Giochi spesso = carica. Fermo = si scarica. Con batteria scarica il punteggio resta visibile, ma vieni mostrato in fondo alla tua fascia, con la batteria vuota bene in vista. Per ricaricarti basta giocare.
+✅ Messaggio positivo ("ricaricati giocando!") invece che punitivo. Immediata a colpo d'occhio.
+❌ L'effetto sulla classifica va comunque deciso (è una veste grafica da abbinare a un'altra opzione).
+
+*1️⃣2️⃣ Chi sta fermo troppo esce e deve "riqualificarsi"*
+Dopo 45 giorni senza partite esci dalla classifica ("non classificato"). Per rientrare giochi 3 partite di ricollocamento, nelle quali il punteggio si muove più velocemente del normale, così si riassesta in fretta al tuo livello attuale.
+✅ Chi sta fermo non occupa posizioni. Al rientro il punteggio si aggiorna rapidamente.
+❌ Le "3 partite per rientrare" possono scoraggiare il rientro.
+
+*1️⃣3️⃣ Chi gioca tanto perde meno punti quando perde*
+Se giochi almeno 4 partite al mese, le sconfitte ti costano meno punti (es. il 25% in meno). Chi gioca poco paga le sconfitte a prezzo pieno.
+✅ Attacca il problema alla radice: giocare tanto non deve costare caro.
+❌ Alla lunga gonfia i punteggi di chi gioca tanto: un mediocre costantissimo potrebbe superare un forte che gioca il giusto.
+
+*1️⃣4️⃣ Un punto in regalo per ogni partita giocata*
+Ogni partita giocata vale +1 punto, vinta o persa. Piccolo, ma su 10 partite al mese compensa le sconfitte di misura e premia la presenza.
+✅ Facilissima da capire. Giocare non è mai del tutto in perdita.
+❌ Alla lunga gonfia i punteggi di chi gioca tantissimo, a prescindere dalla bravura.
+
+*1️⃣5️⃣ Due classifiche: "Bravura" e "Corsa"*
+Come nel tennis professionistico. La prima ("Bravura") è quella di oggi: misura quanto sei forte. La seconda ("Corsa") riparte da zero ogni mese o stagione e si può solo accumulare: tanti punti a vittoria, pochi punti anche a sconfitta. Chi gioca tanto domina sempre la Corsa. Il premio "giocatore del mese" lo vince chi vince la Corsa.
+✅ Due motivazioni distinte: il più forte E il più presente. Si aggancia ai premi già previsti. Nessuna classifica "sporca" l'altra.
+❌ Due classifiche da spiegare: qual è "quella vera"?
+
+*1️⃣6️⃣ Chi non gioca "sbiadisce"* 👻
+Nessun cambiamento a punti o posizioni. Solo un effetto visivo: la riga di chi non gioca da tempo diventa via via più trasparente, quasi un fantasma. Tutto il circolo vede a colpo d'occhio chi latita. La spinta è la pressione sociale del gruppo.
+✅ Costo quasi zero, e nei gruppi di amici funziona ("oh, sei un fantasma, torna a giocare!").
+❌ Non risolve il sorpasso vero: il fermo resta sopra, solo un po' trasparente.
+
+*1️⃣7️⃣ Il campionato: GOLP propone le partite, chi vince accumula punti* 🏟️
+L'app non si limita a registrare le partite: le organizza. A ogni "giornata" GOLP suggerisce gli accoppiamenti — con chi fai coppia e contro chi giochi (i compagni ruotano, così giochi con tutti). I punti del campionato sono _solo positivi_: es. 3 a vittoria, 1 a sconfitta combattuta, 0 se non giochi. Chi non gioca resta fermo a zero mentre gli altri accumulano: il sorpasso da fermo diventa impossibile. Il campionato dura per es. 3 mesi, si premia il vincitore e se ne apre uno nuovo.
+✅ L'unica proposta che oltre a sistemare la classifica _fa giocare di più_: l'app ti invita in campo. Nessuna paura di perdere punti. Ruotando i compagni conosci tutto il circolo. Può convivere con la classifica di oggi (quella misura la bravura, il campionato chi vince sul campo).
+❌ Il calendario è il punto delicato: in un circolo amatoriale si gioca quando si può, non quando dice l'app. Chi ha più tempo libero accumula più punti (servirebbe un tetto di partite valide). Variante morbida: niente giornate fisse, l'app _suggerisce_ sfide e quando avvengono valgono per il campionato.
+
+━━━━━━━━━━━━━━━
+❓ *DOMANDE SU CUI DISCUTERE INSIEME*
+━━━━━━━━━━━━━━━
+
+1. Vi sembra giusto che chi non gioca *perda punti*, oppure i punti sono "sacri" e va toccata solo la posizione/visibilità?
+
+2. Quanto tempo senza giocare è accettabile prima che scatti qualcosa? 2 settimane? 1 mese? 3 mesi?
+
+3. Preferite una regola invisibile e automatica, o qualcosa di ben visibile e giocoso (batteria 🔋, fantasma 👻, trono da difendere 👑)?
+
+4. L'idea delle *stagioni* vi piace o preferite una classifica continua che non riparte mai?
+
+5. Avrebbe senso avere *due classifiche* (il più forte / il più presente) o è troppo complicato?
+
+6. Vi piacerebbe che l'app vi *proponesse le partite* da giocare (campionato con giornate e accoppiamenti), o preferite decidere sempre voi quando e con chi giocare?

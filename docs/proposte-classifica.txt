@@ -1,0 +1,355 @@
+PROPOSTE PER MIGLIORARE LA CLASSIFICA
+======================================
+
+IL PROBLEMA
+-----------
+Oggi la classifica funziona così: ogni partita vinta fa guadagnare punti,
+ogni partita persa ne fa perdere. Chi non gioca, però, non perde nulla:
+i suoi punti restano congelati.
+
+Risultato: un giocatore che gioca spesso e ogni tanto perde può ritrovarsi
+in classifica SOTTO a qualcuno che ha smesso di giocare da mesi.
+Questo demotiva proprio chi tiene vivo il circolo giocando.
+
+Qui sotto trovate 17 possibili soluzioni, divise in 4 gruppi.
+Per ognuna: come funziona, i lati positivi e i lati negativi.
+
+
+=====================================================
+GRUPPO 1 — CHI NON GIOCA PERDE PUNTI COL TEMPO
+=====================================================
+
+OPZIONE 1 — Perdita di punti fissa per chi sta fermo
+----------------------------------------------------
+Come funziona: se non giochi per più di 2 settimane, ogni settimana
+successiva perdi automaticamente qualche punto (per esempio 2 a settimana).
+Appena torni a giocare, la perdita si ferma, ma i punti persi non tornano.
+
+Lati positivi:
+- Regola semplicissima da capire: "se non giochi, cali".
+- Chi gioca con costanza non viene mai scavalcato da chi sta fermo.
+
+Lati negativi:
+- Punisce anche chi ha una buona ragione per fermarsi (vacanza,
+  infortunio, lavoro).
+- Il punteggio non riflette più solo quanto sei bravo, ma anche
+  quanto tempo libero hai.
+
+OPZIONE 2 — I punti di chi sta fermo tornano lentamente verso il centro
+-----------------------------------------------------------------------
+Come funziona: chi non gioca vede il suo punteggio scivolare piano piano
+verso il punteggio di partenza (1000 punti). Attenzione: funziona in
+entrambe le direzioni. Chi era a 1200 scende verso 1000, ma chi era a 800
+SALE verso 1000.
+
+L'idea di fondo: se non giochi da tanto, non sappiamo più quanto vali
+davvero, quindi il tuo punteggio torna verso la media.
+
+Lati positivi:
+- È la soluzione più "giusta": senza partite recenti, il punteggio
+  vecchio vale sempre meno.
+- Non umilia i giocatori deboli che stanno fermi (non li spinge
+  ancora più in basso, anzi).
+
+Lati negativi:
+- Il giocatore forte che sta fermo percepirà comunque che
+  "gli rubano i punti".
+
+OPZIONE 3 — Perdita di punti che aumenta col passare del tempo
+--------------------------------------------------------------
+Come funziona: le prime 2 settimane di pausa non succede nulla.
+Poi la perdita parte piccola e cresce: prima settimana -1 punto,
+poi -2, poi -4, poi -8 (con un limite massimo).
+
+L'idea: una pausa breve (una vacanza) non costa quasi nulla,
+un abbandono lungo costa parecchio.
+
+Lati positivi:
+- Distingue bene tra "vacanza" e "ha smesso di giocare".
+
+Lati negativi:
+- Regola più difficile da spiegare e da ricordare.
+- Bisogna azzeccare i numeri giusti, altrimenti sembra arbitraria.
+
+
+=====================================================
+GRUPPO 2 — I PUNTI NON SI TOCCANO, MA LA POSIZIONE
+IN CLASSIFICA TIENE CONTO DI QUANTO GIOCHI
+=====================================================
+
+OPZIONE 4 — Punteggio e posizione diventano due cose separate
+-------------------------------------------------------------
+Come funziona: il tuo punteggio (quanto sei bravo) non viene mai toccato
+dall'inattività. Ma la posizione in classifica si calcola combinando
+punteggio E attività recente: chi non gioca da un mese scende di qualche
+posizione, anche se i suoi punti restano uguali.
+Appena torna a giocare, risale subito dove merita.
+
+Lati positivi:
+- Nessuno "perde punti" per essere stato fermo: scende solo di posizione,
+  e la risalita è immediata appena rigioca.
+- Il punteggio resta una misura pulita della bravura.
+
+Lati negativi:
+- Può creare confusione: "come mai lui ha meno punti di me ma sta sopra?"
+  Servirebbe spiegarlo bene nell'app.
+
+OPZIONE 5 — Il punteggio diventa una "stima" che perde precisione
+-----------------------------------------------------------------
+Come funziona: accanto al punteggio, il sistema tiene traccia di quanto
+quel punteggio è affidabile. Se giochi spesso, la stima è precisa.
+Se stai fermo a lungo, diventa sempre più incerta ("varrà ancora 1200?
+Boh, è fermo da 3 mesi"). La classifica ordina i giocatori usando una
+stima prudente: chi è fermo da tanto viene messo più in basso, perché
+il suo punteggio è meno affidabile.
+
+(È il sistema usato dai videogiochi competitivi più famosi.)
+
+Lati positivi:
+- È il metodo più corretto dal punto di vista matematico.
+- Risolve anche un altro problema: i nuovi iscritti non schizzano
+  subito in vetta, perché il loro punteggio è ancora "incerto".
+
+Lati negativi:
+- Difficile da spiegare: "perché sono sotto di lui se ho più punti?"
+- Per noi è la modifica più impegnativa da realizzare.
+
+OPZIONE 6 — Piccolo bonus di posizione per chi è attivo
+-------------------------------------------------------
+Come funziona: la classifica ordina per punteggio, ma chi ha giocato
+di recente riceve un piccolo vantaggio di posizione (come se avesse
+qualche punto in più, solo ai fini dell'ordinamento). A parità o quasi
+parità di punti, l'attivo sta sopra il fermo.
+
+Lati positivi:
+- Intervento leggero: la bravura conta comunque di più.
+
+Lati negativi:
+- Il vantaggio può sembrare "punti regalati".
+- Se il divario di punti è grande, non cambia nulla.
+
+
+=====================================================
+GRUPPO 3 — CHI NON GIOCA ESCE DALLA CLASSIFICA
+(O LA CLASSIFICA RIPARTE PERIODICAMENTE)
+=====================================================
+
+OPZIONE 7 — Classifica divisa: attivi e inattivi
+------------------------------------------------
+Come funziona: per stare in classifica devi aver giocato almeno una
+partita negli ultimi 30 giorni. Chi non l'ha fatto finisce in una sezione
+separata in fondo, in grigio, senza numero di posizione ("Inattivi").
+Appena rigioca una partita, rientra in classifica con i suoi punti intatti.
+
+Lati positivi:
+- Semplicissima da capire: "la classifica è di chi gioca".
+- Nessuno perde punti, mai.
+- Il messaggio al circolo è chiaro e sano.
+
+Lati negativi:
+- Effetto "scalino": al giorno 31 sparisci di colpo dalla classifica.
+  (Rimediabile con un avviso tipo "tra 5 giorni diventi inattivo".)
+
+OPZIONE 8 — La classifica considera solo le partite recenti
+-----------------------------------------------------------
+Come funziona: la classifica si calcola contando solo le partite degli
+ultimi 3 mesi. Le partite più vecchie "escono" dal conteggio man mano
+che passa il tempo. Chi non gioca da 3 mesi non ha più partite valide
+e sparisce dalla classifica.
+
+Lati positivi:
+- La classifica fotografa sempre il presente, mai il passato.
+
+Lati negativi:
+- Il punteggio può cambiare anche senza giocare (quando una vecchia
+  partita esce dal conteggio), il che può risultare strano.
+- Per noi è tecnicamente complicata da realizzare.
+
+OPZIONE 9 — Stagioni: la classifica riparte ogni tot mesi
+---------------------------------------------------------
+Come funziona: come nei campionati. Ogni 3-6 mesi la stagione si chiude,
+si premia il vincitore, e i punteggi vengono in parte riavvicinati tra
+loro per la stagione nuova (chi era a 1300 riparte per esempio da 1150:
+mantiene un vantaggio, ma ridotto). Chi ha smesso di giocare viene
+riassorbito nel gruppo a ogni nuova stagione.
+
+Lati positivi:
+- Formula collaudata in tutti gli sport e giochi competitivi.
+- A ogni stagione tutti hanno un motivo per ricominciare a giocare.
+- Si sposa bene con i premi "giocatore del mese/dell'anno" già previsti.
+
+Lati negativi:
+- Durante la stagione il problema resta (l'inattivo scavalcato solo
+  al riavvio).
+- Chi era in alto può vivere male il "taglio" a inizio stagione.
+
+
+=====================================================
+GRUPPO 4 — IDEE CREATIVE
+=====================================================
+
+OPZIONE 10 — "Difendi il trono"
+-------------------------------
+Come funziona: i punti non calano mai. Ma le prime posizioni (per esempio
+le prime 5) vanno difese: se chi sta nel gruppo di testa non gioca entro
+un certo numero di giorni, chi gli sta subito dietro con punteggio vicino
+e gioca regolarmente lo scavalca in classifica.
+Come nella boxe: il campione deve difendere il titolo, non può tenerselo
+restando fermo.
+
+Lati positivi:
+- Nessun punto perso, solo sorpassi "sul campo".
+- Racconto avvincente: il trono va difeso.
+
+Lati negativi:
+- La regola dello scavalcamento va definita molto bene, altrimenti
+  sembra arbitraria.
+
+OPZIONE 11 — La "batteria" di attività
+--------------------------------------
+Come funziona: accanto a ogni giocatore c'è un'icona a forma di batteria.
+Giochi spesso = batteria carica. Stai fermo = batteria che si scarica.
+Con la batteria scarica il tuo punteggio resta visibile, ma in classifica
+vieni mostrato in fondo alla tua fascia, con la batteria vuota bene in
+vista. Per "ricaricarti" basta giocare.
+
+Lati positivi:
+- Messaggio positivo ("ricaricati giocando!") invece che punitivo
+  ("stai perdendo punti!").
+- Immediata da capire a colpo d'occhio.
+
+Lati negativi:
+- L'effetto sulla classifica va comunque deciso (è una veste grafica
+  da abbinare a una delle altre opzioni).
+
+OPZIONE 12 — Chi sta fermo troppo esce e deve "riqualificarsi"
+--------------------------------------------------------------
+Come funziona: dopo 45 giorni senza partite esci dalla classifica
+("non classificato"). Per rientrare devi giocare 3 partite di
+ricollocamento, nelle quali il tuo punteggio si muove più velocemente
+del normale, così si riassesta in fretta al tuo livello attuale.
+
+Lati positivi:
+- Chi sta fermo non occupa posizioni in classifica.
+- Al rientro il punteggio si aggiorna rapidamente al livello reale.
+
+Lati negativi:
+- Il "devi fare 3 partite per rientrare" può scoraggiare il rientro
+  di chi era fermo.
+
+OPZIONE 13 — Chi gioca tanto perde meno punti quando perde
+----------------------------------------------------------
+Come funziona: se giochi almeno 4 partite al mese, le sconfitte ti
+costano meno punti (per esempio il 25% in meno). Chi gioca poco paga
+le sconfitte a prezzo pieno.
+
+Lati positivi:
+- Attacca il problema alla radice: giocare tanto non deve costare caro.
+
+Lati negativi:
+- Alla lunga gonfia i punteggi di chi gioca tanto: un giocatore mediocre
+  ma costantissimo potrebbe superare un giocatore forte che gioca il
+  giusto. Il punteggio smetterebbe di misurare la bravura.
+
+OPZIONE 14 — Un punto in regalo per ogni partita giocata
+--------------------------------------------------------
+Come funziona: ogni partita giocata vale +1 punto, vinta o persa.
+Piccolo, ma su 10 partite al mese compensa le sconfitte di misura
+e premia la presenza.
+
+Lati positivi:
+- Facilissima da realizzare e da capire.
+- Messaggio: giocare non è mai del tutto in perdita.
+
+Lati negativi:
+- Alla lunga anche questo gonfia i punteggi di chi gioca tantissimo,
+  a prescindere da quanto è bravo.
+
+OPZIONE 15 — Due classifiche: "Bravura" e "Corsa"
+-------------------------------------------------
+Come funziona: come nel tennis professionistico, che ha due classifiche.
+La prima ("Bravura") è quella di oggi: misura quanto sei forte, punti
+che salgono e scendono. La seconda ("Corsa") riparte da zero ogni mese
+o stagione e si può solo accumulare: tanti punti a vittoria, pochi punti
+anche a sconfitta. Chi gioca tanto domina sempre la Corsa, anche se
+perde qualche posizione nella Bravura. Il premio "giocatore del mese"
+lo vince chi vince la Corsa.
+
+Lati positivi:
+- Due motivazioni distinte: essere il più forte E essere il più presente.
+- Si aggancia perfettamente ai premi mensili/annuali già previsti.
+- Nessuna delle due classifiche viene "sporcata" dall'altra.
+
+Lati negativi:
+- Due classifiche da spiegare: qual è "quella vera" per il circolo?
+
+OPZIONE 16 — Chi non gioca "sbiadisce"
+--------------------------------------
+Come funziona: nessun cambiamento ai punti o alle posizioni. Solo un
+effetto visivo: la riga di chi non gioca da tempo diventa via via più
+trasparente, quasi un fantasma. Tutto il circolo vede a colpo d'occhio
+chi latita. La spinta a giocare è la pressione sociale del gruppo.
+
+Lati positivi:
+- Costo quasi zero, e nei gruppi di amici funziona più di quanto
+  sembri ("oh, sei diventato un fantasma, torna a giocare!").
+
+Lati negativi:
+- Non risolve il sorpasso vero e proprio: il fermo resta sopra,
+  solo un po' trasparente.
+
+OPZIONE 17 — Il campionato: GOLP propone le partite, chi vince
+accumula punti
+--------------------------------------------------------------
+Come funziona: l'app non si limita a registrare le partite, le organizza.
+A ogni "giornata" GOLP suggerisce gli accoppiamenti: con chi fai coppia
+e contro chi giochi (i compagni ruotano, così giochi con tutti).
+I punti del campionato sono SOLO positivi: per esempio 3 punti a vittoria,
+1 punto a sconfitta combattuta, 0 se non giochi.
+Chi non gioca non perde nulla, ma resta fermo a zero mentre gli altri
+accumulano: il sorpasso da fermo diventa impossibile per definizione.
+Il campionato ha una durata (per esempio 3 mesi), alla fine si premia
+il vincitore e se ne apre uno nuovo.
+
+Lati positivi:
+- È l'unica proposta che oltre a sistemare la classifica FA GIOCARE
+  di più: l'app ti invita in campo, non aspetta che ci vai da solo.
+- Nessuna paura di perdere punti: giocare conviene sempre.
+- Ruotando i compagni si conosce tutto il circolo e la bravura vera
+  emerge comunque sulla lunga distanza.
+- Può convivere con la classifica di oggi: quella misura quanto sei
+  forte, il campionato misura chi vince di più sul campo.
+
+Lati negativi:
+- Il calendario è il punto delicato: in un circolo amatoriale la gente
+  gioca quando può, non quando dice l'app. Partite proposte e mai
+  giocate rovinano la giornata di campionato.
+- Chi ha più tempo libero gioca più partite e accumula più punti:
+  servirebbe un limite di partite valide per periodo.
+- Variante più morbida: niente giornate fisse, l'app si limita a
+  SUGGERIRE sfide ("non giochi con Luca da 2 mesi!") e quando la
+  partita avviene vale per il campionato.
+
+
+=====================================================
+DOMANDE SU CUI DISCUTERE INSIEME
+=====================================================
+
+1. Vi sembra giusto che chi non gioca perda punti, oppure i punti
+   devono essere "sacri" e va toccata solo la posizione/visibilità?
+
+2. Quanto tempo senza giocare è accettabile prima che scatti qualcosa?
+   2 settimane? 1 mese? 3 mesi?
+
+3. Preferite una regola invisibile e automatica, o qualcosa di ben
+   visibile e giocoso (batteria, fantasma, trono da difendere)?
+
+4. L'idea delle stagioni vi piace o preferite una classifica continua
+   che non riparte mai?
+
+5. Avrebbe senso avere due classifiche (il più forte / il più presente)
+   o è troppo complicato?
+
+6. Vi piacerebbe che l'app vi PROPONESSE le partite da giocare
+   (campionato con giornate e accoppiamenti), o preferite decidere
+   sempre voi quando e con chi giocare?
