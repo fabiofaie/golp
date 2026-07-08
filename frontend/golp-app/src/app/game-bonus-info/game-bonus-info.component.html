@@ -1,0 +1,173 @@
+<div class="page">
+  <div class="bg-deco" aria-hidden="true">G+B</div>
+
+  <header class="auth-header">
+    <span class="brand">GOLP</span>
+    <button type="button" (click)="goBack()" class="back-nav" style="background:none;border:none;cursor:pointer;padding:0;">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Indietro
+    </button>
+  </header>
+
+  <h1 class="auth-title">Come funziona il punteggio</h1>
+  <p class="auth-subtitle">Il metodo Game+Bonus: punti dai game giocati, senza rating assoluto.</p>
+
+  <!-- ── SCELTA METODO ── -->
+  <div class="pill-switcher" role="group" style="margin-bottom: 16px;">
+    <a routerLink="/elo-info" class="pill-switcher__btn" style="text-decoration:none;text-align:center;">ELO</a>
+    <button type="button" class="pill-switcher__btn active">Game+Bonus</button>
+  </div>
+
+  <div class="explanation-block">
+    <div class="explanation-block__title">
+      <span class="icon">⚖️</span>
+      ELO vs Game+Bonus: le differenze
+    </div>
+    <div class="explanation-block__text">
+      <strong>ELO</strong> è un rating assoluto e persistente: sale o scende ad ogni partita confermata e resta valido finché non giochi ancora. <strong>Game+Bonus</strong> invece somma punti guadagnati dai game giocati (più un bonus se batti chi è più forte) solo sulle partite recenti: una partita vecchia esce dal conteggio da sola, senza rating da "portarsi dietro". Il proprietario del circolo sceglie quale metodo è attivo, ed è reversibile in ogni momento senza toccare le partite già giocate.
+    </div>
+  </div>
+
+  <!-- ── SPIEGAZIONE ── -->
+  <div class="section-label">Le basi</div>
+
+  <div class="explanation-block">
+    <div class="explanation-block__title">
+      <span class="icon">🎾</span>
+      Punteggio base
+    </div>
+    <div class="explanation-block__text">
+      La squadra vincente guadagna <strong>1 punto per ogni set vinto</strong> (meno 1 per ogni set perso), <strong>più la differenza di game nei soli set che ha vinto</strong>. I set persi non tolgono punti oltre a questo: vincere la partita 2 set a 1 paga sempre, anche se in un set hai perso largo. La squadra perdente non guadagna punti in quella partita.
+    </div>
+  </div>
+
+  <div class="explanation-block">
+    <div class="explanation-block__title">
+      <span class="icon">🏆</span>
+      Bonus se batti i più forti
+    </div>
+    <div class="explanation-block__text">
+      Se la tua squadra aveva un punteggio Game+Bonus <strong>inferiore</strong> a quello degli avversari prima della partita, vincendo ricevi un bonus aggiuntivo pari al <strong>10% della differenza</strong> di punteggio tra le due squadre.
+    </div>
+  </div>
+
+  <div class="explanation-block">
+    <div class="explanation-block__title">
+      <span class="icon">🗓️</span>
+      Solo le partite recenti contano
+    </div>
+    <div class="explanation-block__text">
+      La classifica del circolo somma solo i punti delle partite che rientrano <strong>sia</strong> nelle ultime N partite del circolo <strong>sia</strong> nelle ultime M settimane (parametri impostati dal proprietario). Una partita che esce da una delle due finestre smette di contare.
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ── SIMULATORE ── -->
+  <div class="section-label">Simulatore partita</div>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="sim-form">
+
+    <!-- Punteggi Game+Bonus correnti -->
+    <div class="sim-team sim-team--mine">
+      <div class="sim-team__label">Punteggio Game+Bonus corrente</div>
+      <div class="sim-team__fields">
+        <div class="field">
+          <label for="team1CurrentScore">La mia squadra</label>
+          <input id="team1CurrentScore" type="number" formControlName="team1CurrentScore" placeholder="es. 42"
+            [class.error]="form.get('team1CurrentScore')?.invalid && form.get('team1CurrentScore')?.touched">
+        </div>
+        <div class="field">
+          <label for="team2CurrentScore">Avversari</label>
+          <input id="team2CurrentScore" type="number" formControlName="team2CurrentScore" placeholder="es. 30"
+            [class.error]="form.get('team2CurrentScore')?.invalid && form.get('team2CurrentScore')?.touched">
+        </div>
+      </div>
+    </div>
+
+    <!-- Modalità risultato -->
+    <div>
+      <div class="section-label" style="margin-bottom: 12px;">Risultato</div>
+      <div class="pill-switcher" role="group">
+        <button type="button" class="pill-switcher__btn" [class.active]="resultMode === 'unico'" (click)="setMode('unico')">Risultato unico</button>
+        <button type="button" class="pill-switcher__btn" [class.active]="resultMode === 'set'" (click)="setMode('set')">Per set</button>
+      </div>
+
+      @if (resultMode === 'unico') {
+        <div class="score-section">
+          <div class="score-headers">
+            <span class="sh-my">Mia sqd</span>
+            <span class="sh-sep"></span>
+            <span class="sh-opp">Avvers.</span>
+          </div>
+          <div class="score-row">
+            <div class="score-row__inputs">
+              <input type="number" class="score-input" formControlName="myScore" placeholder="10" min="0">
+              <span class="score-row__sep">–</span>
+              <input type="number" class="score-input" formControlName="oppScore" placeholder="6" min="0">
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (resultMode === 'set') {
+        <div class="score-section" formArrayName="sets">
+          <div class="score-headers">
+            <span class="sh-my">Mia sqd</span>
+            <span class="sh-sep"></span>
+            <span class="sh-opp">Avvers.</span>
+          </div>
+          @for (s of sets.controls; track $index; let i = $index) {
+            <div class="score-row" [formGroupName]="i">
+              <div class="score-row__inputs">
+                <input type="number" class="score-input" formControlName="myScore" placeholder="6" min="0">
+                <span class="score-row__sep">–</span>
+                <input type="number" class="score-input" formControlName="oppScore" placeholder="4" min="0">
+              </div>
+              @if (sets.length > 1) {
+                <button type="button" class="score-row__remove" (click)="removeSet(i)" aria-label="Rimuovi set">×</button>
+              }
+            </div>
+          }
+          <button type="button" class="add-set-btn" (click)="addSet()">+ Aggiungi set</button>
+        </div>
+      }
+    </div>
+
+    @if (errorMsg()) {
+      <div class="form-error">{{ errorMsg() }}</div>
+    }
+
+    <button type="submit" class="btn-primary" [disabled]="!isValid() || loading()">
+      {{ loading() ? 'Calcolo…' : 'Calcola punti partita' }}
+    </button>
+  </form>
+
+  <!-- ── RISULTATO ── -->
+  @if (result(); as res) {
+    <div class="result-panel">
+      <div class="result-panel__header">Punti assegnati</div>
+
+      <div class="result-row">
+        <div class="result-row__info">
+          <div class="result-row__name">La mia squadra</div>
+        </div>
+        <div class="result-row__delta" [class.result-row__delta--pos]="res.team1Points > 0">
+          +{{ res.team1Points }}
+        </div>
+      </div>
+
+      <div class="result-row">
+        <div class="result-row__info">
+          <div class="result-row__name">Avversari</div>
+        </div>
+        <div class="result-row__delta" [class.result-row__delta--pos]="res.team2Points > 0">
+          +{{ res.team2Points }}
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

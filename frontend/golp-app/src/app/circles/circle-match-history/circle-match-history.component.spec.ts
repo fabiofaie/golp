@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError, Subject } from 'rxjs';
 import { CircleMatchHistoryComponent } from './circle-match-history.component';
 import { MatchService, MatchSummary } from '../match.service';
@@ -57,6 +57,7 @@ describe('CircleMatchHistoryComponent', () => {
     await TestBed.configureTestingModule({
       imports: [CircleMatchHistoryComponent],
       providers: [
+        provideRouter([]),
         { provide: MatchService,  useValue: matchSvc },
         { provide: CircleService, useValue: circleSvc },
         { provide: AuthService,   useValue: authSvc },
@@ -345,14 +346,14 @@ describe('CircleMatchHistoryComponent', () => {
 
   // US-037 — link al dettaglio partita
 
-  it('match-date link navigates to detail route with circleId/matchId', () => {
+  it('"Dettagli" link navigates to detail route with circleId/matchId', () => {
     const m = makeMatch();
     matchSvc.getMatches.and.returnValue(of([m]));
 
     const fixture = TestBed.createComponent(CircleMatchHistoryComponent);
     fixture.detectChanges();
 
-    const link: HTMLAnchorElement = fixture.nativeElement.querySelector('.match-date');
+    const link: HTMLAnchorElement = fixture.nativeElement.querySelector('.btn-detail');
     expect(link).toBeTruthy();
     expect(link.getAttribute('href')).toBe(`/circles/${CIRCLE_ID}/matches/${m.id}/detail`);
   });

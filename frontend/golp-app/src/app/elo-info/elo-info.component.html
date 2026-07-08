@@ -14,6 +14,22 @@
   <h1 class="auth-title">Come funziona il rating</h1>
   <p class="auth-subtitle">Il sistema ELO adattato per il gioco di squadra.</p>
 
+  <!-- ── SCELTA METODO ── -->
+  <div class="pill-switcher" role="group" style="margin-bottom: 16px;">
+    <button type="button" class="pill-switcher__btn active">ELO</button>
+    <a routerLink="/game-bonus-info" class="pill-switcher__btn" style="text-decoration:none;text-align:center;">Game+Bonus</a>
+  </div>
+
+  <div class="explanation-block">
+    <div class="explanation-block__title">
+      <span class="icon">⚖️</span>
+      ELO vs Game+Bonus: le differenze
+    </div>
+    <div class="explanation-block__text">
+      <strong>ELO</strong> è un rating assoluto e persistente: sale o scende ad ogni partita confermata e resta valido finché non giochi ancora. <strong>Game+Bonus</strong> invece somma punti guadagnati dai game giocati (più un bonus se batti chi è più forte) solo sulle partite recenti: una partita vecchia esce dal conteggio da sola, senza rating da "portarsi dietro". Il proprietario del circolo sceglie quale metodo è attivo, ed è reversibile in ogni momento senza toccare le partite già giocate.
+    </div>
+  </div>
+
   <!-- ── SPIEGAZIONE ── -->
   <div class="section-label">Le basi</div>
 

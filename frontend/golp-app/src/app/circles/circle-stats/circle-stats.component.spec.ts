@@ -10,6 +10,11 @@ function makeStats(overrides: Partial<CircleStatsResponse> = {}): CircleStatsRes
   return {
     bestPartner: null,
     toughestOpponent: null,
+    matchesWon: 1,
+    matchesLost: 0,
+    gamesWon: 0,
+    gamesLost: 0,
+    recentForm: [],
     ...overrides,
   };
 }
@@ -73,8 +78,8 @@ describe('CircleStatsComponent', () => {
     expect(el.textContent).toContain('5 partite contro');
   });
 
-  it('shows empty state message when both are null', () => {
-    circleSvc.getMyStats.and.returnValue(of(makeStats()));
+  it('shows empty state message when no matches played', () => {
+    circleSvc.getMyStats.and.returnValue(of(makeStats({ matchesWon: 0, matchesLost: 0 })));
 
     const fixture = TestBed.createComponent(CircleStatsComponent);
     fixture.detectChanges();
@@ -82,6 +87,35 @@ describe('CircleStatsComponent', () => {
 
     expect(el.textContent).toContain('Ancora nessuna statistica');
     expect(el.querySelector('.stats-list')).toBeNull();
+  });
+
+  it('shows matches and games record, and recent form badges', () => {
+    circleSvc.getMyStats.and.returnValue(of(makeStats({
+      matchesWon: 7, matchesLost: 3, gamesWon: 45, gamesLost: 30,
+      recentForm: ['W', 'L', 'W', 'W', 'L'],
+    })));
+
+    const fixture = TestBed.createComponent(CircleStatsComponent);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    expect(el.textContent).toContain('7');
+    expect(el.textContent).toContain('3');
+    expect(el.textContent).toContain('45');
+    expect(el.textContent).toContain('30');
+    expect(el.querySelectorAll('.stat-form-badge').length).toBe(5);
+    expect(el.querySelectorAll('.stat-form-badge--win').length).toBe(3);
+    expect(el.querySelectorAll('.stat-form-badge--loss').length).toBe(2);
+  });
+
+  it('hides recent form block when no matches in the trend', () => {
+    circleSvc.getMyStats.and.returnValue(of(makeStats({ recentForm: [] })));
+
+    const fixture = TestBed.createComponent(CircleStatsComponent);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    expect(el.querySelector('.stat-card--form')).toBeNull();
   });
 
   it('shows loading state while request is pending', () => {

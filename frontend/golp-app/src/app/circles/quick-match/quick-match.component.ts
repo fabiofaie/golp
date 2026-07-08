@@ -148,17 +148,22 @@ type Step = "sport" | "players" | "picker" | "score";
                 (ngModelChange)="onSearch($event)" />
 
               @if (suggestions.length > 0) {
-                <div class="qm-chip-cloud">
-                  @for (s of suggestions; track s.userId) {
-                    <button
-                      class="qm-chip"
-                      [class.used]="isUsed(s.userId)"
-                      [disabled]="isUsed(s.userId)"
-                      (click)="addFromSuggestion(s)">
-                      {{ s.name }}
-                    </button>
-                  }
-                </div>
+                @for (group of groupedSuggestions; track group.circleId ?? group.label) {
+                  <div class="qm-chip-group">
+                    <p class="qm-chip-group-label">{{ group.label }}</p>
+                    <div class="qm-chip-cloud">
+                      @for (s of group.users; track s.userId) {
+                        <button
+                          class="qm-chip"
+                          [class.used]="isUsed(s.userId)"
+                          [disabled]="isUsed(s.userId)"
+                          (click)="addFromSuggestion(s)">
+                          {{ s.name }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
               } @else if (searchQuery.length > 1 && !checkingCircles) {
                 <p class="qm-no-results">Nessun giocatore trovato</p>
               }
@@ -577,6 +582,20 @@ type Step = "sport" | "players" | "picker" | "score";
         box-sizing: border-box;
       }
 
+      .qm-chip-group {
+        margin-bottom: 12px;
+      }
+
+      .qm-chip-group-label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        color: var(--color-text-secondary, var(--color-text));
+        opacity: 0.7;
+        margin: 0 0 6px;
+      }
+
       .qm-chip-cloud {
         display: flex;
         flex-wrap: wrap;
@@ -854,6 +873,30 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
   }
 
   get totalRequired(): number { return this.isSingles ? 2 : 4; }
+
+  get groupedSuggestions(): { label: string; circleId: string | null; users: SuggestionUser[] }[] {
+    const recentLabel = "Giocati di recente";
+    const groups = new Map<string, { label: string; circleId: string | null; users: SuggestionUser[] }>();
+
+    for (const s of this.suggestions) {
+      if (!s.circles || s.circles.length === 0) {
+        if (!groups.has(recentLabel)) groups.set(recentLabel, { label: recentLabel, circleId: null, users: [] });
+        groups.get(recentLabel)!.users.push(s);
+        continue;
+      }
+      for (const c of s.circles) {
+        if (!groups.has(c.id)) groups.set(c.id, { label: c.name, circleId: c.id, users: [] });
+        groups.get(c.id)!.users.push(s);
+      }
+    }
+
+    const recent = groups.get(recentLabel);
+    const circleGroups = [...groups.values()]
+      .filter(g => g.circleId !== null)
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    return recent ? [recent, ...circleGroups] : circleGroups;
+  }
 
   ngOnInit(): void {
     this.currentUserId = this.authSvc.getCurrentUserId() ?? "";

@@ -44,6 +44,7 @@ export class InviteDialogComponent implements OnInit {
         title: `Unisciti a ${this.circleName} su GOLP`,
         url: this.inviteUrl,
       })
+      .then(() => this.close())
       .catch(() => {
         // utente ha annullato la condivisione: nessuna azione necessaria
       });

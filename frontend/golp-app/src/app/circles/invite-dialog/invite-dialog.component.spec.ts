@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { InviteDialogComponent } from './invite-dialog.component';
 import { CircleService, InviteLinkResponse } from '../circle.service';
@@ -40,21 +40,23 @@ describe('InviteDialogComponent', () => {
     expect(comp.inviteUrl).toContain(`/join?token=${TOKEN}`);
   });
 
-  it('when canShare, auto-triggers navigator.share and closes the dialog', () => {
+  it('when canShare, auto-triggers navigator.share and closes the dialog', fakeAsync(() => {
     const shareSpy = jasmine.createSpy('share').and.returnValue(Promise.resolve());
-    (navigator as any).share = shareSpy;
+    Object.defineProperty(navigator, 'share', { value: shareSpy, configurable: true });
     let emitted = false;
 
     const fixture = createComponent(true);
     fixture.componentInstance.closed.subscribe(() => (emitted = true));
-    fixture.componentInstance.ngOnInit();
 
     expect(shareSpy).toHaveBeenCalledWith({
       title: `Unisciti a ${CIRCLE_NAME} su GOLP`,
       url: fixture.componentInstance.inviteUrl,
     });
+
+    tick();
+
     expect(emitted).toBeTrue();
-  });
+  }));
 
   it('copyLink calls navigator.clipboard.writeText with full invite URL', async () => {
     const fixture = createComponent(false);

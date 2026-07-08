@@ -189,6 +189,78 @@ public class PlayerStatsEndpointTests : IClassFixture<StatsTestFactory>
         Assert.NotEqual(JsonValueKind.Null, body.GetProperty("toughestOpponent").ValueKind);
     }
 
+    // US-054 — conteggio vinte/perse, game vinti/persi (somma su tutti i set)
+    [Fact]
+    public async Task GetStats_MatchesAndGamesCount_MultiSet()
+    {
+        var (circleId, me, tokens, others) = await SetupAsync();
+
+        // 1 vittoria 2 set (6-3, 6-4) e 1 sconfitta 2 set (4-6, 3-6)
+        await SeedMatchWithSetsAsync(circleId, me, others[0], [others[1], others[2]],
+            winnerTeam: 1, sets: [(6, 3), (6, 4)]);
+        await SeedMatchWithSetsAsync(circleId, me, others[0], [others[1], others[2]],
+            winnerTeam: 2, sets: [(4, 6), (3, 6)]);
+
+        var body = await GetStatsAsync(circleId, tokens[0]);
+
+        Assert.Equal(1, body.GetProperty("matchesWon").GetInt32());
+        Assert.Equal(1, body.GetProperty("matchesLost").GetInt32());
+        Assert.Equal(6 + 6 + 4 + 3, body.GetProperty("gamesWon").GetInt32());
+        Assert.Equal(3 + 4 + 6 + 6, body.GetProperty("gamesLost").GetInt32());
+    }
+
+    // US-054 — tendenza: con più di 10 partite confermate, solo le ultime 10 in ordine cronologico
+    [Fact]
+    public async Task GetStats_RecentForm_MoreThan10_ReturnsOnlyLast10InOrder()
+    {
+        var (circleId, me, tokens, others) = await SetupAsync();
+
+        // 12 partite: le prime 2 perse, le successive 10 alternate P/V (per riconoscere l'ordine)
+        var pattern = new[] { false, false, true, false, true, false, true, false, true, false, true, true };
+        for (int i = 0; i < pattern.Length; i++)
+        {
+            await SeedMatchWithSetsAsync(circleId, me, others[0], [others[1], others[2]],
+                winnerTeam: pattern[i] ? 1 : 2, sets: [(6, 0)], createdAt: DateTimeOffset.UtcNow.AddMinutes(i));
+        }
+
+        var body = await GetStatsAsync(circleId, tokens[0]);
+        var recentForm = body.GetProperty("recentForm").EnumerateArray().Select(e => e.GetString()).ToArray();
+
+        Assert.Equal(10, recentForm.Length);
+        var expected = pattern.Skip(2).Select(w => w ? "W" : "L").ToArray();
+        Assert.Equal(expected, recentForm);
+    }
+
+    // US-054 — tendenza: con meno di 10 partite confermate, solo quelle disponibili
+    [Fact]
+    public async Task GetStats_RecentForm_FewerThan10_ReturnsAllAvailable()
+    {
+        var (circleId, me, tokens, others) = await SetupAsync();
+
+        await SeedMatchWithSetsAsync(circleId, me, others[0], [others[1], others[2]], winnerTeam: 1, sets: [(6, 0)]);
+        await SeedMatchWithSetsAsync(circleId, me, others[0], [others[1], others[2]], winnerTeam: 2, sets: [(0, 6)]);
+        await SeedMatchWithSetsAsync(circleId, me, others[0], [others[1], others[2]], winnerTeam: 1, sets: [(6, 0)]);
+
+        var body = await GetStatsAsync(circleId, tokens[0]);
+
+        Assert.Equal(3, body.GetProperty("recentForm").GetArrayLength());
+    }
+
+    // US-054 — nessuna partita confermata: contatori a zero, recentForm vuoto, nessun errore
+    [Fact]
+    public async Task GetStats_NoConfirmedMatches_CountersAreZeroAndRecentFormEmpty()
+    {
+        var (circleId, _, tokens, _) = await SetupAsync();
+
+        var body = await GetStatsAsync(circleId, tokens[0]);
+
+        Assert.Equal(0, body.GetProperty("matchesWon").GetInt32());
+        Assert.Equal(0, body.GetProperty("matchesLost").GetInt32());
+        Assert.Equal(0, body.GetProperty("gamesWon").GetInt32());
+        Assert.Equal(0, body.GetProperty("gamesLost").GetInt32());
+        Assert.Equal(0, body.GetProperty("recentForm").GetArrayLength());
+    }
+
     // ─── helpers ─────────────────────────────────────────────────────────────
 
     private async Task<(Guid CircleId, Guid Me, string[] Tokens, Guid[] Others)> SetupAsync()
@@ -246,6 +318,39 @@ public class PlayerStatsEndpointTests : IClassFixture<StatsTestFactory>
                 Team2Player2Id = opps[1],
             });
         }
+        await db.SaveChangesAsync();
+    }
+
+    private async Task SeedMatchWithSetsAsync(
+        Guid circleId, Guid meId, Guid partnerId, Guid[] opps,
+        int winnerTeam, (int Team1, int Team2)[] sets, DateTimeOffset? createdAt = null)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var match = new Match
+        {
+            CircleId       = circleId,
+            CreatedById    = meId,
+            Status         = "confirmed",
+            WinnerTeam     = winnerTeam,
+            Team1Player1Id = meId,
+            Team1Player2Id = partnerId,
+            Team2Player1Id = opps[0],
+            Team2Player2Id = opps[1],
+            CreatedAt      = createdAt ?? DateTimeOffset.UtcNow,
+        };
+        for (int i = 0; i < sets.Length; i++)
+        {
+            match.Sets.Add(new MatchSet
+            {
+                MatchId    = match.Id,
+                SetNumber  = i + 1,
+                Team1Score = sets[i].Team1,
+                Team2Score = sets[i].Team2,
+            });
+        }
+        db.Matches.Add(match);
         await db.SaveChangesAsync();
     }
 

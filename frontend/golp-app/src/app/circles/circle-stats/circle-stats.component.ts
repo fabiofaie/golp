@@ -33,7 +33,8 @@ export class CircleStatsComponent implements OnInit {
   }
 
   get isEmpty(): boolean {
-    return this.stats?.bestPartner === null && this.stats?.toughestOpponent === null;
+    if (!this.stats) return true;
+    return this.stats.matchesWon + this.stats.matchesLost === 0;
   }
 
   winRatePct(rate: number): string {

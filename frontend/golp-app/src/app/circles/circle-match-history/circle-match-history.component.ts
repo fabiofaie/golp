@@ -53,10 +53,6 @@ export class CircleMatchHistoryComponent implements OnInit {
     return [...m.team1, ...m.team2].some(p => p.userId === this.currentUserId);
   }
 
-  teamNames(players: MatchSummary['team1']): string {
-    return players.map(p => p.userId === this.currentUserId ? `${p.name} (Tu)` : p.name).join(' & ');
-  }
-
   isSingles(m: MatchSummary): boolean {
     return m.team1.length === 1;
   }

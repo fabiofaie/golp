@@ -135,6 +135,26 @@ test('ScenarioB — 4 utenti stesso circolo: banner nome circolo, no nuovo circo
   await expect(page.locator('[data-testid="success-state"]')).toBeVisible({ timeout: 10000 });
 });
 
+// ─── US-057: chip raggruppate per circolo con etichetta ──────────────────────
+
+test('US-057 — chip cloud mostra etichetta del circolo comune sopra i giocatori', async ({ page }) => {
+  const ownerEmail = `${uid('d_owner')}@e2e.test`;
+  const owner = await registerUser(ownerEmail, 'Delta Owner');
+  const p2 = await registerUser(`${uid('d_p2')}@e2e.test`, 'Delta Due');
+
+  const circleId = await createCircle(owner.token, 'basket2v2');
+  await joinCircle(p2.token, circleId);
+
+  await loginViaUI(page, ownerEmail);
+  await page.goto('/match/quick');
+  await page.click('.qm-sport-card:has-text("Basket 2v2")');
+
+  // Chip group label with the circle name appears above the suggestion chip.
+  const group = page.locator('.qm-chip-group', { hasText: 'Delta Due' });
+  await expect(group.locator('.qm-chip-group-label')).toBeVisible({ timeout: 6000 });
+  await expect(group.locator('.qm-chip:has-text("Delta Due")')).toBeVisible();
+});
+
 // ─── Scenario C: 3 utenti in circolo + 1 ospite → PARTIAL → picker → "Crea nuovo gruppo" ──
 
 test('ScenarioC — 3 utenti + ospite nuovo: picker con Crea nuovo gruppo', async ({ page }) => {

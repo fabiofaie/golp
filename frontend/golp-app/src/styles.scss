@@ -412,6 +412,9 @@ body.has-pwa-install-banner {
   background: none;
   border: 1px dashed rgba(255, 85, 0, 0.35);
   color: var(--color-accent);
+  min-width: 0;
+  white-space: normal;
+  padding: var(--sp-2) var(--sp-2);
   &:hover { background: var(--color-accent-dim); border-color: var(--color-accent); }
 }
 

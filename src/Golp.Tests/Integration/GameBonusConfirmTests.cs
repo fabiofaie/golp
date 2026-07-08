@@ -44,7 +44,9 @@ public class GameBonusConfirmTests : IClassFixture<GameBonusConfirmTestFactory>
 
         Assert.NotNull(match!.GameBonusWinnerPoints);
         Assert.Equal(3, match.GameBonusWinnerPoints); // 6-4 → (6-4)+1 = 3, nessuna storia pregressa
-        Assert.Null(match.DeltaTeam1Player1);
+        // I delta sono valorizzati anche per Game+Bonus (espongono il punteggio in UI, vedi
+        // GameBonusRatingService.CalculateAndApplyAsync), non sono più esclusivi dell'ELO.
+        Assert.Equal(3, match.DeltaTeam1Player1);
     }
 
     [Fact]

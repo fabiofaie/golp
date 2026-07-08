@@ -135,3 +135,63 @@
   font-style: italic;
   padding-top: var(--sp-2);
 }
+
+.stat-card--record,
+.stat-card--form {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+.stat-record-row {
+  display: flex;
+  gap: var(--sp-6);
+}
+
+.stat-record-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.stat-record-value {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-black);
+  color: var(--color-text-primary);
+}
+
+.stat-record-sep {
+  color: var(--color-text-secondary);
+  margin: 0 4px;
+}
+
+.stat-record-caption {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.stat-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.stat-form-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-full, 999px);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.stat-form-badge--win {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.stat-form-badge--loss {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}

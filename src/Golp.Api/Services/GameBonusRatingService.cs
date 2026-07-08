@@ -39,9 +39,12 @@ public class GameBonusRatingService : IGameBonusRatingService
             return;
 
         bool team1Won = match.WinnerTeam == 1;
-        int winnerUnits = team1Won ? totalTeam1 : totalTeam2;
-        int loserUnits  = team1Won ? totalTeam2 : totalTeam1;
-        int basePoints  = (winnerUnits - loserUnits) + 1;
+
+        // Sport senza set (basket2v2, burraco): nessuna riga in match.Sets, ma i totali già
+        // calcolati fungono da singolo "set virtuale" — preserva il comportamento pre-US-056.
+        List<(int Team1, int Team2)> sets = match.Sets.Count > 0
+            ? match.Sets.Select(s => (s.Team1Score, s.Team2Score)).ToList()
+            : [(totalTeam1, totalTeam2)];
 
         var winnerPlayers = PlayersOf(match, team1Won ? 1 : 2);
         var loserPlayers  = PlayersOf(match, team1Won ? 2 : 1);
@@ -53,11 +56,58 @@ public class GameBonusRatingService : IGameBonusRatingService
         double winnerAvg = winnerPlayers.Average(p => (double)scores.GetValueOrDefault(p, 0));
         double loserAvg  = loserPlayers.Average(p => (double)scores.GetValueOrDefault(p, 0));
 
-        int bonus = winnerAvg < loserAvg
-            ? (int)Math.Ceiling(0.10 * (loserAvg - winnerAvg))
+        var points = ComputeMatchPoints(sets, team1Won, winnerAvg, loserAvg);
+        match.GameBonusWinnerPoints = points;
+
+        // Espone il punteggio Game+Bonus della partita come "delta" per la UI di dettaglio match
+        // (vincitori = punti assegnati, perdenti = 0), analogamente ai delta ELO.
+        match.DeltaTeam1Player1 = team1Won ? points : 0;
+        match.DeltaTeam2Player1 = team1Won ? 0 : points;
+        if (match.Team1Player2Id.HasValue)
+            match.DeltaTeam1Player2 = team1Won ? points : 0;
+        if (match.Team2Player2Id.HasValue)
+            match.DeltaTeam2Player2 = team1Won ? 0 : points;
+    }
+
+    /// <summary>
+    /// Calcolo puro (nessun accesso a DB) dei punti assegnati al vincitore di una partita Game+Bonus:
+    ///   base  = (set_vinti - set_persi) + somma, sui SOLI set vinti dalla squadra vincente,
+    ///           di (game_vincitore - game_perdente) in quel set (i set persi dal vincitore
+    ///           non contribuiscono né penalizzano — US-056, evita che un set perso largo
+    ///           ribalti il segno del punteggio di chi ha comunque vinto la partita)
+    ///   bonus = ceil(0.10 * (punteggio_perdente - punteggio_vincitore)) se il vincitore aveva,
+    ///           prima della partita, punteggio Game+Bonus medio inferiore al perdente; 0 altrimenti.
+    /// Per sport senza set / risultato unico, <paramref name="sets"/> ha un solo elemento: la formula
+    /// collassa esattamente sul comportamento pre-US-056 (game diff + 1).
+    /// Riusato sia dal calcolo reale (<see cref="CalculateAndApplyAsync"/>) sia dal simulatore pubblico.
+    /// </summary>
+    public static int ComputeMatchPoints(IReadOnlyList<(int Team1, int Team2)> sets, bool team1Won, double winnerCurrentScore, double loserCurrentScore)
+    {
+        int setsWon = 0, setsLost = 0, gameDiffPerSetVinto = 0;
+
+        foreach (var (t1, t2) in sets)
+        {
+            int winnerGames = team1Won ? t1 : t2;
+            int loserGames  = team1Won ? t2 : t1;
+
+            if (winnerGames > loserGames)
+            {
+                setsWon++;
+                gameDiffPerSetVinto += winnerGames - loserGames;
+            }
+            else if (winnerGames < loserGames)
+            {
+                setsLost++;
+            }
+        }
+
+        int basePoints = (setsWon - setsLost) + gameDiffPerSetVinto;
+
+        int bonus = winnerCurrentScore < loserCurrentScore
+            ? (int)Math.Ceiling(0.10 * (loserCurrentScore - winnerCurrentScore))
             : 0;
 
-        match.GameBonusWinnerPoints = basePoints + bonus;
+        return basePoints + bonus;
     }
 
     private static List<Guid> PlayersOf(Match match, int team) => team == 1

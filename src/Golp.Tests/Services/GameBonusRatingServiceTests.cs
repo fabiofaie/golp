@@ -145,8 +145,8 @@ public class GameBonusRatingServiceTests
     // ── Punteggio base ─────────────────────────────────────────────────────
 
     [Theory]
-    [InlineData(6, 4, 3)]  // differenza 2 + 1 vittoria = 3
-    [InlineData(6, 0, 7)]  // differenza 6 + 1 = 7
+    [InlineData(6, 4, 3)]  // 1 set vinto (no persi) + diff 2 = 3
+    [InlineData(6, 0, 7)]  // 1 set vinto + diff 6 = 7
     public async Task BasePoints_SingleSet(int t1, int t2, int expectedPoints)
     {
         using var db = CreateDb();
@@ -158,27 +158,53 @@ public class GameBonusRatingServiceTests
     }
 
     [Fact]
-    public async Task BasePoints_MultiSet_SumsGamesAcrossAllSets()
+    public async Task BasePoints_MultiSet_AllSetsWon_SumsGameDiffOfWonSets()
     {
         using var db = CreateDb();
-        // 6-2 6-2 → team1: 12 game, team2: 4 game → diff 8 + 1 = 9
+        // 6-2 6-2 → 2 set vinti, 0 persi, gameDiff 4+4=8 → base 2+8=10
         var f = await SetupAsync(db, [(6, 2), (6, 2)], winnerTeam: 1);
 
         await new GameBonusRatingService().CalculateAndApplyAsync(f.Match.Id, db);
 
-        Assert.Equal(9, (await db.Matches.FindAsync(f.Match.Id))!.GameBonusWinnerPoints);
+        Assert.Equal(10, (await db.Matches.FindAsync(f.Match.Id))!.GameBonusWinnerPoints);
     }
 
     [Fact]
-    public async Task BasePoints_SuperTiebreak_CountsAsOrdinarySet()
+    public async Task BasePoints_SuperTiebreak_MixedSets()
     {
         using var db = CreateDb();
-        // 4-6 6-4 7-6 (winner team2 tramite super tiebreak) → team1: 4+6+6=16, team2: 6+4+7=17 → diff 1 + 1 = 2
+        // 4-6 6-4 6-7 (winner team2): team2 vince set1 (6-4? no: t2=6>t1=4) e set3 (7-6), perde set2 (4<6)
+        // setsWon=2, setsLost=1, gameDiff sui set vinti = (6-4)+(7-6)=3 → base = 2-1+3 = 4
         var f = await SetupAsync(db, [(4, 6), (6, 4), (6, 7)], winnerTeam: 2);
 
         await new GameBonusRatingService().CalculateAndApplyAsync(f.Match.Id, db);
 
-        Assert.Equal(2, (await db.Matches.FindAsync(f.Match.Id))!.GameBonusWinnerPoints);
+        Assert.Equal(4, (await db.Matches.FindAsync(f.Match.Id))!.GameBonusWinnerPoints);
+    }
+
+    [Fact]
+    public async Task BasePoints_TiedSetIgnored_NeitherWonNorLost()
+    {
+        using var db = CreateDb();
+        // 6-4 (vinto), 6-6 (pareggio ipotetico, ignorato), 6-4 (vinto) → setsWon=2, setsLost=0, gameDiff=2+2=4 → base=6
+        var f = await SetupAsync(db, [(6, 4), (6, 6), (6, 4)], winnerTeam: 1);
+
+        await new GameBonusRatingService().CalculateAndApplyAsync(f.Match.Id, db);
+
+        Assert.Equal(6, (await db.Matches.FindAsync(f.Match.Id))!.GameBonusWinnerPoints);
+    }
+
+    [Fact]
+    public async Task BasePoints_WinnerLosesGameTotalButWinsMatchOnSets_StaysPositive()
+    {
+        using var db = CreateDb();
+        // 6-4 6-4 1-6: team1 vince 2 set su 3 (match vinto) ma game totali 13 vs 16 (sfavorevoli).
+        // setsWon=2, setsLost=1, gameDiff sui set vinti = (6-4)+(6-4)=4 → base = 2-1+4 = 5 (mai negativo/zero)
+        var f = await SetupAsync(db, [(6, 4), (6, 4), (1, 6)], winnerTeam: 1);
+
+        await new GameBonusRatingService().CalculateAndApplyAsync(f.Match.Id, db);
+
+        Assert.Equal(5, (await db.Matches.FindAsync(f.Match.Id))!.GameBonusWinnerPoints);
     }
 
     // ── Bonus upset ─────────────────────────────────────────────────────────
@@ -238,6 +264,45 @@ public class GameBonusRatingServiceTests
 
         // base = 6+1=7, nessuna storia → nessun bonus
         Assert.Equal(7, (await db.Matches.FindAsync(f.Match.Id))!.GameBonusWinnerPoints);
+    }
+
+    // ── ComputeMatchPoints (puro, riusato dal simulatore) ───────────────────
+
+    [Fact]
+    public void ComputeMatchPoints_SingleSet_BaseOnly_NoBonus()
+    {
+        Assert.Equal(3, GameBonusRatingService.ComputeMatchPoints([(6, 4)], true, 0, 0));
+    }
+
+    [Fact]
+    public void ComputeMatchPoints_SingleSet_LargeMargin_BaseOnly()
+    {
+        Assert.Equal(7, GameBonusRatingService.ComputeMatchPoints([(6, 0)], true, 0, 0));
+    }
+
+    [Fact]
+    public void ComputeMatchPoints_UnderdogWins_BonusApplied()
+    {
+        Assert.Equal(13, GameBonusRatingService.ComputeMatchPoints([(6, 4)], true, 0, 100));
+    }
+
+    [Fact]
+    public void ComputeMatchPoints_FavoriteWins_NoBonus()
+    {
+        Assert.Equal(3, GameBonusRatingService.ComputeMatchPoints([(6, 4)], true, 100, 0));
+    }
+
+    [Fact]
+    public void ComputeMatchPoints_EqualCurrentScores_NoBonus()
+    {
+        Assert.Equal(3, GameBonusRatingService.ComputeMatchPoints([(6, 4)], true, 50, 50));
+    }
+
+    [Fact]
+    public void ComputeMatchPoints_MultiSet_WinnerLosesOneSetLargely_StaysPositive()
+    {
+        // Replica il bug segnalato: vince 2 set su 3 ma il terzo è perso largo (1-6)
+        Assert.Equal(5, GameBonusRatingService.ComputeMatchPoints([(6, 4), (6, 4), (1, 6)], true, 0, 0));
     }
 
     // ── Finestra rolling ──────────────────────────────────────────────────

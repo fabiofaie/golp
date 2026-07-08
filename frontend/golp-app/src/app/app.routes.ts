@@ -92,6 +92,10 @@ export const routes: Routes = [
     loadComponent: () => import('./elo-info/elo-info.component').then(m => m.EloInfoComponent)
   },
   {
+    path: 'game-bonus-info',
+    loadComponent: () => import('./game-bonus-info/game-bonus-info.component').then(m => m.GameBonusInfoComponent)
+  },
+  {
     path: 'm/:token',
     loadComponent: () => import('./public/match-public-confirm/match-public-confirm.component').then(m => m.MatchPublicConfirmComponent)
   },

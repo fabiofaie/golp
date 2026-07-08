@@ -131,6 +131,7 @@ app.MapPushEndpoints();
 app.MapAwardsEndpoints();
 app.MapStatsEndpoints();
 app.MapSimulateEndpoints();
+app.MapSimulateGameBonusEndpoints();
 app.MapQuickMatchEndpoints();
 app.MapMyMatchEndpoints();
 

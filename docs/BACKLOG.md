@@ -5,8 +5,8 @@
 ## Riepilogo
 
 - Epic totali: 9
-- Storie totali: 52
-- Storie TODO: 4 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 43
+- Storie totali: 54
+- Storie TODO: 5 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 6 | DONE: 43
 
 ---
 
@@ -1865,4 +1865,164 @@ Alla conferma di una partita in un circolo con metodo Game+Bonus attivo, la squa
 
 ---
 
-> **PROSSIMO PASSO:** avvia il piano tecnico con `/eq-plan US-052` per l'algoritmo Game+Bonus, oppure `/eq-plan US-049` per il campionato serata.
+#### US-053: Rimozione "Aggiungi membro" — unico ingresso non-self-service è l'ospite in partita
+
+**Epic:** EP-006 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-07-08):** Review umana OK.
+**Review note (2026-07-08):** Rimossi bottone "+ Giocatore"/`AddMemberDialogComponent`/`checkOrAddMember` (frontend) e `AddMemberAsync`+route (backend, `CircleEndpoints.cs`). Test: `CircleIntegrationTests.AddMemberEndpointTests` sostituito con 1 test che verifica 405 su `POST /circles/{id}/members` (route GET sullo stesso path resta mappata). Suite completa 309/309 verdi, frontend 217/220 (3 fail pre-esistenti su push-notification, non correlati). Reviewer APPROVE (0 Critical, 1 Suggestion cosmetica applicata). Verifica visiva frontend in dev non eseguita (estensione browser non connessa) — da fare in review umana. > **PROSSIMO PASSO:** revisione umana (incl. check visivo my-circles). Quando approvi: `/eq-approve US-053`.
+**Blocked by:** -
+
+**Story**
+Come proprietario di un circolo, voglio avere un solo modo chiaro per far entrare qualcuno che non giocherà subito da solo (il link di invito) e un solo modo per aggiungere qualcuno mentre registro una partita (l'ospite), così che non debba più scegliere tra due bottoni che fanno quasi la stessa cosa.
+
+**Demonstrates**
+Nella schermata `my-circles` resta un solo bottone di acquisizione membri per l'owner: "Invita" (link self-service). Il bottone "Aggiungi membro" e il relativo dialog scompaiono. L'unico modo per far entrare nel circolo una persona nominata (email/telefono) senza che sia lei stessa a usare il link resta l'aggiunta come ospite durante la registrazione di una partita (quick-match o record-match), che già crea la `CircleMembership`.
+
+**Acceptance Criteria**
+- [ ] Il bottone "Aggiungi membro" e `AddMemberDialogComponent` sono rimossi da `my-circles` (componente e riferimenti in `MyCirclesComponent`, incluso `openAddMember`/`closeAddMember`)
+- [ ] Il bottone "Invita" (link self-service) resta invariato e continua a funzionare come oggi
+- [ ] Il flusso ospite in quick-match/record-match resta invariato (nessuna regressione sulla creazione di `CircleMembership` per gli ospiti)
+- [ ] L'endpoint `POST /circles/{id}/members` (`AddMemberAsync`) viene deprecato o rimosso lato backend, coerentemente con la decisione presa in fase di piano tecnico (vedi Open questions)
+- [ ] Nessuna funzionalità di attivazione account via email introdotta da `AddMemberAsync` viene silenziosamente persa per gli utenti già in stato pending creati da tale flusso in passato (dato esistente non deve rompersi)
+
+**Out of scope**
+- Unificare visivamente invite-link e ospite in un unico componente condiviso
+- Modificare il comportamento di `ResolveOrCreateGuestAsync` o della logica di attivazione guest già esistente
+- Introdurre un nuovo flusso di onboarding pre-partita (esplicitamente escluso, vedi AN-002)
+
+**Open questions**
+- L'endpoint `POST /circles/{id}/members` va rimosso del tutto o solo deprecato (mantenuto per compatibilità dati storici)? Da decidere in `/eq-plan US-053`.
+- Cosa succede agli utenti `IsActivated=false` creati in passato da `AddMemberAsync` che non hanno mai attivato l'account? Verificare in fase di piano se serve una migrazione o restano invariati.
+
+**Fonte:** [AN-002](analysis/AN-002.md)
+
+---
+
+#### US-054: Statistiche personali — vittorie/sconfitte, game vinti/persi, tendenza ultime 10 partite
+
+**Epic:** EP-004 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-07-08):** Review umana OK.
+**Review note (2026-07-08):** Estesa `GetMyStatsAsync` (`StatsEndpoints.cs`) con `Include(m => m.Sets)` + accumulo `matchesWon/Lost`, `gamesWon/Lost` (stesso criterio somma-set di `GameBonusRatingService`) e `recentForm` (ultime 10 partite confermate, ordine cronologico, `OrderBy(CreatedAt).TakeLast(10)`). Frontend: `CircleStatsResponse` esteso, 3 nuovi blocchi in `CircleStatsComponent` (record partite/game, badge tendenza), `isEmpty` ridefinito su `matchesWon+matchesLost===0`. Test: 4 nuovi integration (`PlayerStatsEndpointTests`, 13/13 verdi) + 2 nuovi unit Angular (8/8 verdi su `circle-stats.component.spec.ts`). Suite completa: backend 313/313, frontend 219/222 (3 fail pre-esistenti push-notification non correlati). Reviewer APPROVE (0 Critical, 0 Important). Verifica visiva manuale non eseguita in sessione (da fare in review umana). > **PROSSIMO PASSO:** revisione umana (incl. check visivo pagina stats). Quando approvi: `/eq-approve US-054`.
+**Blocked by:** US-011
+
+**Story**
+Come Marco, voglio vedere nella mia pagina statistiche quante partite ho vinto e perso, quanti game ho vinto e perso in totale, e come sto andando nelle ultime 10 partite, così che capisca il mio andamento recente oltre a "con chi gioco meglio".
+
+**Demonstrates**
+Nella pagina statistiche personali del circolo (`/circles/:circleId/stats`, accanto a "miglior compagno"/"avversario più ostico" di US-011), Marco vede tre nuovi blocchi: totale partite vinte/perse nel circolo, totale game vinti/persi nel circolo, e una sequenza delle ultime 10 partite confermate (es. V-V-P-V-P-P-V-V-V-P) con indicazione visiva vittoria/sconfitta in ordine cronologico.
+
+**Acceptance Criteria**
+
+- [ ] Conteggio partite vinte e perse: solo partite `confirmed` del circolo corrente, per il giocatore loggato
+- [ ] Conteggio game vinti e persi: somma dei game fatti/subiti dalla squadra del giocatore su tutte le sue partite confermate nel circolo (per sport a set, somma su tutti i set, stesso criterio di US-012)
+- [ ] Tendenza ultime 10 partite: le 10 partite confermate più recenti del giocatore nel circolo, ordinate dalla più vecchia alla più recente, ciascuna marcata vinta o persa
+- [ ] Se il giocatore ha meno di 10 partite confermate, la tendenza mostra solo quelle disponibili (nessun placeholder per le mancanti)
+- [ ] Nessuna partita confermata nel circolo → i tre blocchi mostrano uno stato vuoto coerente con quello già usato in US-011, non errori
+- [ ] Le statistiche sono per-circolo: cambiando circolo (se il giocatore è in più circoli) i tre blocchi si aggiornano di conseguenza
+
+**Out of scope**
+- Grafici storici o andamento del rating nel tempo (solo sequenza V/P, non un grafico a linee)
+- Confronto della tendenza tra giocatori diversi
+- Estendere la tendenza oltre le ultime 10 partite (no configurazione del numero)
+
+**Open questions**
+- Nessuna
+
+---
+
+#### US-055: Pagina spiegazione Game+Bonus e simulatore esteso ai due metodi
+
+**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** REVIEW
+**Review note (2026-07-08):** Backend: estratto `GameBonusRatingService.ComputeMatchPoints` (puro, riusato da `CalculateAndApplyAsync` e dal nuovo simulatore), `SimulateGameBonusEndpoints.cs` (`POST /api/simulate-game-bonus`, pubblico), registrato in `Program.cs`. Frontend: `rating-method.util.ts` (`ratingInfoPath`), `game-bonus-info/` (component + service + html + scss, analogo a `elo-info/` di US-017), route `game-bonus-info`, `circle-leaderboard` aggiornata per usare `ratingInfoPath(ratingMethod)` invece del link fisso a `/elo-info`. Dashboard lasciata invariata (nessun circolo di riferimento, vedi piano). Test: 5 nuovi unit `ComputeMatchPoints` + 9 integration `SimulateGameBonusEndpointTests` (backend 328/328 verdi); `rating-method.util.spec.ts`, `game-bonus-info.component.spec.ts` (6 casi), 2 nuovi casi in `circle-leaderboard.component.spec.ts` (frontend 229/232 verdi, 3 fail pre-esistenti su push-notification non correlati); e2e `game-bonus-info.spec.ts` scritto (non eseguito in sessione, richiede backend+frontend avviati). Reviewer APPROVE — nessun Critical. Suggestion non bloccante: `EloInfoComponent.submit()` (US-017) ha un bug pre-esistente indipendente da questa storia — il gate `form.invalid` include il FormArray `sets` sempre `required` anche in modalità "Risultato unico", quindi il bottone di submit risulta sempre disabilitato in quel modo; il nuovo `GameBonusInfoComponent` evita il problema con un `isValid()` dedicato per modalità, ma `EloInfoComponent` non è stato toccato (fuori scope). > **PROSSIMO PASSO:** revisione umana (incl. verifica e2e con server avviati). Quando approvi: `/eq-approve US-055`.
+**Blocked by:** US-051, US-052
+
+**Story**
+Come Marco iscritto a un circolo che usa il metodo Game+Bonus, voglio leggere una spiegazione semplice di come funziona il mio punteggio e simulare una partita ipotetica con quel metodo, così che capisca l'impatto delle mie vittorie senza dover interpretare la spiegazione dell'ELO che non si applica al mio circolo.
+
+**Demonstrates**
+Esiste una pagina di spiegazione dedicata al metodo Game+Bonus (analoga a `/elo-info` di US-017: testo semplice + simulatore). Il link "Come funziona il rating?"/"Simula una partita" mostrato in un circolo punta sempre alla pagina coerente col `RatingMethod` di quel circolo: ELO → pagina ELO esistente, Game+Bonus → nuova pagina. Il simulatore della pagina Game+Bonus calcola punteggio base (differenza game + 1) ed eventuale bonus upset a partire da input inseriti dall'utente (game vinti/persi, punteggio Game+Bonus corrente delle due squadre), con la stessa formula usata da `GameBonusRatingService` lato backend.
+
+**Acceptance Criteria**
+
+- [ ] Nuova pagina (es. `/game-bonus-info`) con sezione testuale che spiega in linguaggio non tecnico: punteggio base = differenza game + 1 punto vittoria, perdente 0; bonus upset se la squadra vincente aveva classifica inferiore; classifica calcolata solo su finestra rolling (ultime N partite / ultime M settimane)
+- [ ] Il simulatore della nuova pagina accetta in input i game delle due squadre (o dei set, per sport a set — stesso criterio di somma di US-012) e i punteggi Game+Bonus correnti delle due squadre, e mostra il punteggio partita assegnato a ciascuna squadra (base + bonus se applicabile), calcolato lato client con la stessa formula di `GameBonusRatingService`
+- [ ] Ovunque nell'app compaia oggi il link a `/elo-info` (leaderboard, dashboard, per un dato circolo) il link punta invece a `/game-bonus-info` se quel circolo ha `RatingMethod = GameBonus`, e a `/elo-info` se `RatingMethod = Elo`
+- [ ] La formula non è mai esposta come tale nella UI del circolo al di fuori di questa pagina dedicata (stessa regola UX di US-017 per l'ELO)
+- [ ] Se l'utente non è in nessun circolo con Game+Bonus attivo, la pagina resta comunque raggiungibile direttamente (non è protetta da un guard legato al metodo)
+
+**Out of scope**
+
+- Storico simulazioni salvate
+- Simulazione della finestra rolling (N partite / M settimane) o di più partite in sequenza
+- Migrazione automatica dei link già condivisi/salvati che puntano a `/elo-info`
+
+**Open questions**
+
+- (nessuna)
+
+---
+
+#### US-056: Revisione algoritmo Game+Bonus — vittoria per set, non per game totali
+
+**Epic:** EP-003 | **Priority:** HIGH | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-07-08):** Review umana OK.
+**Review note (2026-07-08):** Riscritta `GameBonusRatingService.ComputeMatchPoints` con nuova firma su lista set: `basePoints = (setsWon - setsLost) + gameDiffPerSetVinto` (soli set vinti dal vincitore). Fallback set vuoti (sport senza set) collassa esattamente sul comportamento pre-US-056. `SimulateGameBonusEndpoints` non riceve più `Team1Won` dal client: il vincitore è derivato server-side dai set vinti (elimina la classe di bug originale). Frontend `game-bonus-info.component.ts`/`.service.ts`/`.html` aggiornati di conseguenza (validazione su set vinti pari, testo esplicativo). Test: 8 nuovi/riscritti unit `GameBonusRatingServiceTests` (21/21 verdi, incl. caso reale 6-4/6-4/1-6 e caso set pareggiato ignorato), 9 integration `SimulateGameBonusEndpointTests` riscritti, 8 unit Angular `game-bonus-info.component.spec.ts` (incl. fix pre-esistente `provideRouter` mancante). Suite completa: backend 333/333 (1 fail pre-esistente non correlato, `GameBonusConfirmTests` su codice uncommitted di US-055 sui delta ELO), frontend 232/233 (2 fail pre-esistenti non correlati, `CircleMatchHistoryComponent`/`InviteDialogComponent`). Reviewer APPROVE (0 Critical). 2 Important non bloccanti risolti in follow-up: test esplicito per set pareggiato ignorato, commento su duplicazione validazione client/server. > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-056`.
+**Blocked by:** US-052, US-055
+
+**Story**
+Come Marco iscritto a un circolo che usa il metodo Game+Bonus e gioca uno sport a set (padel, beach tennis), voglio che il punteggio della partita rifletta chi ha vinto più set, così che vincere la partita non venga mai penalizzato da una somma di game totali sfavorevole dovuta a un set perso largo.
+
+**Demonstrates**
+Partita 6-4, 6-4, 1-6: la squadra vince 2 set su 3 (match vinto) ma la somma game totale (13 vs 16) è sfavorevole. Con l'algoritmo attuale la squadra vincente riceve punti pari o inferiori alla perdente (bug). Dopo questa storia, la squadra vincente riceve sempre punti positivi, calcolati sui set vinti e sul game diff dei soli set vinti — mai penalizzata da un set perso largo. Il simulatore pubblico (`/game-bonus-info`, US-055) mostra lo stesso comportamento corretto, incluso il calcolo automatico di chi ha vinto la partita in modalità "per set".
+
+**Acceptance Criteria**
+
+- [ ] Per sport a set: `basePoints = (setsWon - setsLost) + gameDiffPerSetVinto`, dove `setsWon`/`setsLost` sono i set vinti/persi dalla squadra vincente del match, e `gameDiffPerSetVinto` è la somma di (game vinti - game persi) calcolata SOLO sui set vinti dalla squadra vincente (i set persi dal vincitore non contribuiscono né penalizzano)
+- [ ] Per sport senza set (basket2v2, burraco) o risultato "unico": la formula produce lo stesso risultato numerico della formula attuale (game diff + 1) — nessuna regressione
+- [ ] Match già confermati con `GameBonusWinnerPoints` già persistito non vengono ricalcolati (append-only, invariato rispetto a US-052)
+- [ ] Il simulatore pubblico (`SimulateGameBonusEndpoints` + pagina `/game-bonus-info` di US-055) usa la stessa nuova formula, con lo stesso comportamento sui set vinti dal vincitore
+- [ ] Nella pagina simulatore, modalità "per set": chi ha vinto la partita è determinato dal conteggio dei set vinti (maggioranza), non dalla somma dei game totali — corregge il bug per cui una squadra che vince 2 set su 3 ma ha meno game totali risultava "perdente" nel simulatore
+- [ ] Nella pagina simulatore, modalità "risultato unico": il vincitore resta quello indicato direttamente dall'input (nessun cambiamento, non esistono set multipli da contare)
+- [ ] Il testo esplicativo della pagina `/game-bonus-info` (US-055) viene aggiornato per descrivere la nuova formula (set vinti + game diff dei soli set vinti), non più "differenza game totale + 1"
+
+**Out of scope**
+- Ricalcolo retroattivo dei punti già persistiti sui match confermati prima di questa storia
+- Modifiche al bonus upset (invariato, US-052)
+- Modifiche alla finestra rolling N/M o alla classifica aggregata (invariate, US-052)
+
+**Open questions**
+- Nessuna
+
+---
+
+#### US-057: Chip giocatori raggruppate per circolo nella registrazione partita
+
+**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** REVIEW
+**Review note (2026-07-08):** Storia riscopata da `record-match` a `quick-match` (screenshot corrispondeva a quest'ultimo). Backend `QuickMatchEndpoints.GetSuggestionsAsync` ora espone `circles: [{id, name}]` per suggerimento (co-membership con l'utente corrente, nessun leak cross-tenant: solo circoli propri dell'utente). Frontend `quick-match.component.ts` raggruppa client-side via nuovo getter `groupedSuggestions` (gruppo residuo "Giocati di recente" per suggerimenti senza circolo comune, poi circoli in ordine alfabetico); template e CSS aggiornati per header di gruppo. Test: 3 nuovi backend (`QuickMatchEndpointsTests`, 14/14 verdi), 5 nuovi unit frontend (`quick-match.component.spec.ts`, nuovo file), 1 e2e (`quick-match.spec.ts`, verde). Suite completa dopo fix dei fallimenti pre-esistenti non correlati (richiesti separatamente dall'utente): backend 336/336, frontend 238/238 — entrambe verdi al 100%. Fix collaterali fuori scope US-057 ma necessari per suite verde: `GameBonusConfirmTests` (assert stale, i delta sono ora intenzionalmente valorizzati anche per Game+Bonus); `InviteDialogComponent.shareLink()` non chiudeva più il dialog dopo condivisione riuscita (bug reale, aggiunto `.then(() => this.close())`) e relativo test riscritto con `fakeAsync`/`tick()`; `CircleMatchHistoryComponent` — test puntava a un selettore CSS morto (`.match-date` non è più un link) e il marcatore "(Tu)" era stato perso in un refactor del template (ripristinato, rimosso metodo `teamNames()` orfano). Self-review: nessun Critical, nessun leak multi-tenant (circoli esposti sono solo quelli dell'utente stesso). > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-057`.
+**Blocked by:** -
+
+**Story**
+Come Marco che registra una partita ed è membro di più circoli, voglio che nello step 2 (Squadre) le chip dei giocatori selezionabili siano raggruppate per circolo di appartenenza con etichetta visibile del circolo, così che io sappia sempre da quale circolo sto prendendo ciascun giocatore prima di aggiungerlo a una squadra.
+
+**Demonstrates**
+Nello step "Squadre" di `record-match`, sotto il campo "Cerca giocatore...", la lista di chip non è più un blocco unico indifferenziato: è organizzata in sezioni, una per circolo, ciascuna con un'etichetta testuale del nome del circolo sopra le chip dei suoi membri. Se l'utente digita nel campo di ricerca, il filtro si applica dentro ciascun gruppo mantenendo il raggruppamento (i gruppi senza risultati si nascondono).
+
+**Acceptance Criteria**
+- [ ] Le chip giocatore nello step 2 di "Registra Partita" sono raggruppate per circolo di appartenenza del giocatore rispetto all'utente corrente
+- [ ] Ogni gruppo mostra un'etichetta con il nome del circolo sopra le sue chip
+- [ ] Un giocatore membro di più circoli in comune con l'utente compare una volta per ciascun circolo condiviso (una chip per gruppo), non una sola chip ambigua
+- [ ] Il campo "Cerca giocatore..." filtra le chip mantenendo il raggruppamento per circolo; i gruppi senza corrispondenze restano nascosti
+- [ ] Il comportamento di selezione/aggiunta di una chip a Squadra A/B resta invariato rispetto a oggi
+- [ ] Se l'utente è membro di un solo circolo, viene mostrato comunque il gruppo con la relativa etichetta (nessun caso speciale "circolo singolo senza etichetta")
+
+**Out of scope**
+- Filtri o ordinamento aggiuntivi dei circoli (es. per rating, per attività recente)
+- Modifiche al flusso "Aggiungi come ospite"
+- Modifiche alla logica di calcolo o alle chiamate API esistenti per il recupero dei membri
+
+**Open questions**
+- Nessuna
+
+---
+
+> **PROSSIMO PASSO:** invoca `/eq-plan US-057` per pianificare il raggruppamento delle chip giocatori per circolo.

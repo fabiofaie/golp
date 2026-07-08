@@ -74,6 +74,75 @@ public class QuickMatchEndpointsTests : IClassFixture<QuickMatchTestFactory>
         Assert.DoesNotContain(ids[0], userIds); // self excluded
     }
 
+    [Fact]
+    public async Task Suggestions_CommonCircles_IncludesCircleIdAndName()
+    {
+        // A owns circle1 with B; A also owns circle2 with C. B and C should each
+        // carry the name of the one circle they share with A.
+        var ownerToken = await RegisterTokenAsync();
+        SetAuth(ownerToken);
+
+        var circle1Resp = await _client.PostAsJsonAsync("/circles",
+            new { name = $"Circolo1_{Guid.NewGuid():N}", sport = "basket2v2" });
+        var circle1Body = await circle1Resp.Content.ReadFromJsonAsync<JsonElement>();
+        var circle1Id = Guid.Parse(circle1Body.GetProperty("id").GetString()!);
+        var circle1Name = circle1Body.GetProperty("name").GetString()!;
+
+        SetAuth(ownerToken);
+        var circle2Resp = await _client.PostAsJsonAsync("/circles",
+            new { name = $"Circolo2_{Guid.NewGuid():N}", sport = "basket2v2" });
+        var circle2Body = await circle2Resp.Content.ReadFromJsonAsync<JsonElement>();
+        var circle2Id = Guid.Parse(circle2Body.GetProperty("id").GetString()!);
+        var circle2Name = circle2Body.GetProperty("name").GetString()!;
+
+        var (bId, _) = await RegisterAndJoinAsync(circle1Id);
+        var (cId, _) = await RegisterAndJoinAsync(circle2Id);
+
+        SetAuth(ownerToken);
+        var resp = await _client.GetAsync("/match/quick/suggestions");
+
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        var suggestions = await resp.Content.ReadFromJsonAsync<JsonElement>();
+
+        JsonElement Find(Guid userId) =>
+            Enumerable.Range(0, suggestions.GetArrayLength())
+                .Select(i => suggestions[i])
+                .Single(s => Guid.Parse(s.GetProperty("userId").GetString()!) == userId);
+
+        var bEntry = Find(bId);
+        var bCircles = bEntry.GetProperty("circles");
+        Assert.Equal(1, bCircles.GetArrayLength());
+        Assert.Equal(circle1Id, Guid.Parse(bCircles[0].GetProperty("id").GetString()!));
+        Assert.Equal(circle1Name, bCircles[0].GetProperty("name").GetString());
+
+        var cEntry = Find(cId);
+        var cCircles = cEntry.GetProperty("circles");
+        Assert.Equal(1, cCircles.GetArrayLength());
+        Assert.Equal(circle2Id, Guid.Parse(cCircles[0].GetProperty("id").GetString()!));
+        Assert.Equal(circle2Name, cCircles[0].GetProperty("name").GetString());
+    }
+
+    [Fact]
+    public async Task Suggestions_CirclesFieldAlwaysArray()
+    {
+        var (circleId, ids, tokens) = await SetupAsync("basket2v2");
+        SetAuth(tokens[0]);
+        await _client.PostAsJsonAsync($"/circles/{circleId}/matches", new
+        {
+            team1 = new[] { new { userId = ids[0] }, new { userId = ids[1] } },
+            team2 = new[] { new { userId = ids[2] }, new { userId = ids[3] } },
+            sets  = new[] { new { team1 = 21, team2 = 15 } },
+        });
+
+        var resp = await _client.GetAsync("/match/quick/suggestions");
+        var suggestions = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(suggestions.GetArrayLength() > 0);
+        for (var i = 0; i < suggestions.GetArrayLength(); i++)
+        {
+            Assert.Equal(JsonValueKind.Array, suggestions[i].GetProperty("circles").ValueKind);
+        }
+    }
+
     // ─── Check ────────────────────────────────────────────────────────────────
 
     [Fact]

@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { CircleLeaderboardComponent } from './circle-leaderboard.component';
 import { CircleService, LeaderboardEntry, LeaderboardResponse } from '../circle.service';
@@ -28,6 +28,7 @@ describe('CircleLeaderboardComponent', () => {
     await TestBed.configureTestingModule({
       imports: [CircleLeaderboardComponent],
       providers: [
+        provideRouter([]),
         { provide: CircleService, useValue: circleSvc },
         { provide: AuthService, useValue: authSvc },
         {
@@ -142,5 +143,23 @@ describe('CircleLeaderboardComponent', () => {
 
     expect(comp.isCurrentUser(CURRENT_USER)).toBeTrue();
     expect(comp.isCurrentUser('someone-else')).toBeFalse();
+  });
+
+  it('rating info link points to /elo-info when method is Elo', () => {
+    circleSvc.getLeaderboard.and.returnValue(of(makeResponse({ ratingMethod: 'Elo' })));
+    const fixture = TestBed.createComponent(CircleLeaderboardComponent);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    expect(el.querySelector('.elo-info-link')?.getAttribute('href')).toBe('/elo-info');
+  });
+
+  it('rating info link points to /game-bonus-info when method is GameBonus', () => {
+    circleSvc.getLeaderboard.and.returnValue(of(makeResponse({ ratingMethod: 'GameBonus' })));
+    const fixture = TestBed.createComponent(CircleLeaderboardComponent);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    expect(el.querySelector('.elo-info-link')?.getAttribute('href')).toBe('/game-bonus-info');
   });
 });

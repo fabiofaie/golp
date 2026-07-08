@@ -68,7 +68,7 @@
               <span class="team-label" [class.team-label--team1]="true">Team 1</span>
               <span class="team-names">
                 @for (p of m.team1; track p.userId; let last = $last) {
-                  {{ p.name }}@if (p.isActivated === false) { <span class="unreg-badge">(non registrato)</span> }@if (!last) { &amp; }
+                  {{ p.name }}@if (p.userId === currentUserId) { (Tu) }@if (p.isActivated === false) { <span class="unreg-badge">(non registrato)</span> }@if (!last) { &amp; }
                 }
               </span>
               @if (m.winnerTeam === 1) { <span class="win-tag">✓ Vince</span> }
@@ -77,7 +77,7 @@
               <span class="team-label" [class.team-label--team2]="true">Team 2</span>
               <span class="team-names">
                 @for (p of m.team2; track p.userId; let last = $last) {
-                  {{ p.name }}@if (p.isActivated === false) { <span class="unreg-badge">(non registrato)</span> }@if (!last) { &amp; }
+                  {{ p.name }}@if (p.userId === currentUserId) { (Tu) }@if (p.isActivated === false) { <span class="unreg-badge">(non registrato)</span> }@if (!last) { &amp; }
                 }
               </span>
               @if (m.winnerTeam === 2) { <span class="win-tag">✓ Vince</span> }

@@ -60,7 +60,7 @@ public static class QuickMatchEndpoints
             ? []
             : await db.CircleMemberships
                 .Where(m => myCircleIds.Contains(m.CircleId) && m.UserId != userId)
-                .Select(m => new { m.UserId, m.JoinedAt })
+                .Select(m => new { m.UserId, m.CircleId, m.JoinedAt })
                 .ToListAsync();
 
         var fromCircles = fromCirclesRaw
@@ -83,6 +83,23 @@ public static class QuickMatchEndpoints
             .Select(u => new { u.Id, u.Name, u.IsActivated })
             .ToDictionaryAsync(u => u.Id);
 
+        var myCircleNames = myCircleIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : await db.Circles
+                .Where(c => myCircleIds.Contains(c.Id))
+                .Select(c => new { c.Id, c.Name })
+                .ToDictionaryAsync(c => c.Id, c => c.Name);
+
+        var circlesByUser = fromCirclesRaw
+            .GroupBy(x => x.UserId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(x => x.CircleId).Distinct()
+                    .Where(myCircleNames.ContainsKey)
+                    .Select(cid => new { id = cid, name = myCircleNames[cid] })
+                    .OrderBy(c => c.name)
+                    .ToList());
+
         var result = combined
             .Where(x => users.ContainsKey(x.UserId))
             .Where(x => string.IsNullOrWhiteSpace(q) ||
@@ -93,6 +110,7 @@ public static class QuickMatchEndpoints
                 userId      = x.UserId,
                 name        = users[x.UserId].Name,
                 isActivated = users[x.UserId].IsActivated,
+                circles     = circlesByUser.TryGetValue(x.UserId, out var c) ? c : [],
             })
             .ToList();
 

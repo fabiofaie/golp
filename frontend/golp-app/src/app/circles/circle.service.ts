@@ -115,6 +115,11 @@ export interface PlayerStatSummary {
 export interface CircleStatsResponse {
   bestPartner: PlayerStatSummary | null;
   toughestOpponent: PlayerStatSummary | null;
+  matchesWon: number;
+  matchesLost: number;
+  gamesWon: number;
+  gamesLost: number;
+  recentForm: string[];
 }
 
 export interface InviteLinkResponse {
@@ -130,13 +135,6 @@ export interface JoinByTokenResult {
 export interface InviteInfo {
   valid: boolean;
   circleName?: string;
-}
-
-export interface AddMemberResult {
-  exists: boolean;
-  name?: string;
-  alreadyMember?: boolean;
-  created?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -190,10 +188,6 @@ export class CircleService {
 
   getInviteInfo(token: string): Observable<InviteInfo> {
     return this.http.get<InviteInfo>(`${this.base}/circles/invite/${token}`);
-  }
-
-  checkOrAddMember(circleId: string, email: string, name?: string, confirmed = false): Observable<AddMemberResult> {
-    return this.http.post<AddMemberResult>(`${this.base}/circles/${circleId}/members`, { email, name, confirmed });
   }
 
   updateRatingConfig(

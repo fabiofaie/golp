@@ -120,6 +120,7 @@ export interface SuggestionUser {
   userId: string;
   name: string;
   isActivated: boolean;
+  circles: { id: string; name: string }[];
 }
 
 export interface GuestCheckDto {

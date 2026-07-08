@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { CircleService, LeaderboardEntry, LeaderboardResponse, LeaderboardUnclassified } from '../circle.service';
 import { AuthService } from '../../auth/auth.service';
+import { ratingInfoPath } from '../rating-method.util';
 
 @Component({
   selector: 'app-circle-leaderboard',
@@ -57,6 +58,10 @@ export class CircleLeaderboardComponent implements OnInit {
 
   isCurrentUser(userId: string): boolean {
     return userId === this.currentUserId;
+  }
+
+  ratingInfoPath(method: 'Elo' | 'GameBonus'): string {
+    return ratingInfoPath(method);
   }
 
   trackById(_: number, entry: { userId: string }): string {

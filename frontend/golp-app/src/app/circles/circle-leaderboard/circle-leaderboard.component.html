@@ -42,7 +42,7 @@
             }
             <div class="podium-medal">🥈</div>
             <div class="podium-name">{{ podium2nd.name }}</div>
-            <div class="podium-rating">{{ podium2nd.rating }}</div>
+            <div class="podium-rating">{{ ratingMethod === 'GameBonus' ? podium2nd.gameBonusPoints : podium2nd.rating }}</div>
           }
         </div>
         <!-- 1st place -->
@@ -53,7 +53,7 @@
             }
             <div class="podium-medal">🥇</div>
             <div class="podium-name">{{ podium1st.name }}</div>
-            <div class="podium-rating">{{ podium1st.rating }}</div>
+            <div class="podium-rating">{{ ratingMethod === 'GameBonus' ? podium1st.gameBonusPoints : podium1st.rating }}</div>
           }
         </div>
         <!-- 3rd place -->
@@ -64,7 +64,7 @@
             }
             <div class="podium-medal">🥉</div>
             <div class="podium-name">{{ podium3rd.name }}</div>
-            <div class="podium-rating">{{ podium3rd.rating }}</div>
+            <div class="podium-rating">{{ ratingMethod === 'GameBonus' ? podium3rd.gameBonusPoints : podium3rd.rating }}</div>
           }
         </div>
       </div>
@@ -95,7 +95,7 @@
               </div>
               <div class="player-matches">{{ entry.confirmedMatches }} {{ entry.confirmedMatches === 1 ? 'partita' : 'partite' }}</div>
             </div>
-            <div class="player-rating">{{ entry.rating }}</div>
+            <div class="player-rating">{{ ratingMethod === 'GameBonus' ? entry.gameBonusPoints : entry.rating }}</div>
           </div>
         }
       </div>
@@ -130,7 +130,7 @@
 
   }
 
-  <a routerLink="/elo-info" class="back-nav elo-info-link">
+  <a [routerLink]="ratingInfoPath(ratingMethod)" class="back-nav elo-info-link">
     Come funziona il rating?
   </a>
 </div>

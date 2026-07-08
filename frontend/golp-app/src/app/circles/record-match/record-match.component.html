@@ -94,7 +94,7 @@
                   class="slot-toggle-btn slot-toggle-btn--guest"
                   [class.slot-toggle-btn--active-guest]="slots[slotIndex].mode === 'ospite'"
                   (click)="setSlotMode(slotIndex, 'ospite')">
-                  Ospite
+                  Nuovo giocatore
                 </button>
               </div>
               @if (slots[slotIndex].mode === "membro") {
@@ -103,7 +103,7 @@
                     [ngModel]="slots[slotIndex].userId"
                     (ngModelChange)="updateSlotField(slotIndex, 'userId', $event)"
                     [name]="'slot_' + slotIndex">
-                    <option value="">Giocatore {{ slotIndex + 1 }}</option>
+                    <option value="" disabled selected hidden>Seleziona giocatore</option>
                     @for (m of availableForSlot(otherSlotIndexes(slotIndex)); track m.userId) {
                       <option [value]="m.userId">{{ m.name }}</option>
                     }
@@ -196,7 +196,7 @@
                   class="slot-toggle-btn slot-toggle-btn--guest"
                   [class.slot-toggle-btn--active-guest]="slots[slotIndex].mode === 'ospite'"
                   (click)="setSlotMode(slotIndex, 'ospite')">
-                  Ospite
+                  Nuovo giocatore
                 </button>
               </div>
               @if (slots[slotIndex].mode === "membro") {
@@ -205,7 +205,7 @@
                     [ngModel]="slots[slotIndex].userId"
                     (ngModelChange)="updateSlotField(slotIndex, 'userId', $event)"
                     [name]="'slot_' + slotIndex">
-                    <option value="">Giocatore {{ slotIndex + 1 }}</option>
+                    <option value="" disabled selected hidden>Seleziona giocatore</option>
                     @for (m of availableForSlot(otherSlotIndexes(slotIndex)); track m.userId) {
                       <option [value]="m.userId">{{ m.name }}</option>
                     }

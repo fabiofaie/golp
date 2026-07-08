@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Golp.Api.Data;
 using Golp.Api.Data.Entities;
@@ -23,7 +22,6 @@ public static class CircleEndpoints
         circles.MapGet("/{id:guid}/members", GetCircleMembersAsync);
         circles.MapGet("/{id:guid}/leaderboard", GetCircleLeaderboardAsync);
         circles.MapGet("/{id:guid}/invite-link", GetInviteLinkAsync);
-        circles.MapPost("/{id:guid}/members", AddMemberAsync);
         circles.MapPut("/{id:guid}/rating-config", UpdateRatingConfigAsync);
 
         return app;
@@ -416,99 +414,8 @@ public static class CircleEndpoints
             gameBonusWindowWeeks   = circle.GameBonusWindowWeeks,
         });
     }
-
-    // POST /circles/{id}/members — solo owner. Aggiunge un giocatore al circolo:
-    // - email esistente + confirmed=false → ritorna il nome per conferma, nessun side-effect
-    // - email esistente + confirmed=true  → crea la membership (idempotente)
-    // - email non esistente + name        → crea utente "pending" (PasswordHash vuoto) + membership + invio email attivazione
-    private static async Task<IResult> AddMemberAsync(
-        Guid id,
-        AddMemberRequest req,
-        ClaimsPrincipal user,
-        AppDbContext db,
-        IPasswordResetService resetService,
-        IEmailService emailService,
-        IConfiguration configuration)
-    {
-        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
-            return Results.Unauthorized();
-
-        var circle = await db.Circles.FindAsync(id);
-        if (circle == null)
-            return Results.NotFound(new { error = "Circolo non trovato" });
-
-        if (circle.OwnerId != userId)
-            return Results.Json(new { error = "Solo il creatore può aggiungere giocatori" }, statusCode: 403);
-
-        if (!IsValidEmail(req.Email))
-            return Results.BadRequest(new { error = "Formato email non valido" });
-
-        var email = req.Email.Trim().ToLowerInvariant();
-        var existingUser = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
-
-        // Email esistente, non ancora confermata dall'owner → ritorna solo il nome, nessun side-effect
-        if (existingUser != null && !req.Confirmed)
-            return Results.Ok(new { exists = true, name = existingUser.Name });
-
-        // Email esistente e confermata → crea membership (idempotente)
-        if (existingUser != null && req.Confirmed)
-        {
-            var alreadyMember = await db.CircleMemberships
-                .AnyAsync(m => m.CircleId == id && m.UserId == existingUser.Id);
-
-            if (alreadyMember)
-                return Results.Ok(new { exists = true, alreadyMember = true, name = existingUser.Name });
-
-            db.CircleMemberships.Add(new CircleMembership
-            {
-                CircleId = id,
-                UserId   = existingUser.Id,
-                Rating   = 1000,
-            });
-            await db.SaveChangesAsync();
-
-            await emailService.SendAddedToCircleNotificationAsync(existingUser.Email!, circle.Name);
-
-            return Results.Ok(new { exists = true, alreadyMember = false, name = existingUser.Name });
-        }
-
-        // Email non esistente, nome non ancora fornito → ritorna solo l'esito del lookup, nessun side-effect
-        if (string.IsNullOrWhiteSpace(req.Name))
-            return Results.Ok(new { exists = false });
-
-        // Email non esistente + nome fornito → crea nuovo utente pending + membership + email di attivazione
-
-        var newUser = new User
-        {
-            Name         = req.Name.Trim(),
-            Email        = email,
-            PasswordHash = string.Empty,
-            IsActivated  = false,
-        };
-
-        db.Users.Add(newUser);
-        db.CircleMemberships.Add(new CircleMembership
-        {
-            CircleId = id,
-            UserId   = newUser.Id,
-            Rating   = 1000,
-        });
-        await db.SaveChangesAsync();
-
-        var plainToken = await resetService.GenerateTokenAsync(newUser.Id);
-        var frontendBase = configuration["Cors:AllowedOrigins:0"] ?? "http://localhost:4200";
-        var activationLink = $"{frontendBase}/reset-password?token={Uri.EscapeDataString(plainToken)}";
-        await emailService.SendCircleActivationEmailAsync(newUser.Email, circle.Name, activationLink);
-
-        return Results.Ok(new { exists = false, created = true, name = newUser.Name });
-    }
-
-    private static bool IsValidEmail(string email) =>
-        new EmailAddressAttribute().IsValid(email);
 }
 
 record CreateCircleRequest(string Name, string Sport);
 record JoinByTokenRequest(string InviteToken);
-record AddMemberRequest(string Email, string? Name, bool Confirmed);
 record UpdateRatingConfigRequest(string RatingMethod, int? GameBonusWindowMatches, int? GameBonusWindowWeeks);

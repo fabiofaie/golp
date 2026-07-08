@@ -32,10 +32,12 @@ public static class StatsEndpoints
             return Results.Json(new { error = "Non sei membro del circolo" }, statusCode: 403);
 
         var asTeam1 = await db.Matches
+            .Include(m => m.Sets)
             .Where(m => m.CircleId == circleId && m.Status == "confirmed"
                      && (m.Team1Player1Id == userId || m.Team1Player2Id == userId))
             .ToListAsync();
         var asTeam2 = await db.Matches
+            .Include(m => m.Sets)
             .Where(m => m.CircleId == circleId && m.Status == "confirmed"
                      && (m.Team2Player1Id == userId || m.Team2Player2Id == userId))
             .ToListAsync();
@@ -46,10 +48,23 @@ public static class StatsEndpoints
         var partnerStats = new Dictionary<Guid, (int Total, int Wins)>();
         var opponentStats = new Dictionary<Guid, (int Total, int Wins)>();
 
+        int matchesWon = 0, matchesLost = 0, gamesWon = 0, gamesLost = 0;
+
         foreach (var m in allMatches)
         {
             bool iAmTeam1 = asTeam1Ids.Contains(m.Id);
             bool iWon = (iAmTeam1 && m.WinnerTeam == 1) || (!iAmTeam1 && m.WinnerTeam == 2);
+
+            if (iWon) matchesWon++; else matchesLost++;
+
+            int myTeamGames = iAmTeam1
+                ? m.Sets.Sum(s => s.Team1Score)
+                : m.Sets.Sum(s => s.Team2Score);
+            int otherTeamGames = iAmTeam1
+                ? m.Sets.Sum(s => s.Team2Score)
+                : m.Sets.Sum(s => s.Team1Score);
+            gamesWon += myTeamGames;
+            gamesLost += otherTeamGames;
 
             var partner = iAmTeam1
                 ? (m.Team1Player1Id == userId ? m.Team1Player2Id : (Guid?)m.Team1Player1Id)
@@ -138,6 +153,26 @@ public static class StatsEndpoints
             };
         }
 
-        return Results.Ok(new { bestPartner, toughestOpponent });
+        var recentForm = allMatches
+            .OrderBy(m => m.CreatedAt)
+            .TakeLast(10)
+            .Select(m =>
+            {
+                bool iAmTeam1 = asTeam1Ids.Contains(m.Id);
+                bool iWon = (iAmTeam1 && m.WinnerTeam == 1) || (!iAmTeam1 && m.WinnerTeam == 2);
+                return iWon ? "W" : "L";
+            })
+            .ToList();
+
+        return Results.Ok(new
+        {
+            bestPartner,
+            toughestOpponent,
+            matchesWon,
+            matchesLost,
+            gamesWon,
+            gamesLost,
+            recentForm,
+        });
     }
 }

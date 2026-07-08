@@ -30,6 +30,39 @@
       } @else {
         <div class="stats-list">
 
+          <!-- Partite e game -->
+          <div class="stat-card stat-card--record">
+            <div class="stat-card-header">
+              <span class="stat-label">Partite e game</span>
+            </div>
+            <div class="stat-record-row">
+              <div class="stat-record-item">
+                <span class="stat-record-value">{{ stats.matchesWon }}<span class="stat-record-sep">–</span>{{ stats.matchesLost }}</span>
+                <span class="stat-record-caption">Partite V–P</span>
+              </div>
+              <div class="stat-record-item">
+                <span class="stat-record-value">{{ stats.gamesWon }}<span class="stat-record-sep">–</span>{{ stats.gamesLost }}</span>
+                <span class="stat-record-caption">Game V–P</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tendenza ultime 10 partite -->
+          @if (stats.recentForm.length > 0) {
+            <div class="stat-card stat-card--form">
+              <div class="stat-card-header">
+                <span class="stat-label">Tendenza ultime {{ stats.recentForm.length }} partite</span>
+              </div>
+              <div class="stat-form-row" aria-label="Sequenza vittorie e sconfitte, dalla più vecchia alla più recente">
+                @for (result of stats.recentForm; track $index) {
+                  <span class="stat-form-badge" [class.stat-form-badge--win]="result === 'W'" [class.stat-form-badge--loss]="result === 'L'">
+                    {{ result === 'W' ? 'V' : 'P' }}
+                  </span>
+                }
+              </div>
+            </div>
+          }
+
           <!-- Miglior compagno -->
           <div class="stat-card stat-card--partner">
             <div class="stat-card-header">
