@@ -62,6 +62,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(c => c.Sport).HasMaxLength(50).IsRequired();
             e.Property(c => c.PointUnit).HasMaxLength(20).IsRequired();
             e.Property(c => c.JoinCode).HasMaxLength(32);
+            e.Property(c => c.RatingMethod).HasMaxLength(20).IsRequired().HasDefaultValue("Elo");
+            e.Property(c => c.GameBonusWindowMatches).HasDefaultValue(30);
+            e.Property(c => c.GameBonusWindowWeeks).HasDefaultValue(6);
             e.HasIndex(c => new { c.OwnerId, c.Name }).IsUnique();
             e.HasOne(c => c.Owner)
              .WithMany()

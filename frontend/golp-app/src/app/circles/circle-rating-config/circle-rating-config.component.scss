@@ -1,0 +1,161 @@
+.rc-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.rc-card {
+  background: var(--color-surface, #1e1e2e);
+  border-radius: 12px;
+  padding: 2rem;
+  width: min(480px, 90vw);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.close-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--color-text-secondary, #aaa);
+  line-height: 1;
+}
+
+h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.circle-name {
+  color: var(--color-text-secondary, #aaa);
+  margin: 0;
+}
+
+.method-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.method-card {
+  background: var(--color-bg, #13131f);
+  border: 1px solid var(--color-border, #2c2c3a);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.method-card.selected {
+  border: 2px solid var(--color-primary, #7c6af7);
+  background: var(--color-primary-dim, rgba(124, 106, 247, 0.12));
+  padding: calc(1rem - 1px) calc(1.25rem - 1px);
+}
+
+.method-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.method-card-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.radio {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border, #2c2c3a);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.radio.checked {
+  border-color: var(--color-primary, #7c6af7);
+}
+
+.radio.checked::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--color-primary, #7c6af7);
+}
+
+.method-card-desc {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary, #aaa);
+  margin: 0.4rem 0 0;
+}
+
+.window-params {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--color-border, #2c2c3a);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, #aaa);
+}
+
+.field input {
+  height: 38px;
+  background: var(--color-bg, #13131f);
+  border: 1px solid var(--color-border, #2c2c3a);
+  border-radius: 8px;
+  color: var(--color-text-primary, #fff);
+  padding: 0 0.75rem;
+  font-size: 0.9rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+}
+
+.btn {
+  width: 100%;
+  padding: 0.75rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: var(--color-primary, #7c6af7);
+  color: #fff;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.error {
+  color: var(--color-error, #f87171);
+  margin: 0;
+  font-size: 0.85rem;
+}

@@ -475,6 +475,7 @@ public static class MatchEndpoints
         ClaimsPrincipal user,
         AppDbContext db,
         IRatingService ratingService,
+        IGameBonusRatingService gameBonusRatingService,
         IPushNotificationService pushService)
     {
         var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -494,7 +495,7 @@ public static class MatchEndpoints
         if (!playerIds.Contains(userId))
             return Results.Json(new { error = "Non sei un partecipante di questa partita" }, statusCode: 403);
 
-        var (_, status, totalCount, improvements) = await PrepareConfirmAsync(matchId, userId, match, db, ratingService);
+        var (_, status, totalCount, improvements) = await PrepareConfirmAsync(matchId, userId, match, db, ratingService, gameBonusRatingService);
         await db.SaveChangesAsync();
 
         // US-035: notifiche push fire-and-forget per chi sale in classifica
@@ -573,7 +574,7 @@ public static class MatchEndpoints
 
     // PrepareConfirm stages changes in the EF tracker without saving; caller must call SaveChangesAsync.
     internal static async Task<(bool alreadyDone, string status, int count, IReadOnlyList<(Guid UserId, int NewPosition)> improvements)>
-        PrepareConfirmAsync(Guid matchId, Guid userId, Match match, AppDbContext db, IRatingService ratingService)
+        PrepareConfirmAsync(Guid matchId, Guid userId, Match match, AppDbContext db, IRatingService ratingService, IGameBonusRatingService? gameBonusRatingService = null)
     {
         var alreadyConfirmed = await db.MatchConfirmations
             .AnyAsync(c => c.MatchId == matchId && c.UserId == userId);
@@ -589,7 +590,15 @@ public static class MatchEndpoints
         if (totalCount == requiredConfirmations && !alreadyConfirmed)
         {
             match.Status = "confirmed";
-            improvements = await ratingService.CalculateAndApplyAsync(matchId, db);
+            // US-052: il metodo di calcolo attivo del circolo decide quale algoritmo gira alla conferma.
+            var circleRatingMethod = await db.Circles
+                .Where(c => c.Id == match.CircleId)
+                .Select(c => c.RatingMethod)
+                .FirstOrDefaultAsync();
+            if (circleRatingMethod == "GameBonus" && gameBonusRatingService != null)
+                await gameBonusRatingService.CalculateAndApplyAsync(matchId, db);
+            else
+                improvements = await ratingService.CalculateAndApplyAsync(matchId, db);
         }
 
         return (alreadyConfirmed, match.Status, totalCount, improvements);
@@ -608,7 +617,8 @@ public static class MatchEndpoints
         Guid matchId,
         ClaimsPrincipal user,
         AppDbContext db,
-        IRatingService ratingService)
+        IRatingService ratingService,
+        IGameBonusRatingService gameBonusRatingService)
     {
         var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
@@ -632,7 +642,10 @@ public static class MatchEndpoints
         match.ForceConfirmedById = userId;
         match.ForceConfirmedAt = DateTimeOffset.UtcNow;
 
-        _ = await ratingService.CalculateAndApplyAsync(matchId, db);
+        if (circle.RatingMethod == "GameBonus")
+            await gameBonusRatingService.CalculateAndApplyAsync(matchId, db);
+        else
+            _ = await ratingService.CalculateAndApplyAsync(matchId, db);
         await db.SaveChangesAsync();
 
         return Results.Ok(new { status = match.Status, forceConfirmedBy = userId });

@@ -1,12 +1,12 @@
 ﻿# Backlog — GOLP
 
-**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-07-06
+**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-07-08
 
 ## Riepilogo
 
 - Epic totali: 9
-- Storie totali: 50
-- Storie TODO: 4 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 4 | DONE: 42
+- Storie totali: 52
+- Storie TODO: 4 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 5 | DONE: 43
 
 ---
 
@@ -1792,4 +1792,77 @@ L'organizzatore crea un torneo indicando formato, numero campi, punti per round 
 
 ---
 
-> **PROSSIMO PASSO:** avvia il piano tecnico con `/eq-plan US-049` per il campionato serata, oppure `/eq-plan US-047` per il backend del singolo.
+#### US-051: Scelta metodo di calcolo punteggio del circolo (ELO vs Game+Bonus)
+
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** REVIEW
+**Review note (2026-07-08):** Backend: `PUT /circles/{id}/rating-config` owner-only in `CircleEndpoints.cs` (whitelist RatingMethod, range 1-200/1-52 su finestre), DTO `GET /circles/me` e leaderboard estesi con `ratingMethod`/`gameBonusPoints`/finestre (i campi `Circle.RatingMethod`/`GameBonusWindowMatches`/`GameBonusWindowWeeks` erano già stati introdotti da US-052). Frontend: `CircleRatingConfigComponent` (nuovo, dialog owner-only in `my-circles`, card ELO/Game+Bonus + 2 input condizionali), badge metodo attivo in `circle-leaderboard`, `circle.service.ts` esteso con `updateRatingConfig`. Mockup in `docs/mockups/US-051/`. Test: 10 integration (`CircleRatingConfigEndpointTests`) + 4 unit Angular (`circle.service.spec.ts`) + 7 unit Angular (`circle-rating-config.component.spec.ts`) + 2 e2e Playwright (`circle-rating-config.spec.ts`) = 317/317 BE verdi, 224/227 FE verdi (3 fail pre-esistenti non correlati: `navigator.share` readonly in `invite-dialog`, notifiche push in ambiente di test). Reviewer APPROVE — 1 bug reale trovato e fixato via e2e: `selectedMethod`/`windowMatches`/`windowWeeks` erano field initializer letti da `@Input` prima che Angular li valorizzasse (sempre `'Elo'`/default); spostati in `ngOnInit`. > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-051`.
+**Blocked by:** US-052
+
+**Story**
+Come proprietario di un circolo, voglio scegliere se il circolo usa il rating ELO attuale oppure il nuovo metodo Game+Bonus, così che possa adottare il sistema di punteggio più adatto al mio gruppo di gioco.
+
+**Demonstrates**
+Nella pagina di configurazione del circolo il proprietario vede un selettore "Metodo di calcolo punteggio" con due opzioni (ELO / Game+Bonus). Cambiando opzione, da quel momento in poi le partite confermate vengono valutate col nuovo metodo; lo storico dei delta già assegnati non viene ricalcolato. Se il metodo scelto è Game+Bonus, il proprietario vede anche i due parametri configurabili (finestra partite, finestra settimane) descritti in US-052.
+
+**Acceptance Criteria**
+
+- [ ] Solo il proprietario del circolo può cambiare il metodo di calcolo (autorizzazione lato API)
+- [ ] Il circolo ha un campo persistito `RatingMethod` (default `Elo` per circoli esistenti e nuovi, retrocompatibile)
+- [ ] Cambiare metodo non ricalcola le partite già confermate: si applica solo alle conferme successive al cambio
+- [ ] Se il metodo attivo è Game+Bonus, la UI del circolo mostra i due parametri configurabili di US-052 con i loro valori correnti
+- [ ] Cambiare metodo è reversibile in qualunque momento (nessun blocco dopo N partite)
+- [ ] La classifica del circolo (US-008) mostra un'etichetta che indica quale metodo è attivo
+
+**Out of scope**
+
+- Ricalcolo retroattivo dello storico quando si cambia metodo
+- Metodi di calcolo ulteriori oltre ELO e Game+Bonus
+- Migrazione assistita o simulazione "cosa succederebbe se" prima di cambiare metodo
+
+**Open questions**
+
+- (nessuna)
+
+---
+
+#### US-052: Metodo di calcolo punteggio "Game+Bonus" con finestra rolling
+
+**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 8 | **Status:** DONE
+**Approved (2026-07-08):** Review umana OK.
+**Review note (2026-07-08):** `Circle.RatingMethod`/`GameBonusWindowMatches`/`GameBonusWindowWeeks` + `Match.GameBonusWinnerPoints` (migration `AddGameBonusRatingMethod`, default Elo/30/6). Nuovo `GameBonusRatingService`/`IGameBonusRatingService` (punti base = diff. game + 1, bonus upset 10% arrotondato per eccesso su punteggio medio squadra in finestra), wired in `PrepareConfirmAsync`/`ForceConfirmMatchAsync`/`ConfirmViaTokenAsync` con branch su `circle.RatingMethod`. Leaderboard (`GetCircleLeaderboardAsync`) estesa con `gameBonusPoints` + `ratingMethod` quando il metodo è attivo, via `GameBonusRatingService.GetWindowScoresAsync` (finestra N partite ∩ M settimane, SQL-side). Test: 13 unit (`GameBonusRatingServiceTests`) + 5 integration (`GameBonusConfirmTests`, `GameBonusLeaderboardEndpointTests`) = 307/307 verdi, zero regressioni. Reviewer APPROVE (1 Critical trovato e fixato in review: migration generava default 0/"" invece di 30/6/"Elo" — corretto con `HasDefaultValue` esplicito in `AppDbContext` + rigenerazione migration). > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-052`.
+**Blocked by:** US-007
+
+**Story**
+Come Marco iscritto a un circolo che usa il metodo Game+Bonus, voglio che il mio punteggio rifletta quanto ho dominato la partita e sia premiato se batto una squadra più forte, ma calcolato solo sulle partite recenti, così che la classifica racconti il mio momento di forma attuale e non tutta la mia storia.
+
+**Demonstrates**
+Alla conferma di una partita in un circolo con metodo Game+Bonus attivo, la squadra vincente riceve (differenza game tra le due squadre) + 1 punto vittoria; la squadra perdente riceve 0 punti. Se la squadra vincente aveva la classifica inferiore prima della partita, riceve un bonus aggiuntivo pari al 10% (arrotondato per eccesso) della differenza di classifica tra le due squadre. La classifica del circolo è la somma dei punti ottenuti nelle sole partite che rientrano contemporaneamente nella finestra delle ultime N partite (rolling, default 30) e nella finestra delle ultime M settimane (default 6): una partita che esce da una delle due finestre smette di contare, e i punti totali del giocatore si ricalcolano di conseguenza.
+
+**Acceptance Criteria**
+
+- [ ] Punteggio base: squadra vincente = (game vinti − game persi) + 1; squadra perdente = 0; per sport a set si usa il totale game su tutti i set (stesso criterio di US-012)
+- [ ] Bonus upset: se la classifica Game+Bonus della squadra vincente (prima della partita) era inferiore a quella della squadra perdente, si aggiunge ai punti della partita `ceil(0.10 × differenza_classifica)`; nessun bonus se vince la squadra già in vantaggio o a parità
+- [ ] La classifica Game+Bonus di ogni giocatore è la somma dei punti delle sue partite confermate che rientrano sia nelle ultime N partite del circolo sia nelle ultime M settimane da oggi
+- [ ] Quando una partita esce dalla finestra (per numero o per tempo) i suoi punti non contano più nella classifica corrente, senza necessità di un'azione manuale
+- [ ] N (numero partite, default 30) e M (settimane, default 6) sono parametri impostabili dal proprietario del circolo (vedi US-051 per la UI di configurazione)
+- [ ] Cambiare N o M ricalcola immediatamente la classifica corrente usando le nuove finestre, senza toccare i punti già registrati per ogni partita
+- [ ] Partite pending o disputed non contribuiscono al punteggio Game+Bonus
+- [ ] Ogni giocatore vede il proprio punteggio Game+Bonus per partita (analogo al delta `+N pt` di US-009), calcolato con la sua squadra
+- [ ] La classifica Game+Bonus è indipendente per giocatore all'interno del circolo (non è per coppia)
+
+**Out of scope**
+
+- Applicazione del metodo Game+Bonus a più circoli con parametri diversi in un'unica vista aggregata
+- Storico dell'evoluzione della classifica Game+Bonus nel tempo
+- Coesistenza dei due metodi sullo stesso circolo in parallelo (un circolo ha un solo metodo attivo alla volta — vedi US-051)
+- Bonus/malus per margini particolarmente ampi oltre a quanto già catturato dalla differenza game
+
+**Open questions**
+
+- ~~Riferimento bonus upset~~ Risolto: si usa il punteggio Game+Bonus corrente di ogni squadra; se non ci sono partite pregresse la differenza è 0 (nessun bonus possibile)
+- ~~Punteggio squadra~~ Risolto: media dei punteggi dei due giocatori della coppia (coerente con ELO team_rating = media)
+- Il ricalcolo massivo della classifica dopo un cambio di N o M ha un limite di scala accettabile (es. circoli con migliaia di partite storiche)?
+
+---
+
+> **PROSSIMO PASSO:** avvia il piano tecnico con `/eq-plan US-052` per l'algoritmo Game+Bonus, oppure `/eq-plan US-049` per il campionato serata.

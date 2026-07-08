@@ -11,7 +11,12 @@
     </a>
   </header>
 
-  <h1 class="auth-title">Classifica</h1>
+  <h1 class="auth-title">
+    Classifica
+    <span class="rating-method-badge" [class.rating-method-badge--gamebonus]="ratingMethod === 'GameBonus'">
+      {{ ratingMethod === 'GameBonus' ? 'Game+Bonus' : 'ELO' }}
+    </span>
+  </h1>
   <p class="auth-subtitle">Ranking per rating ELO nel circolo</p>
 
   @if (loading) {

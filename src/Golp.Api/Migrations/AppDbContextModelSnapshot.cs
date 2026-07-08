@@ -64,6 +64,16 @@ namespace Golp.Api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("GameBonusWindowMatches")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(30);
+
+                    b.Property<int>("GameBonusWindowWeeks")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(6);
+
                     b.Property<bool>("IsPrivate")
                         .HasColumnType("bit");
 
@@ -83,6 +93,13 @@ namespace Golp.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("RatingMethod")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Elo");
 
                     b.Property<bool>("Sets")
                         .HasColumnType("bit");
@@ -234,6 +251,9 @@ namespace Golp.Api.Migrations
 
                     b.Property<Guid?>("ForceConfirmedById")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("GameBonusWinnerPoints")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsSingles")
                         .HasColumnType("bit");

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Configurazione punteggio — GOLP</title>
+<link rel="stylesheet" href="shared.css" />
+</head>
+<body>
+<div class="page">
+
+  <div class="topbar">
+    <a class="back" href="#">←</a>
+    <h1>Circolo Padel Milano — Impostazioni</h1>
+  </div>
+
+  <div class="section-title">Metodo di calcolo punteggio</div>
+
+  <div class="method-cards" id="methodCards">
+    <div class="method-card selected" data-method="Elo" onclick="selectMethod('Elo')">
+      <div class="method-card-head">
+        <div class="method-card-title">Rating ELO</div>
+        <div class="radio"></div>
+      </div>
+      <p class="method-card-desc">Il metodo attuale. Ogni vittoria/sconfitta sposta il rating in base alla differenza di forza tra le squadre. Storico completo, nessuna finestra temporale.</p>
+      <div class="method-card-example">Esempio: vinci 6-4 contro una squadra più forte → <b>+18 pt</b> rating</div>
+    </div>
+
+    <div class="method-card" data-method="GameBonus" onclick="selectMethod('GameBonus')">
+      <div class="method-card-head">
+        <div class="method-card-title">Game + Bonus</div>
+        <div class="radio"></div>
+      </div>
+      <p class="method-card-desc">Punti = differenza game + 1 per la vittoria. Bonus se vince la coppia più debole. Conta solo il periodo recente: le partite più vecchie escono dal conteggio.</p>
+      <div class="method-card-example">Esempio: vinci 6-4 → <b>2 + 1 = 3 pt</b>. Se eri sfavorito, +10% del divario in classifica</div>
+    </div>
+  </div>
+
+  <div class="window-params hidden" id="windowParams">
+    <div class="field">
+      <label for="windowMatches">Ultime partite considerate</label>
+      <input type="number" id="windowMatches" value="30" min="1" max="200" />
+      <div class="hint">Rolling: entra la nuova, esce la più vecchia</div>
+    </div>
+    <div class="field">
+      <label for="windowWeeks">Settimane considerate</label>
+      <input type="number" id="windowWeeks" value="6" min="1" max="52" />
+      <div class="hint">Partite più vecchie non contano più</div>
+    </div>
+  </div>
+
+  <div class="save-bar">
+    <button class="save-btn" onclick="save()">Salva configurazione</button>
+    <span class="save-status" id="saveStatus">✓ Salvato</span>
+  </div>
+
+  <div class="leaderboard-preview">
+    <div class="leaderboard-preview-head">
+      <h3>Classifica circolo</h3>
+      <span class="method-badge" id="lbBadge">ELO</span>
+    </div>
+    <div class="lb-row"><span class="name">1. Marco B.</span><span class="points">1184 pt</span></div>
+    <div class="lb-row"><span class="name">2. Giulia R.</span><span class="points">1122 pt</span></div>
+    <div class="lb-row"><span class="name">3. Luca P.</span><span class="points">1096 pt</span></div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

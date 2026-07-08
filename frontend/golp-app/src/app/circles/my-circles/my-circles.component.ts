@@ -5,11 +5,12 @@ import { CircleService, CircleSummary } from '../circle.service';
 import { AuthService } from '../../auth/auth.service';
 import { InviteDialogComponent } from '../invite-dialog/invite-dialog.component';
 import { AddMemberDialogComponent } from '../add-member-dialog/add-member-dialog.component';
+import { CircleRatingConfigComponent } from '../circle-rating-config/circle-rating-config.component';
 
 @Component({
   selector: 'app-my-circles',
   standalone: true,
-  imports: [CommonModule, RouterLink, InviteDialogComponent, AddMemberDialogComponent],
+  imports: [CommonModule, RouterLink, InviteDialogComponent, AddMemberDialogComponent, CircleRatingConfigComponent],
   templateUrl: './my-circles.component.html',
 })
 export class MyCirclesComponent implements OnInit {
@@ -22,6 +23,7 @@ export class MyCirclesComponent implements OnInit {
   currentUserId = this.authSvc.getCurrentUserId() ?? '';
   activeInviteCircle: CircleSummary | null = null;
   activeAddMemberCircle: CircleSummary | null = null;
+  activeRatingConfigCircle: CircleSummary | null = null;
 
   ngOnInit(): void {
     this.svc.getMyCircles().subscribe({
@@ -58,5 +60,21 @@ export class MyCirclesComponent implements OnInit {
 
   closeAddMember(): void {
     this.activeAddMemberCircle = null;
+  }
+
+  openRatingConfig(c: CircleSummary): void {
+    this.activeRatingConfigCircle = c;
+  }
+
+  closeRatingConfig(): void {
+    this.activeRatingConfigCircle = null;
+  }
+
+  onRatingConfigSaved(res: { ratingMethod: 'Elo' | 'GameBonus'; gameBonusWindowMatches: number; gameBonusWindowWeeks: number }): void {
+    if (this.activeRatingConfigCircle) {
+      this.activeRatingConfigCircle.ratingMethod = res.ratingMethod;
+      this.activeRatingConfigCircle.gameBonusWindowMatches = res.gameBonusWindowMatches;
+      this.activeRatingConfigCircle.gameBonusWindowWeeks = res.gameBonusWindowWeeks;
+    }
   }
 }

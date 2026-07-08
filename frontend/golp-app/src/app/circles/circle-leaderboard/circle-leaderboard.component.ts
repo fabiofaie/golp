@@ -22,6 +22,7 @@ export class CircleLeaderboardComponent implements OnInit {
   errorMessage = '';
   classified: LeaderboardEntry[] = [];
   unclassified: LeaderboardUnclassified[] = [];
+  ratingMethod: 'Elo' | 'GameBonus' = 'Elo';
 
   get top3(): LeaderboardEntry[] {
     return this.classified.slice(0, 3);
@@ -44,6 +45,7 @@ export class CircleLeaderboardComponent implements OnInit {
       next: (data: LeaderboardResponse) => {
         this.classified = data.classified;
         this.unclassified = data.unclassified;
+        this.ratingMethod = data.ratingMethod ?? 'Elo';
         this.loading = false;
       },
       error: () => {

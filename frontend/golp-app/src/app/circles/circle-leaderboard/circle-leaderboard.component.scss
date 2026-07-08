@@ -1,5 +1,23 @@
 /* Leaderboard — tokens from style-tokens.json (US-008) */
 
+.rating-method-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: var(--sp-2);
+  padding: 2px 10px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  border-radius: 999px;
+  background: var(--color-surface-elevated);
+  color: var(--color-text-secondary);
+  vertical-align: middle;
+}
+
+.rating-method-badge--gamebonus {
+  background: var(--color-accent-dim, rgba(255, 85, 0, 0.12));
+  color: var(--color-accent, #FF5500);
+}
+
 .elo-info-link {
   justify-content: center;
   margin-top: var(--sp-6);

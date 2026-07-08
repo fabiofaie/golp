@@ -1,0 +1,62 @@
+<div class="rc-overlay" (click)="close()">
+  <div class="rc-card" (click)="$event.stopPropagation()">
+    <button class="close-btn" (click)="close()" aria-label="Chiudi">×</button>
+    <h2>Metodo di calcolo punteggio</h2>
+    <p class="circle-name">{{ circleName }}</p>
+
+    <div class="method-cards">
+      <div
+        class="method-card"
+        [class.selected]="selectedMethod === 'Elo'"
+        (click)="select('Elo')"
+        role="button"
+        tabindex="0"
+        (keydown.enter)="select('Elo')"
+      >
+        <div class="method-card-head">
+          <span class="method-card-title">Rating ELO</span>
+          <span class="radio" [class.checked]="selectedMethod === 'Elo'"></span>
+        </div>
+        <p class="method-card-desc">Il metodo attuale. Storico completo, nessuna finestra temporale.</p>
+      </div>
+
+      <div
+        class="method-card"
+        [class.selected]="selectedMethod === 'GameBonus'"
+        (click)="select('GameBonus')"
+        role="button"
+        tabindex="0"
+        (keydown.enter)="select('GameBonus')"
+      >
+        <div class="method-card-head">
+          <span class="method-card-title">Game + Bonus</span>
+          <span class="radio" [class.checked]="selectedMethod === 'GameBonus'"></span>
+        </div>
+        <p class="method-card-desc">Punti = differenza game + 1 per la vittoria, con bonus se vince la coppia più debole. Conta solo il periodo recente.</p>
+      </div>
+    </div>
+
+    @if (selectedMethod === 'GameBonus') {
+      <div class="window-params">
+        <label class="field">
+          <span>Ultime partite considerate</span>
+          <input type="number" min="1" max="200" [(ngModel)]="windowMatches" />
+        </label>
+        <label class="field">
+          <span>Settimane considerate</span>
+          <input type="number" min="1" max="52" [(ngModel)]="windowWeeks" />
+        </label>
+      </div>
+    }
+
+    @if (error) {
+      <p class="error">{{ error }}</p>
+    }
+
+    <div class="actions">
+      <button class="btn btn-primary" [disabled]="saving" (click)="save()">
+        {{ saving ? 'Salvataggio…' : saved_ ? '✓ Salvato' : 'Salva configurazione' }}
+      </button>
+    </div>
+  </div>
+</div>

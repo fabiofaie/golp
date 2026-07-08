@@ -99,6 +99,7 @@ public static class PublicMatchEndpoints
         Guid token,
         AppDbContext db,
         IRatingService ratingService,
+        IGameBonusRatingService gameBonusRatingService,
         IPushNotificationService pushService)
     {
         var (confirmToken, match, validateResult) = await ValidateTokenAsync(token, db);
@@ -114,7 +115,7 @@ public static class PublicMatchEndpoints
             return Results.Conflict(new { error = $"La partita è già {match.Status}" });
 
         var (_, status, totalCount, improvements) = await MatchEndpoints.PrepareConfirmAsync(
-            match.Id, confirmToken.UserId, match, db, ratingService);
+            match.Id, confirmToken.UserId, match, db, ratingService, gameBonusRatingService);
 
         confirmToken.UsedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(); // salva conferma + token.UsedAt atomicamente

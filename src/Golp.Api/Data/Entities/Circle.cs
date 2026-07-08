@@ -14,6 +14,11 @@ public class Circle
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 
+    // US-052: metodo di calcolo punteggio del circolo ("Elo" o "GameBonus")
+    public string RatingMethod { get; set; } = "Elo";
+    public int GameBonusWindowMatches { get; set; } = 30;
+    public int GameBonusWindowWeeks { get; set; } = 6;
+
     public User Owner { get; set; } = null!;
     public ICollection<CircleMembership> Members { get; set; } = [];
 }

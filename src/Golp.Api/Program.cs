@@ -31,6 +31,9 @@ else
 // Rating service (US-007) — ELO alla conferma partita
 builder.Services.AddScoped<IRatingService, RatingService>();
 
+// Game+Bonus rating service (US-052) — metodo alternativo, per-circolo (Circle.RatingMethod)
+builder.Services.AddScoped<IGameBonusRatingService, GameBonusRatingService>();
+
 // Sports config da DB (US-016)
 builder.Services.AddScoped<ISportsService, SportsService>();
 

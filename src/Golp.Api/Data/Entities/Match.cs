@@ -20,6 +20,9 @@ public class Match
     public int? DeltaTeam2Player1 { get; set; }
     public int? DeltaTeam2Player2 { get; set; }
 
+    // US-052: punti Game+Bonus assegnati alla squadra vincente (null = non applicabile/non confermato con questo metodo)
+    public int? GameBonusWinnerPoints { get; set; }
+
     public Guid? ForceConfirmedById { get; set; }
     public DateTimeOffset? ForceConfirmedAt { get; set; }
 

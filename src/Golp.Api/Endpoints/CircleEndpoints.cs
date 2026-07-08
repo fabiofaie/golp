@@ -24,6 +24,7 @@ public static class CircleEndpoints
         circles.MapGet("/{id:guid}/leaderboard", GetCircleLeaderboardAsync);
         circles.MapGet("/{id:guid}/invite-link", GetInviteLinkAsync);
         circles.MapPost("/{id:guid}/members", AddMemberAsync);
+        circles.MapPut("/{id:guid}/rating-config", UpdateRatingConfigAsync);
 
         return app;
     }
@@ -151,20 +152,26 @@ public static class CircleEndpoints
                 MyRating         = m.Rating,
                 MemberCount      = db.CircleMemberships.Count(x => x.CircleId == m.CircleId),
                 MyRank           = db.CircleMemberships.Count(x => x.CircleId == m.CircleId && x.Rating > m.Rating) + 1,
+                RatingMethod            = m.Circle.RatingMethod,
+                GameBonusWindowMatches  = m.Circle.GameBonusWindowMatches,
+                GameBonusWindowWeeks    = m.Circle.GameBonusWindowWeeks,
             })
             .ToListAsync();
 
         return Results.Ok(memberships.Select(m => new
         {
-            id          = m.CircleId,
-            name        = m.CircleName,
-            sport       = m.CircleSport,
-            sets        = m.CircleSets,
-            pointUnit   = m.CirclePointUnit,
-            ownerId     = m.CircleOwnerId,
-            memberCount = m.MemberCount,
-            myRating    = m.MyRating,
-            myRank      = m.MyRank,
+            id                     = m.CircleId,
+            name                   = m.CircleName,
+            sport                  = m.CircleSport,
+            sets                   = m.CircleSets,
+            pointUnit              = m.CirclePointUnit,
+            ownerId                = m.CircleOwnerId,
+            memberCount            = m.MemberCount,
+            myRating               = m.MyRating,
+            myRank                 = m.MyRank,
+            ratingMethod           = m.RatingMethod,
+            gameBonusWindowMatches = m.GameBonusWindowMatches,
+            gameBonusWindowWeeks   = m.GameBonusWindowWeeks,
         }));
     }
 
@@ -249,8 +256,8 @@ public static class CircleEndpoints
         if (userIdStr == null || !Guid.TryParse(userIdStr, out _))
             return Results.Unauthorized();
 
-        var circleExists = await db.Circles.AnyAsync(c => c.Id == id);
-        if (!circleExists)
+        var circle = await db.Circles.FirstOrDefaultAsync(c => c.Id == id);
+        if (circle == null)
             return Results.NotFound(new { error = "Circolo non trovato" });
 
         var confirmedMatches = await db.Matches
@@ -268,15 +275,22 @@ public static class CircleEndpoints
             .Select(m => new { m.UserId, Name = m.User.Name, m.Rating, IsActivated = m.User.IsActivated })
             .ToListAsync();
 
+        // US-052: circoli con metodo Game+Bonus attivo ordinano/mostrano i punti in finestra (N∩M) invece del rating ELO
+        Dictionary<Guid, int>? gameBonusScores = null;
+        if (circle.RatingMethod == "GameBonus")
+            gameBonusScores = await GameBonusRatingService.GetWindowScoresAsync(
+                db, id, circle.GameBonusWindowMatches, circle.GameBonusWindowWeeks, members.Select(m => m.UserId));
+
         var classified = members
             .Where(m => confirmedCounts.ContainsKey(m.UserId))
-            .OrderByDescending(m => m.Rating)
+            .OrderByDescending(m => gameBonusScores != null ? gameBonusScores.GetValueOrDefault(m.UserId, 0) : m.Rating)
             .ThenByDescending(m => confirmedCounts[m.UserId])
             .Select((m, i) => new
             {
                 userId           = m.UserId,
                 name             = m.Name,
                 rating           = m.Rating,
+                gameBonusPoints  = gameBonusScores?.GetValueOrDefault(m.UserId, 0),
                 rank             = i + 1,
                 confirmedMatches = confirmedCounts[m.UserId],
                 isActivated      = m.IsActivated,
@@ -288,7 +302,7 @@ public static class CircleEndpoints
             .Select(m => new { userId = m.UserId, name = m.Name, isActivated = m.IsActivated })
             .ToList();
 
-        return Results.Ok(new { classified, unclassified });
+        return Results.Ok(new { classified, unclassified, ratingMethod = circle.RatingMethod });
     }
 
     // GET /circles/invite/{token} — public, valida un token senza consumarlo
@@ -358,6 +372,49 @@ public static class CircleEndpoints
         }
 
         return Results.Ok(new { inviteToken = circle.JoinCode });
+    }
+
+    // PUT /circles/{id}/rating-config — solo owner. Cambia il metodo di calcolo punteggio del circolo
+    // (US-051/US-052) e i parametri di finestra del metodo Game+Bonus. Non ricalcola lo storico.
+    private static async Task<IResult> UpdateRatingConfigAsync(
+        Guid id,
+        UpdateRatingConfigRequest req,
+        ClaimsPrincipal user,
+        AppDbContext db)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
+            return Results.Unauthorized();
+
+        var circle = await db.Circles.FindAsync(id);
+        if (circle == null)
+            return Results.NotFound(new { error = "Circolo non trovato" });
+
+        if (circle.OwnerId != userId)
+            return Results.Json(new { error = "Solo il proprietario del circolo può cambiare il metodo di calcolo" }, statusCode: 403);
+
+        if (req.RatingMethod is not ("Elo" or "GameBonus"))
+            return Results.BadRequest(new { error = "ratingMethod deve essere 'Elo' o 'GameBonus'" });
+
+        var windowMatches = req.GameBonusWindowMatches ?? circle.GameBonusWindowMatches;
+        var windowWeeks   = req.GameBonusWindowWeeks ?? circle.GameBonusWindowWeeks;
+
+        if (windowMatches is < 1 or > 200)
+            return Results.BadRequest(new { error = "gameBonusWindowMatches deve essere tra 1 e 200" });
+        if (windowWeeks is < 1 or > 52)
+            return Results.BadRequest(new { error = "gameBonusWindowWeeks deve essere tra 1 e 52" });
+
+        circle.RatingMethod           = req.RatingMethod;
+        circle.GameBonusWindowMatches = windowMatches;
+        circle.GameBonusWindowWeeks   = windowWeeks;
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new
+        {
+            ratingMethod           = circle.RatingMethod,
+            gameBonusWindowMatches = circle.GameBonusWindowMatches,
+            gameBonusWindowWeeks   = circle.GameBonusWindowWeeks,
+        });
     }
 
     // POST /circles/{id}/members — solo owner. Aggiunge un giocatore al circolo:
@@ -454,3 +511,4 @@ public static class CircleEndpoints
 record CreateCircleRequest(string Name, string Sport);
 record JoinByTokenRequest(string InviteToken);
 record AddMemberRequest(string Email, string? Name, bool Confirmed);
+record UpdateRatingConfigRequest(string RatingMethod, int? GameBonusWindowMatches, int? GameBonusWindowWeeks);

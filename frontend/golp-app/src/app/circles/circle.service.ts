@@ -22,6 +22,9 @@ export interface CircleSummary {
   memberCount: number;
   myRating: number;
   myRank: number;
+  ratingMethod?: 'Elo' | 'GameBonus';
+  gameBonusWindowMatches?: number;
+  gameBonusWindowWeeks?: number;
 }
 
 export interface CircleCreated {
@@ -60,6 +63,7 @@ export interface LeaderboardEntry {
   userId: string;
   name: string;
   rating: number;
+  gameBonusPoints?: number | null;
   rank: number;
   confirmedMatches: number;
   isActivated?: boolean;
@@ -74,6 +78,13 @@ export interface LeaderboardUnclassified {
 export interface LeaderboardResponse {
   classified: LeaderboardEntry[];
   unclassified: LeaderboardUnclassified[];
+  ratingMethod?: 'Elo' | 'GameBonus';
+}
+
+export interface UpdateRatingConfigResult {
+  ratingMethod: 'Elo' | 'GameBonus';
+  gameBonusWindowMatches: number;
+  gameBonusWindowWeeks: number;
 }
 
 export interface AwardWinner {
@@ -183,5 +194,18 @@ export class CircleService {
 
   checkOrAddMember(circleId: string, email: string, name?: string, confirmed = false): Observable<AddMemberResult> {
     return this.http.post<AddMemberResult>(`${this.base}/circles/${circleId}/members`, { email, name, confirmed });
+  }
+
+  updateRatingConfig(
+    circleId: string,
+    ratingMethod: 'Elo' | 'GameBonus',
+    gameBonusWindowMatches?: number,
+    gameBonusWindowWeeks?: number,
+  ): Observable<UpdateRatingConfigResult> {
+    return this.http.put<UpdateRatingConfigResult>(`${this.base}/circles/${circleId}/rating-config`, {
+      ratingMethod,
+      gameBonusWindowMatches,
+      gameBonusWindowWeeks,
+    });
   }
 }
