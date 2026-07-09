@@ -18,6 +18,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Sport> Sports => Set<Sport>();
     public DbSet<AwardNotificationSent> AwardNotificationsSent => Set<AwardNotificationSent>();
     public DbSet<MatchConfirmationToken> MatchConfirmationTokens => Set<MatchConfirmationToken>();
+    public DbSet<ImpersonationAuditLog> ImpersonationAuditLogs => Set<ImpersonationAuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,6 +30,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasIndex(u => u.Email).IsUnique().HasFilter("[Email] IS NOT NULL");
             e.Property(u => u.Phone).HasMaxLength(30);
             e.Property(u => u.PasswordHash).HasMaxLength(100).IsRequired();
+        });
+
+        modelBuilder.Entity<ImpersonationAuditLog>(e =>
+        {
+            e.HasKey(l => l.Id);
+            e.HasOne<User>().WithMany().HasForeignKey(l => l.SuperAdminId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<User>().WithMany().HasForeignKey(l => l.TargetUserId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<PasswordResetToken>(e =>

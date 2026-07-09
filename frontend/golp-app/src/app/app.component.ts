@@ -5,12 +5,13 @@ import { filter } from 'rxjs';
 import { AppUpdateService } from './shared/update/app-update.service';
 import { AppUpdateBannerComponent } from './shared/update/app-update-banner.component';
 import { PwaInstallBannerComponent } from './shared/pwa-install/pwa-install-banner.component';
+import { ImpersonationBannerComponent } from './shared/impersonation-banner/impersonation-banner.component';
 import { ThemeService } from './theme/theme.service';
 import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, AppUpdateBannerComponent, PwaInstallBannerComponent],
+  imports: [RouterOutlet, AppUpdateBannerComponent, PwaInstallBannerComponent, ImpersonationBannerComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

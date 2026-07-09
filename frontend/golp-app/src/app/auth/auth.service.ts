@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { tap } from 'rxjs/operators';
-import { Observable } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { PushNotificationService } from '../push/push-notification.service';
 
@@ -12,10 +12,13 @@ interface LoginRequest { email: string; password: string; }
 
 const TOKEN_KEY = 'golp_token';
 const REFRESH_TOKEN_KEY = 'golp_refresh_token';
+const PRE_IMPERSONATION_TOKEN_KEY = 'golp_pre_impersonation_token';
+const PRE_IMPERSONATION_REFRESH_KEY = 'golp_pre_impersonation_refresh';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly api = `${environment.apiUrl}/auth`;
+  private readonly adminApi = `${environment.apiUrl}/admin`;
   private readonly pushService = inject(PushNotificationService);
   readonly isAuthenticated = signal(this.hasValidToken());
 
@@ -97,10 +100,61 @@ export class AuthService {
   }
 
   getCurrentUserId(): string | null {
+    return this.decodeTokenClaim('sub');
+  }
+
+  isSuperAdmin(): boolean {
+    return this.decodeTokenClaim('super_admin') === 'true';
+  }
+
+  isImpersonating(): boolean {
+    return this.decodeTokenClaim('impersonator_id') !== null;
+  }
+
+  // Durante l'impersonazione il token corrente è quello del target, quindi il claim
+  // 'email' standard è già l'email dell'utente impersonato — nessun claim ad-hoc.
+  getImpersonatedEmail(): string | null {
+    if (!this.isImpersonating()) return null;
+    return this.decodeTokenClaim('email');
+  }
+
+  startImpersonation(email: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.adminApi}/impersonate`, { email }).pipe(
+      tap(r => {
+        // Salva la sessione originale del super admin prima di sovrascriverla,
+        // così endImpersonation() può ripristinarla senza un nuovo login.
+        const currentToken = this.getToken();
+        const currentRefresh = this.getRefreshToken();
+        if (currentToken) localStorage.setItem(PRE_IMPERSONATION_TOKEN_KEY, currentToken);
+        if (currentRefresh) localStorage.setItem(PRE_IMPERSONATION_REFRESH_KEY, currentRefresh);
+
+        this.storeTokens(r.accessToken, r.refreshToken);
+      })
+    );
+  }
+
+  endImpersonation(): Observable<void> {
+    return this.http.post<void>(`${this.adminApi}/impersonate/end`, {}).pipe(
+      catchError(() => of(undefined)),
+      tap(() => this.restorePreImpersonationSession())
+    );
+  }
+
+  private restorePreImpersonationSession(): void {
+    const originalToken = localStorage.getItem(PRE_IMPERSONATION_TOKEN_KEY);
+    const originalRefresh = localStorage.getItem(PRE_IMPERSONATION_REFRESH_KEY);
+    if (originalToken && originalRefresh) {
+      this.storeTokens(originalToken, originalRefresh);
+    }
+    localStorage.removeItem(PRE_IMPERSONATION_TOKEN_KEY);
+    localStorage.removeItem(PRE_IMPERSONATION_REFRESH_KEY);
+  }
+
+  private decodeTokenClaim(claim: string): string | null {
     const token = this.getToken();
     if (!token) return null;
     try {
-      return JSON.parse(atob(token.split('.')[1])).sub ?? null;
+      return JSON.parse(atob(token.split('.')[1]))[claim] ?? null;
     } catch {
       return null;
     }

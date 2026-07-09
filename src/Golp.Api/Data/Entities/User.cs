@@ -8,6 +8,7 @@ public class User
     public string? Phone { get; set; }
     public string PasswordHash { get; set; } = string.Empty;
     public bool IsActivated { get; set; } = true;
+    public bool IsSuperAdmin { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
     public Guid SecurityStamp { get; set; } = Guid.NewGuid();

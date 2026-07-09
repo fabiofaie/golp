@@ -219,6 +219,33 @@ namespace Golp.Api.Migrations
                     b.ToTable("FcmTokens");
                 });
 
+            modelBuilder.Entity("Golp.Api.Data.Entities.ImpersonationAuditLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("EndedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("SuperAdminId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TargetUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SuperAdminId");
+
+                    b.HasIndex("TargetUserId");
+
+                    b.ToTable("ImpersonationAuditLogs");
+                });
+
             modelBuilder.Entity("Golp.Api.Data.Entities.Match", b =>
                 {
                     b.Property<Guid>("Id")
@@ -567,6 +594,9 @@ namespace Golp.Api.Migrations
                     b.Property<bool>("IsActivated")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsSuperAdmin")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -635,6 +665,21 @@ namespace Golp.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Golp.Api.Data.Entities.ImpersonationAuditLog", b =>
+                {
+                    b.HasOne("Golp.Api.Data.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("SuperAdminId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Golp.Api.Data.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("TargetUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Golp.Api.Data.Entities.Match", b =>

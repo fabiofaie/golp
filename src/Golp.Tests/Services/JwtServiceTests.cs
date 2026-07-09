@@ -68,6 +68,59 @@ public class JwtServiceTests
     }
 
     [Fact]
+    public void GenerateToken_SuperAdmin_IncludesSuperAdminClaim()
+    {
+        var service = CreateService();
+
+        var token = service.GenerateToken(Guid.NewGuid(), "admin@example.com", Guid.NewGuid(), isSuperAdmin: true);
+
+        var handler = new JwtSecurityTokenHandler();
+        var jwt = handler.ReadJwtToken(token);
+
+        Assert.Equal("true", jwt.Claims.First(c => c.Type == "super_admin").Value);
+    }
+
+    [Fact]
+    public void GenerateToken_NormalUser_OmitsSuperAdminClaim()
+    {
+        var service = CreateService();
+
+        var token = service.GenerateToken(Guid.NewGuid(), "user@example.com", Guid.NewGuid());
+
+        var handler = new JwtSecurityTokenHandler();
+        var jwt = handler.ReadJwtToken(token);
+
+        Assert.DoesNotContain(jwt.Claims, c => c.Type == "super_admin");
+    }
+
+    [Fact]
+    public void GenerateToken_WithImpersonatorId_IncludesImpersonatorIdClaim()
+    {
+        var service = CreateService();
+        var impersonatorId = Guid.NewGuid();
+
+        var token = service.GenerateToken(Guid.NewGuid(), "target@example.com", Guid.NewGuid(), impersonatorId: impersonatorId);
+
+        var handler = new JwtSecurityTokenHandler();
+        var jwt = handler.ReadJwtToken(token);
+
+        Assert.Equal(impersonatorId.ToString(), jwt.Claims.First(c => c.Type == "impersonator_id").Value);
+    }
+
+    [Fact]
+    public void GenerateToken_WithoutImpersonatorId_OmitsImpersonatorIdClaim()
+    {
+        var service = CreateService();
+
+        var token = service.GenerateToken(Guid.NewGuid(), "user@example.com", Guid.NewGuid());
+
+        var handler = new JwtSecurityTokenHandler();
+        var jwt = handler.ReadJwtToken(token);
+
+        Assert.DoesNotContain(jwt.Claims, c => c.Type == "impersonator_id");
+    }
+
+    [Fact]
     public void ValidateToken_ValidToken_ReturnsTrue_WithCorrectClaims()
     {
         var service = CreateService();

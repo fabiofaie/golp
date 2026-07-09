@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
+import { superAdminGuard } from './auth/super-admin.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -108,6 +109,11 @@ export const routes: Routes = [
     path: 'my-matches',
     loadComponent: () => import('./dashboard/my-matches-page.component').then(m => m.MyMatchesPageComponent),
     canActivate: [authGuard]
+  },
+  {
+    path: 'admin/impersonate',
+    loadComponent: () => import('./admin/impersonate/impersonate.component').then(m => m.ImpersonateComponent),
+    canActivate: [authGuard, superAdminGuard]
   },
   { path: '**', redirectTo: '/dashboard' }
 ];

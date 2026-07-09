@@ -1,0 +1,25 @@
+<div class="page">
+  <header class="auth-header">
+    <span class="brand">GOLP — Super Admin</span>
+  </header>
+
+  <main class="auth-main">
+    <h1 class="auth-title">Impersona utente.</h1>
+    <p class="auth-subtitle">Inserisci l'email dell'utente da impersonare.</p>
+
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="field">
+        <label for="email">Email utente</label>
+        <input id="email" type="email" formControlName="email" placeholder="utente@esempio.it" autocomplete="off">
+      </div>
+
+      @if (error) {
+        <div class="form-error">{{ error }}</div>
+      }
+
+      <button type="submit" class="btn-primary" [disabled]="loading">
+        {{ loading ? 'Impersonazione…' : 'Impersona' }}
+      </button>
+    </form>
+  </main>
+</div>

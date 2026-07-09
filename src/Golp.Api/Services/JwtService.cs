@@ -12,18 +12,28 @@ public class JwtService(IConfiguration configuration) : IJwtService
     private readonly string _audience = configuration["Jwt:Audience"]!;
     private readonly int _expiryMinutes = int.Parse(configuration["Jwt:ExpiryMinutes"] ?? "60");
 
-    public string GenerateToken(Guid userId, string? email, Guid securityStamp)
+    public string GenerateToken(Guid userId, string? email, Guid securityStamp, bool isSuperAdmin = false, Guid? impersonatorId = null)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, email ?? string.Empty),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim("security_stamp", securityStamp.ToString())
+            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new(JwtRegisteredClaimNames.Email, email ?? string.Empty),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new("security_stamp", securityStamp.ToString())
         };
+
+        if (isSuperAdmin)
+        {
+            claims.Add(new Claim("super_admin", "true"));
+        }
+
+        if (impersonatorId.HasValue)
+        {
+            claims.Add(new Claim("impersonator_id", impersonatorId.Value.ToString()));
+        }
 
         var token = new JwtSecurityToken(
             issuer: _issuer,

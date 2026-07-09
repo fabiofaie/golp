@@ -63,7 +63,7 @@ public static class AuthEndpoints
         db.Users.Add(user);
         await db.SaveChangesAsync();
 
-        var accessToken = jwtService.GenerateToken(user.Id, user.Email, user.SecurityStamp);
+        var accessToken = jwtService.GenerateToken(user.Id, user.Email, user.SecurityStamp, user.IsSuperAdmin);
         var userAgent = httpContext.Request.Headers.UserAgent.ToString();
         var refreshToken = await refreshTokenService.IssueAsync(user.Id, userAgent);
 
@@ -87,7 +87,7 @@ public static class AuthEndpoints
         if (user == null || string.IsNullOrEmpty(user.PasswordHash) || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
             return Results.Json(new { error = "Credenziali non valide" }, statusCode: 401);
 
-        var accessToken = jwtService.GenerateToken(user.Id, user.Email, user.SecurityStamp);
+        var accessToken = jwtService.GenerateToken(user.Id, user.Email, user.SecurityStamp, user.IsSuperAdmin);
         var userAgent = httpContext.Request.Headers.UserAgent.ToString();
         var refreshToken = await refreshTokenService.IssueAsync(user.Id, userAgent);
 
@@ -112,7 +112,7 @@ public static class AuthEndpoints
         if (user == null)
             return Results.Json(new { error = "Refresh token non valido o scaduto" }, statusCode: 401);
 
-        var accessToken = jwtService.GenerateToken(user.Id, user.Email, user.SecurityStamp);
+        var accessToken = jwtService.GenerateToken(user.Id, user.Email, user.SecurityStamp, user.IsSuperAdmin);
         return Results.Ok(new { accessToken, refreshToken = result.NewPlainToken });
     }
 

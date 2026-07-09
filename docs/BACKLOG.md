@@ -1,12 +1,12 @@
 ﻿# Backlog — GOLP
 
-**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-07-08
+**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-07-09
 
 ## Riepilogo
 
-- Epic totali: 9
-- Storie totali: 54
-- Storie TODO: 5 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 6 | DONE: 43
+- Epic totali: 10
+- Storie totali: 60
+- Storie TODO: 8 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 6 | DONE: 46
 
 ---
 
@@ -2025,4 +2025,92 @@ Nello step "Squadre" di `record-match`, sotto il campo "Cerca giocatore...", la 
 
 ---
 
-> **PROSSIMO PASSO:** invoca `/eq-plan US-057` per pianificare il raggruppamento delle chip giocatori per circolo.
+## EP-008 — Amministrazione di Sistema
+*Strumenti per lo staff tecnico GOLP per supporto e diagnosi cross-circolo, fuori dal perimetro normale multi-tenant.*
+
+#### US-058: Ruolo super admin di sistema
+
+**Epic:** EP-008 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** REVIEW
+**Review note (2026-07-09):** Codice in `src/Golp.Api/{Data/Entities/User.cs,Services/{JwtService.cs,IJwtService.cs,ClaimsPrincipalExtensions.cs},Endpoints/{AuthEndpoints.cs,AdminEndpoints.cs},Program.cs}`, migration `AddIsSuperAdminToUser`, test in `src/Golp.Tests/{Services/JwtServiceTests.cs,Integration/AdminEndpointsTests.cs}`. Reviewer APPROVE (nessun Critical; 2 punti Important/Suggestion non bloccanti: `ValidateToken` non ripropaga claim custom — verificare path refresh token; `Results.Forbid()` senza body di errore coerente con lo stile progetto). Suite completa 341/341 verde. > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-058`.
+**Blocked by:** -
+
+**Story**
+Come gestore tecnico della piattaforma GOLP, voglio che esista un ruolo "super admin" globale assegnabile a uno o più account utente, così che solo persone autorizzate abbiano accesso a funzioni di amministrazione di sistema fuori dal perimetro di un singolo circolo.
+
+**Demonstrates**
+Un utente marcato come super admin (flag a livello di account, non di `CircleMembership`) ottiene un claim/ruolo aggiuntivo nel JWT dopo login. Un utente normale non vede né può richiamare nessuna funzione di super admin, nemmeno per URL diretta.
+
+**Acceptance Criteria**
+- [ ] Esiste un campo persistito a livello di `User` (non di circolo) che marca un account come super admin
+- [ ] L'assegnazione del ruolo non è self-service da UI: richiede intervento diretto sul dato (script/DB), nessun endpoint pubblico per auto-promuoversi
+- [ ] Il JWT di un super admin contiene un claim distinto verificabile lato backend
+- [ ] Gli endpoint di amministrazione di sistema (introdotti in US-059) rifiutano con 403 chi non ha il claim, anche con token valido di un utente normale
+- [ ] Un super admin continua a operare normalmente come utente/giocatore nei circoli di cui è già membro (il ruolo è additivo, non sostitutivo)
+
+**Out of scope**
+- UI per gestire l'elenco dei super admin (assegnazione resta manuale via DB/script)
+- Livelli intermedi di admin (solo super admin / utente normale, nessuna via di mezzo)
+
+**Open questions**
+- Nessuna
+
+---
+
+#### US-059: Impersonazione di un utente tramite email
+
+**Epic:** EP-008 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** REVIEW
+**Review note (2026-07-09):** Codice in `src/Golp.Api/{Services/{JwtService.cs,IJwtService.cs},Endpoints/AdminEndpoints.cs}` (POST /admin/impersonate) e `frontend/golp-app/src/app/{auth/{auth.service.ts,super-admin.guard.ts},admin/impersonate/,shared/impersonation-banner/,app.component.ts,app.routes.ts}`. Test in `src/Golp.Tests/{Services/JwtServiceTests.cs,Integration/AdminEndpointsTests.cs}` e `frontend/.../*.spec.ts`. Reviewer APPROVE (nessun Critical; 2 Important applicati: guard 400 su email vuota/null, commenti chiarificatori su campo `token` duplicato e claim email durante impersonazione). Nessun mockup generato (utente ha scelto di saltare `/eq-design`, UI minimale riusa classi/token CSS globali esistenti). Suite completa: backend 347/347, frontend 251/251 verdi. Nota: fino a US-060 il super admin non ha modo di uscire dall'impersonazione se non rifacendo login — comportamento esplicitamente accettato nel piano. > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-059`.
+**Blocked by:** US-058
+
+**Story**
+Come super admin, voglio poter impersonare un utente specifico inserendo la sua email, così che io possa vedere l'app esattamente come la vede lui per fare supporto o diagnosticare un problema segnalato.
+
+**Demonstrates**
+Il super admin ha un punto di accesso (pagina o comando) dove inserisce l'email di un utente esistente. Da quel momento l'app opera con l'identità di quell'utente: dashboard, circoli, partite, rating visti sono quelli dell'utente impersonato, non quelli del super admin.
+
+**Acceptance Criteria**
+- [ ] Il super admin può avviare l'impersonazione inserendo l'email di un utente esistente nel sistema
+- [ ] Se l'email non corrisponde a nessun utente, il sistema mostra un errore chiaro e non genera alcun token
+- [ ] Durante l'impersonazione, tutte le chiamate API autenticate operano con i dati e i permessi dell'utente impersonato (stesso `circle_id` scoping normale)
+- [ ] L'interfaccia mostra in modo permanente e visibile un indicatore "stai impersonando [nome utente]" per tutta la durata della sessione impersonata
+- [ ] L'utente impersonato non riceve alcuna notifica dell'impersonazione in corso (operazione trasparente per lui)
+- [ ] L'impersonazione non richiede né consente di conoscere o reimpostare la password dell'utente target
+
+**Out of scope**
+- Impersonazione simultanea di più utenti nella stessa sessione browser
+- Modifica dei dati dell'utente impersonato durante l'impersonazione (in questa storia si assume sola visualizzazione/uso normale, non un modo speciale)
+
+**Open questions**
+- Nessuna
+
+---
+
+#### US-060: Uscita da impersonazione e log di audit
+
+**Epic:** EP-008 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** REVIEW
+**Review note (2026-07-09):** Codice in `src/Golp.Api/{Data/Entities/ImpersonationAuditLog.cs,Data/AppDbContext.cs,Endpoints/AdminEndpoints.cs,Services/ClaimsPrincipalExtensions.cs}` (POST /admin/impersonate/end, log fail-closed su avvio), migration `AddImpersonationAuditLog`, e `frontend/golp-app/src/app/{auth/auth.service.ts,shared/impersonation-banner/}`. Test in `src/Golp.Tests/{Services/ClaimsPrincipalExtensionsTests.cs,Integration/AdminEndpointsTests.cs}` e `frontend/.../*.spec.ts`. Reviewer APPROVE (nessun Critical; 1 Important non bloccante: impersonazioni multiple concorrenti dello stesso admin/target senza chiusura possono lasciare righe di log orfane — segnalato come miglioramento futuro, non richiesto dagli AC di questa storia). Suite completa: backend 354/354, frontend 255/255 verdi. > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-060`.
+**Blocked by:** US-059
+
+**Story**
+Come super admin, voglio poter terminare l'impersonazione in corso con un solo click e sapere che ogni impersonazione viene tracciata, così che io torni sempre alla mia identità reale e resti una traccia verificabile di chi ha impersonato chi e quando.
+
+**Demonstrates**
+Dall'indicatore di impersonazione (US-059) è presente un pulsante "Esci da impersonazione" che riporta immediatamente alla sessione originale del super admin. Ogni inizio/fine impersonazione viene registrato in un log consultabile (super admin, utente impersonato, timestamp inizio, timestamp fine).
+
+**Acceptance Criteria**
+- [ ] Un pulsante "Esci da impersonazione" sempre visibile durante l'impersonazione termina la sessione impersonata e ripristina l'identità originale del super admin senza richiedere nuovo login
+- [ ] Ogni avvio di impersonazione viene registrato con: super admin che l'ha avviata, utente target, timestamp
+- [ ] Ogni fine di impersonazione (esplicita o per scadenza token) viene registrata con timestamp
+- [ ] Il log di audit non è modificabile né cancellabile da endpoint applicativi (sola scrittura in append)
+- [ ] Chiudere il browser o scadere il token durante l'impersonazione non lascia il super admin bloccato nell'identità dell'utente target al login successivo
+
+**Out of scope**
+- UI di consultazione del log di audit (in questa storia il log esiste ed è persistito, non richiesta una pagina dedicata per sfogliarlo)
+- Alerting automatico su impersonazioni sospette
+
+**Open questions**
+- Nessuna
+
+---
+
+> **PROSSIMO PASSO:** invoca `/eq-implement US-060` per implementare uscita da impersonazione e log di audit.
