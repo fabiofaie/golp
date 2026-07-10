@@ -241,6 +241,35 @@ public class RatingService : IRatingService
             .ToList();
     }
 
+    public async Task ResetAndReplayCircleAsync(Guid circleId, Guid excludeMatchId, AppDbContext db)
+    {
+        var memberships = await db.CircleMemberships
+            .Where(m => m.CircleId == circleId)
+            .ToListAsync();
+        foreach (var m in memberships)
+            m.Rating = 1000;
+
+        var matchIds = await db.Matches
+            .Where(m => m.CircleId == circleId && m.Status == "confirmed" && m.Id != excludeMatchId)
+            .OrderBy(m => m.CreatedAt)
+            .Select(m => m.Id)
+            .ToListAsync();
+
+        var matchesToReset = await db.Matches
+            .Where(m => matchIds.Contains(m.Id))
+            .ToListAsync();
+        foreach (var m in matchesToReset)
+        {
+            m.DeltaTeam1Player1 = null;
+            m.DeltaTeam1Player2 = null;
+            m.DeltaTeam2Player1 = null;
+            m.DeltaTeam2Player2 = null;
+        }
+
+        foreach (var matchId in matchIds)
+            await CalculateAndApplyAsync(matchId, db);
+    }
+
     private static async Task<int> CountKAsync(AppDbContext db, Match match, Guid playerId)
     {
         var count = await db.Matches.CountAsync(m =>

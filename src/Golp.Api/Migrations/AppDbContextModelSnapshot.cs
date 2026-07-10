@@ -381,6 +381,72 @@ namespace Golp.Api.Migrations
                     b.ToTable("MatchConfirmationTokens");
                 });
 
+            modelBuilder.Entity("Golp.Api.Data.Entities.MatchDeletionAuditLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CircleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("MatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("MatchSnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("SuperAdminId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CircleId");
+
+                    b.HasIndex("SuperAdminId");
+
+                    b.ToTable("MatchDeletionAuditLogs");
+                });
+
+            modelBuilder.Entity("Golp.Api.Data.Entities.MatchResultEditAuditLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CircleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("EditedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("MatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("NewResultJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PreviousResultJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("SuperAdminId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CircleId");
+
+                    b.HasIndex("SuperAdminId");
+
+                    b.ToTable("MatchResultEditAuditLogs");
+                });
+
             modelBuilder.Entity("Golp.Api.Data.Entities.MatchSet", b =>
                 {
                     b.Property<Guid>("Id")
@@ -759,6 +825,36 @@ namespace Golp.Api.Migrations
                     b.Navigation("Match");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Golp.Api.Data.Entities.MatchDeletionAuditLog", b =>
+                {
+                    b.HasOne("Golp.Api.Data.Entities.Circle", null)
+                        .WithMany()
+                        .HasForeignKey("CircleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Golp.Api.Data.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("SuperAdminId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Golp.Api.Data.Entities.MatchResultEditAuditLog", b =>
+                {
+                    b.HasOne("Golp.Api.Data.Entities.Circle", null)
+                        .WithMany()
+                        .HasForeignKey("CircleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Golp.Api.Data.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("SuperAdminId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Golp.Api.Data.Entities.MatchSet", b =>

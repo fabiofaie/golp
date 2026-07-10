@@ -260,4 +260,15 @@ export class MatchService {
   patchGuestPhone(userId: string, phone: string): Observable<{ phone: string }> {
     return this.http.patch<{ phone: string }>(`${this.base}/auth/guests/${userId}/phone`, { phone });
   }
+
+  // US-061 — cancellazione partita da parte del super admin
+  deleteMatchAsSuperAdmin(circleId: string, matchId: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/admin/circles/${circleId}/matches/${matchId}`);
+  }
+
+  // US-062 — modifica risultato partita da parte del super admin
+  editMatchResultAsSuperAdmin(circleId: string, matchId: string, sets: SetScore[]): Observable<{ id: string; status: string; winnerTeam: number }> {
+    return this.http.put<{ id: string; status: string; winnerTeam: number }>(
+      `${this.base}/admin/circles/${circleId}/matches/${matchId}/result`, { sets });
+  }
 }

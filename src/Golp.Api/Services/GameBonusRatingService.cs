@@ -110,6 +110,37 @@ public class GameBonusRatingService : IGameBonusRatingService
         return basePoints + bonus;
     }
 
+    public async Task ResetAndReplayCircleAsync(Guid circleId, AppDbContext db)
+    {
+        var matchIds = await db.Matches
+            .Where(m => m.CircleId == circleId && m.Status == "confirmed")
+            .OrderBy(m => m.CreatedAt)
+            .Select(m => m.Id)
+            .ToListAsync();
+
+        var matchesToReset = await db.Matches
+            .Where(m => matchIds.Contains(m.Id))
+            .ToListAsync();
+        foreach (var m in matchesToReset)
+        {
+            m.GameBonusWinnerPoints = null;
+            m.DeltaTeam1Player1 = null;
+            m.DeltaTeam1Player2 = null;
+            m.DeltaTeam2Player1 = null;
+            m.DeltaTeam2Player2 = null;
+        }
+
+        // SaveChanges dentro il loop (non solo alla fine): GetWindowScoresAsync legge tramite una
+        // projection (Select su tipo anonimo), che bypassa l'identity resolution del ChangeTracker
+        // e interroga i dati effettivamente persistiti. Senza salvare partita per partita, il punteggio
+        // appena ricalcolato di una partita non sarebbe visibile alla finestra usata dalla successiva.
+        foreach (var matchId in matchIds)
+        {
+            await CalculateAndApplyAsync(matchId, db);
+            await db.SaveChangesAsync();
+        }
+    }
+
     private static List<Guid> PlayersOf(Match match, int team) => team == 1
         ? (match.Team1Player2Id.HasValue ? [match.Team1Player1Id, match.Team1Player2Id.Value] : [match.Team1Player1Id])
         : (match.Team2Player2Id.HasValue ? [match.Team2Player1Id, match.Team2Player2Id.Value] : [match.Team2Player1Id]);

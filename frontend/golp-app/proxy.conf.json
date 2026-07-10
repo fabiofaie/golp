@@ -34,5 +34,11 @@
     "secure": false,
     "changeOrigin": true,
     "logLevel": "warn"
+  },
+  "/admin": {
+    "target": "http://localhost:5120",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "warn"
   }
 }

@@ -953,7 +953,8 @@ All'inserimento di una partita, i 3 giocatori da confermare ricevono una push; i
 
 #### US-020: Email su template riutilizzabili + notifiche email conferma e contestazione partita
 
-**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** REVIEW
+**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-07-10):** Review umana OK.
 **Review note (2026-06-19):** Backend: `Services/IEmailTemplateRenderer.cs`/`EmailTemplateRenderer.cs` (rendering placeholder+layout), `EmailTemplates/*.html` (5 template + layout condiviso), `SmtpEmailService.cs`/`DevelopmentEmailService.cs` migrati ai template (zero HTML inline), `IEmailService` esteso con `SendMatchConfirmationRequestEmailAsync`/`SendMatchDisputedEmailAsync`. `MatchEndpoints.cs`: email ai 3 destinatari su creazione partita (oltre al push esistente) e all'owner su dispute, entrambe fire-and-forget con try/catch per-destinatario (un fallimento non blocca gli altri né il flusso principale). Test: 3 unit `EmailTemplateRendererTests`, regressione 38 test esistenti, 4 nuovi integration test (conferma partita, dispute, 2 di resilienza a fallimento SMTP). Reviewer APPROVE — no critical aperti. Suite completa: 174/183 BE (9 fail pre-esistenti `SimulateEndpointTests`, non toccati da questa storia). > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-020`.
 **Blocked by:** -
 
@@ -1349,7 +1350,8 @@ _Abbattere le barriere all'ingresso per far crescere la base utenti: ospiti nell
 
 #### US-039: Giocatore ospite in una partita
 
-**Epic:** EP-006 | **Priority:** HIGH | **Story Points:** 8 | **Status:** REVIEW
+**Epic:** EP-006 | **Priority:** HIGH | **Story Points:** 8 | **Status:** DONE
+**Approved (2026-07-10):** Review umana OK.
 **Blocked by:** -
 **Review note (2026-06-30):** Codice in `src/Golp.Api/Endpoints/MatchEndpoints.cs`, `CircleEndpoints.cs`, `Data/Entities/User.cs`, `Data/AppDbContext.cs`, `Migrations/`. FE in `frontend/golp-app/src/app/circles/record-match/`, `circle-match-history/`, `circle-leaderboard/`, `match.service.ts`, `circle.service.ts`, `styles.scss`. Test in `src/Golp.Tests/Integration/MatchIntegrationTests.cs` (5 nuovi test guest). E2E in `e2e/record-match-guest.spec.ts`. Reviewer: APPROVE. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-039`.
 
@@ -1534,7 +1536,8 @@ Dalla pagina di dettaglio di una partita in stato `pending`, l'utente vede per o
 
 #### US-044: Storico partite personale nella dashboard
 
-**Epic:** EP-004 | **Priority:** HIGH | **Story Points:** 5 | **Status:** REVIEW
+**Epic:** EP-004 | **Priority:** HIGH | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-07-10):** Review umana OK.
 **Blocked by:** -
 **Review note (2026-07-01):** Backend in `src/Golp.Api/Endpoints/MyMatchEndpoints.cs`, registrato in `Program.cs`. FE: `frontend/golp-app/src/app/dashboard/my-matches-page.component.ts`, route in `app.routes.ts`, link in `dashboard.component.ts`. Interfacce in `match.service.ts`. Test integration in `src/Golp.Tests/Integration/MyMatchesEndpointTests.cs` (7 test). E2E in `e2e/dashboard-match-history.spec.ts` (3 scenari). Suite 278/278 verde. Reviewer APPROVE. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-044`.
 
@@ -1794,7 +1797,8 @@ L'organizzatore crea un torneo indicando formato, numero campi, punti per round 
 
 #### US-051: Scelta metodo di calcolo punteggio del circolo (ELO vs Game+Bonus)
 
-**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** REVIEW
+**Epic:** EP-005 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-07-10):** Review umana OK.
 **Review note (2026-07-08):** Backend: `PUT /circles/{id}/rating-config` owner-only in `CircleEndpoints.cs` (whitelist RatingMethod, range 1-200/1-52 su finestre), DTO `GET /circles/me` e leaderboard estesi con `ratingMethod`/`gameBonusPoints`/finestre (i campi `Circle.RatingMethod`/`GameBonusWindowMatches`/`GameBonusWindowWeeks` erano già stati introdotti da US-052). Frontend: `CircleRatingConfigComponent` (nuovo, dialog owner-only in `my-circles`, card ELO/Game+Bonus + 2 input condizionali), badge metodo attivo in `circle-leaderboard`, `circle.service.ts` esteso con `updateRatingConfig`. Mockup in `docs/mockups/US-051/`. Test: 10 integration (`CircleRatingConfigEndpointTests`) + 4 unit Angular (`circle.service.spec.ts`) + 7 unit Angular (`circle-rating-config.component.spec.ts`) + 2 e2e Playwright (`circle-rating-config.spec.ts`) = 317/317 BE verdi, 224/227 FE verdi (3 fail pre-esistenti non correlati: `navigator.share` readonly in `invite-dialog`, notifiche push in ambiente di test). Reviewer APPROVE — 1 bug reale trovato e fixato via e2e: `selectedMethod`/`windowMatches`/`windowWeeks` erano field initializer letti da `@Input` prima che Angular li valorizzasse (sempre `'Elo'`/default); spostati in `ngOnInit`. > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-051`.
 **Blocked by:** US-052
 
@@ -1932,7 +1936,8 @@ Nella pagina statistiche personali del circolo (`/circles/:circleId/stats`, acca
 
 #### US-055: Pagina spiegazione Game+Bonus e simulatore esteso ai due metodi
 
-**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** REVIEW
+**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-07-10):** Review umana OK, testato manualmente in dev.
 **Review note (2026-07-08):** Backend: estratto `GameBonusRatingService.ComputeMatchPoints` (puro, riusato da `CalculateAndApplyAsync` e dal nuovo simulatore), `SimulateGameBonusEndpoints.cs` (`POST /api/simulate-game-bonus`, pubblico), registrato in `Program.cs`. Frontend: `rating-method.util.ts` (`ratingInfoPath`), `game-bonus-info/` (component + service + html + scss, analogo a `elo-info/` di US-017), route `game-bonus-info`, `circle-leaderboard` aggiornata per usare `ratingInfoPath(ratingMethod)` invece del link fisso a `/elo-info`. Dashboard lasciata invariata (nessun circolo di riferimento, vedi piano). Test: 5 nuovi unit `ComputeMatchPoints` + 9 integration `SimulateGameBonusEndpointTests` (backend 328/328 verdi); `rating-method.util.spec.ts`, `game-bonus-info.component.spec.ts` (6 casi), 2 nuovi casi in `circle-leaderboard.component.spec.ts` (frontend 229/232 verdi, 3 fail pre-esistenti su push-notification non correlati); e2e `game-bonus-info.spec.ts` scritto (non eseguito in sessione, richiede backend+frontend avviati). Reviewer APPROVE — nessun Critical. Suggestion non bloccante: `EloInfoComponent.submit()` (US-017) ha un bug pre-esistente indipendente da questa storia — il gate `form.invalid` include il FormArray `sets` sempre `required` anche in modalità "Risultato unico", quindi il bottone di submit risulta sempre disabilitato in quel modo; il nuovo `GameBonusInfoComponent` evita il problema con un `isValid()` dedicato per modalità, ma `EloInfoComponent` non è stato toccato (fuori scope). > **PROSSIMO PASSO:** revisione umana (incl. verifica e2e con server avviati). Quando approvi: `/eq-approve US-055`.
 **Blocked by:** US-051, US-052
 
@@ -1997,7 +2002,8 @@ Partita 6-4, 6-4, 1-6: la squadra vince 2 set su 3 (match vinto) ma la somma gam
 
 #### US-057: Chip giocatori raggruppate per circolo nella registrazione partita
 
-**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** REVIEW
+**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-07-10):** Review umana OK.
 **Review note (2026-07-08):** Storia riscopata da `record-match` a `quick-match` (screenshot corrispondeva a quest'ultimo). Backend `QuickMatchEndpoints.GetSuggestionsAsync` ora espone `circles: [{id, name}]` per suggerimento (co-membership con l'utente corrente, nessun leak cross-tenant: solo circoli propri dell'utente). Frontend `quick-match.component.ts` raggruppa client-side via nuovo getter `groupedSuggestions` (gruppo residuo "Giocati di recente" per suggerimenti senza circolo comune, poi circoli in ordine alfabetico); template e CSS aggiornati per header di gruppo. Test: 3 nuovi backend (`QuickMatchEndpointsTests`, 14/14 verdi), 5 nuovi unit frontend (`quick-match.component.spec.ts`, nuovo file), 1 e2e (`quick-match.spec.ts`, verde). Suite completa dopo fix dei fallimenti pre-esistenti non correlati (richiesti separatamente dall'utente): backend 336/336, frontend 238/238 — entrambe verdi al 100%. Fix collaterali fuori scope US-057 ma necessari per suite verde: `GameBonusConfirmTests` (assert stale, i delta sono ora intenzionalmente valorizzati anche per Game+Bonus); `InviteDialogComponent.shareLink()` non chiudeva più il dialog dopo condivisione riuscita (bug reale, aggiunto `.then(() => this.close())`) e relativo test riscritto con `fakeAsync`/`tick()`; `CircleMatchHistoryComponent` — test puntava a un selettore CSS morto (`.match-date` non è più un link) e il marcatore "(Tu)" era stato perso in un refactor del template (ripristinato, rimosso metodo `teamNames()` orfano). Self-review: nessun Critical, nessun leak multi-tenant (circoli esposti sono solo quelli dell'utente stesso). > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-057`.
 **Blocked by:** -
 
@@ -2030,7 +2036,8 @@ Nello step "Squadre" di `record-match`, sotto il campo "Cerca giocatore...", la 
 
 #### US-058: Ruolo super admin di sistema
 
-**Epic:** EP-008 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** REVIEW
+**Epic:** EP-008 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-07-10):** Review umana OK. Verificato refresh token: rigenera claim `super_admin` da `user.IsSuperAdmin` (DB), nessun rischio perdita claim.
 **Review note (2026-07-09):** Codice in `src/Golp.Api/{Data/Entities/User.cs,Services/{JwtService.cs,IJwtService.cs,ClaimsPrincipalExtensions.cs},Endpoints/{AuthEndpoints.cs,AdminEndpoints.cs},Program.cs}`, migration `AddIsSuperAdminToUser`, test in `src/Golp.Tests/{Services/JwtServiceTests.cs,Integration/AdminEndpointsTests.cs}`. Reviewer APPROVE (nessun Critical; 2 punti Important/Suggestion non bloccanti: `ValidateToken` non ripropaga claim custom — verificare path refresh token; `Results.Forbid()` senza body di errore coerente con lo stile progetto). Suite completa 341/341 verde. > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-058`.
 **Blocked by:** -
 
@@ -2058,7 +2065,8 @@ Un utente marcato come super admin (flag a livello di account, non di `CircleMem
 
 #### US-059: Impersonazione di un utente tramite email
 
-**Epic:** EP-008 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** REVIEW
+**Epic:** EP-008 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-07-10):** Review umana OK.
 **Review note (2026-07-09):** Codice in `src/Golp.Api/{Services/{JwtService.cs,IJwtService.cs},Endpoints/AdminEndpoints.cs}` (POST /admin/impersonate) e `frontend/golp-app/src/app/{auth/{auth.service.ts,super-admin.guard.ts},admin/impersonate/,shared/impersonation-banner/,app.component.ts,app.routes.ts}`. Test in `src/Golp.Tests/{Services/JwtServiceTests.cs,Integration/AdminEndpointsTests.cs}` e `frontend/.../*.spec.ts`. Reviewer APPROVE (nessun Critical; 2 Important applicati: guard 400 su email vuota/null, commenti chiarificatori su campo `token` duplicato e claim email durante impersonazione). Nessun mockup generato (utente ha scelto di saltare `/eq-design`, UI minimale riusa classi/token CSS globali esistenti). Suite completa: backend 347/347, frontend 251/251 verdi. Nota: fino a US-060 il super admin non ha modo di uscire dall'impersonazione se non rifacendo login — comportamento esplicitamente accettato nel piano. > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-059`.
 **Blocked by:** US-058
 
@@ -2087,7 +2095,8 @@ Il super admin ha un punto di accesso (pagina o comando) dove inserisce l'email 
 
 #### US-060: Uscita da impersonazione e log di audit
 
-**Epic:** EP-008 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** REVIEW
+**Epic:** EP-008 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-07-10):** Review umana OK.
 **Review note (2026-07-09):** Codice in `src/Golp.Api/{Data/Entities/ImpersonationAuditLog.cs,Data/AppDbContext.cs,Endpoints/AdminEndpoints.cs,Services/ClaimsPrincipalExtensions.cs}` (POST /admin/impersonate/end, log fail-closed su avvio), migration `AddImpersonationAuditLog`, e `frontend/golp-app/src/app/{auth/auth.service.ts,shared/impersonation-banner/}`. Test in `src/Golp.Tests/{Services/ClaimsPrincipalExtensionsTests.cs,Integration/AdminEndpointsTests.cs}` e `frontend/.../*.spec.ts`. Reviewer APPROVE (nessun Critical; 1 Important non bloccante: impersonazioni multiple concorrenti dello stesso admin/target senza chiusura possono lasciare righe di log orfane — segnalato come miglioramento futuro, non richiesto dagli AC di questa storia). Suite completa: backend 354/354, frontend 255/255 verdi. > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-060`.
 **Blocked by:** US-059
 
@@ -2113,4 +2122,68 @@ Dall'indicatore di impersonazione (US-059) è presente un pulsante "Esci da impe
 
 ---
 
-> **PROSSIMO PASSO:** invoca `/eq-implement US-060` per implementare uscita da impersonazione e log di audit.
+#### US-061: Cancellazione partita da parte del super admin
+
+**Epic:** EP-008 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-07-10):** Review umana OK.
+**Review note (2026-07-10):** Codice in `src/Golp.Api/{Data/Entities/MatchDeletionAuditLog.cs,Data/AppDbContext.cs,Services/{IRatingService.cs,RatingService.cs},Endpoints/AdminEndpoints.cs}`, migration `AddMatchDeletionAuditLog`, frontend in `frontend/golp-app/src/app/circles/{match.service.ts,match-detail/}` + `proxy.conf.js` (proxy realmente usato da `npm start`; `proxy.conf.json` non è referenziato da nessuno script e la sua modifica in questa storia è stata di fatto un no-op — lasciato allineato per coerenza documentale con CLAUDE.md ma da tenere a mente). Test in `src/Golp.Tests/Integration/{RatingServiceIntegrationTests.cs,AdminEndpointsTests.cs}` e `frontend/.../match-detail.component.spec.ts`. Self-review: individuato e corretto un bug reale in sviluppo — `ResetAndReplayCircleAsync` va eseguito DOPO la rimozione fisica persistita del match, non prima, altrimenti `CountKAsync` conta ancora la partita cancellata e gonfia il K-value (cold-start) delle partite successive nel replay; aggiunta transazione condizionale (solo su provider relazionali, l'in-memory dei test non la supporta) per mantenere delete+replay+audit atomici in produzione; aggiunto test di regressione dedicato. Suite completa: backend 362/362, frontend 260/260 verdi. Verifica manuale end-to-end in browser (login super admin, pulsante "Cancella partita" su dettaglio partita, dialog di conferma, DELETE 204, redirect a storico, rating Elo ripristinato a 1000, audit log su DB confermato) — durante la verifica scoperto e corretto il vero file di proxy dev (`proxy.conf.js`, non `.json`). > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-061`.
+**Blocked by:** US-058
+
+**Story**
+Come super admin, voglio poter cancellare una partita registrata per errore in un circolo qualsiasi, così che dati sbagliati non restino visibili né influenzino la classifica del circolo.
+
+**Demonstrates**
+Da un pannello di amministrazione il super admin individua una partita (anche fuori dai circoli di cui è membro) e la cancella. La partita sparisce da storico, dettaglio e classifica. Se il circolo usa Elo, il rating dei 2/4 giocatori coinvolti torna al valore precedente alla partita cancellata; se usa Game+Bonus, la classifica si ricalcola da sola perché deriva dalla somma delle partite `confirmed` rimaste (nessun aggiustamento manuale necessario per questo metodo).
+
+**Acceptance Criteria**
+- [ ] Solo un utente con ruolo super admin può cancellare una partita, indipendentemente dal circolo e dal proprio ruolo di membro in esso
+- [ ] La cancellazione è consentita sia su partite `pending`/`disputed` sia su partite `confirmed`
+- [ ] Cancellare una partita `confirmed` in un circolo Elo ripristina `CircleMembership.Rating` dei giocatori coinvolti al valore che avevano prima di quella partita (non un semplice sottrarre il delta, se nel frattempo altre partite hanno modificato il rating va ricalcolata la sequenza storica a partire da quella partita)
+- [ ] Cancellare una partita `confirmed` in un circolo Game+Bonus non richiede alcun aggiornamento manuale di rating: la classifica esclude automaticamente la partita cancellata al prossimo calcolo
+- [ ] L'azione è irreversibile e richiede conferma esplicita nell'interfaccia prima dell'esecuzione
+- [ ] L'operazione viene registrata in un log di audit (super admin che ha agito, partita cancellata, circolo, timestamp), coerente con l'approccio già usato per l'impersonazione (US-060)
+- [ ] Cancellare una partita rimuove anche le sue righe correlate (set, notifiche legate alla partita) senza lasciare riferimenti orfani
+
+**Out of scope**
+- Cancellazione massiva (bulk) di più partite in un'unica azione
+- Ripristino/undo di una partita cancellata
+- UI di ricerca avanzata partite per il super admin (si assume un accesso minimale, es. da ID o da dettaglio partita già raggiunto per altra via)
+
+**Open questions**
+- Il ricalcolo storico del rating Elo per partite intermedie successive a quella cancellata va confermato in fase di planning: è la parte tecnicamente più delicata della storia
+
+---
+
+#### US-062: Modifica del risultato di una partita da parte del super admin
+
+**Epic:** EP-008 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-07-10):** Review umana OK.
+**Review note (2026-07-10):** Codice in `src/Golp.Api/{Data/Entities/MatchResultEditAuditLog.cs,Data/AppDbContext.cs,Endpoints/{MatchEndpoints.cs,AdminEndpoints.cs},Services/{RatingService.cs,IRatingService.cs,GameBonusRatingService.cs,IGameBonusRatingService.cs}}`, migration `AddMatchResultEditAuditLog`, frontend in `frontend/golp-app/src/app/circles/{match.service.ts,match-detail/}`. Test in `src/Golp.Tests/Integration/{AdminEndpointsTests.cs,RatingServiceIntegrationTests.cs,GameBonusRatingServiceReplayTests.cs}` e `match-detail.component.spec.ts`. Riuso 1:1 di `RatingService.ResetAndReplayCircleAsync` (già da US-061); nuovo `GameBonusRatingService.ResetAndReplayCircleAsync` speculare, perché a differenza della cancellazione la *modifica* di un risultato è path-dependent anche per Game+Bonus (il bonus upset delle partite successive dipende dallo snapshot dei punti al momento del loro calcolo originale). Self-review: individuato e corretto un secondo bug della stessa famiglia di US-061 — `GetWindowScoresAsync` legge tramite projection (Select su tipo anonimo), che bypassa l'identity resolution del ChangeTracker; senza `SaveChangesAsync` dentro il loop di replay, il punteggio appena ricalcolato di una partita non era visibile alla finestra usata dalla successiva (fix: save per-iterazione, non solo a fine loop). Corretto anche un'omissione propria: la transazione condizionale (pattern US-061) mancava nell'endpoint PUT al primo giro, aggiunta in self-review prima di questa nota. Estratta validazione set condivisa (`MatchEndpoints.ValidateSetsAndComputeWinner`) riusata da `CreateMatchAsync` e dal nuovo endpoint, con validazione punteggi negativi aggiunta (assente prima, nessuna regressione nei test esistenti). Suite completa: backend 370/370, frontend 266/266 verdi. > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-062`.
+**Blocked by:** US-058
+
+**Story**
+Come super admin, voglio poter correggere il risultato (set/game) di una partita già registrata, così che un errore di digitazione dei giocatori non richieda di cancellare e far ripetere la conferma da tutti e 4 i partecipanti.
+
+**Demonstrates**
+Da un pannello di amministrazione il super admin apre una partita, modifica i punteggi dei set (o il risultato unico per sport senza set) e salva. Il nuovo risultato è visibile in storico e dettaglio, e la classifica del circolo (Elo o Game+Bonus) riflette il risultato corretto invece di quello originale.
+
+**Acceptance Criteria**
+- [ ] Solo un utente con ruolo super admin può modificare il risultato di una partita, indipendentemente dal circolo
+- [ ] La modifica è consentita solo su partite `confirmed` (per `pending`/`disputed` i giocatori ridigitano tramite il flusso normale)
+- [ ] Il vincitore (`WinnerTeam`) viene ricalcolato automaticamente dai nuovi punteggi, non impostabile in modo incoerente coi set inseriti
+- [ ] Se il circolo usa Elo, il delta rating dei giocatori coinvolti viene ricalcolato con il nuovo risultato (ripristino del valore pre-partita + riapplicazione della formula Elo col risultato corretto)
+- [ ] Se il circolo usa Game+Bonus, `GameBonusWinnerPoints` viene ricalcolato dal nuovo risultato e la classifica riflette il nuovo valore al prossimo calcolo, senza intervento manuale aggiuntivo
+- [ ] La modifica richiede conferma esplicita nell'interfaccia prima dell'esecuzione, mostrando risultato precedente e nuovo a confronto
+- [ ] L'operazione viene registrata in un log di audit (super admin che ha agito, partita, risultato precedente, risultato nuovo, timestamp), coerente con US-060
+- [ ] I dati inseriti rispettano le stesse regole di validazione usate in registrazione partita (punteggi non negativi, coerenti con le regole dello sport del circolo)
+
+**Out of scope**
+- Modifica dei giocatori/team della partita (solo il risultato è modificabile)
+- Notifica automatica ai 4 partecipanti che il risultato è stato corretto da un admin
+
+**Open questions**
+- Nessuna
+
+---
+
+> **PROSSIMO PASSO:** invoca `/eq-plan US-061` per pianificare la cancellazione partite da parte del super admin.

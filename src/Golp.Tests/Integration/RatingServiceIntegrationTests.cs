@@ -336,4 +336,175 @@ public class RatingServiceIntegrationTests
         Assert.True(memberships[playerIds[2]].Rating < 1000);
         Assert.Equal(0, match.DeltaTeam1Player1!.Value + match.DeltaTeam2Player1!.Value);
     }
+
+    // US-061 — replay del circolo (senza escludere nessuna partita) deve riprodurre esattamente
+    // gli stessi rating finali ottenuti applicando le partite una sola volta: verifica che
+    // ResetAndReplayCircleAsync non introduca divergenze rispetto alla formula esistente.
+    [Fact]
+    public async Task ResetAndReplayCircle_NoExclusion_ReproducesSameFinalRatings()
+    {
+        using var db = CreateDb();
+        var circleId = Guid.NewGuid();
+        var playerIds = Enumerable.Range(0, 4).Select(_ => Guid.NewGuid()).ToArray();
+        db.CircleMemberships.AddRange(playerIds.Select(p =>
+            new CircleMembership { CircleId = circleId, UserId = p, Rating = 1000 }));
+
+        var service = new RatingService();
+        var matchIds = new List<Guid>();
+        for (int i = 0; i < 3; i++)
+        {
+            var match = new Match
+            {
+                CircleId = circleId, CreatedById = playerIds[0], Status = "confirmed", WinnerTeam = 1,
+                Team1Player1Id = playerIds[0], Team1Player2Id = playerIds[1],
+                Team2Player1Id = playerIds[2], Team2Player2Id = playerIds[3],
+                CreatedAt = DateTimeOffset.UtcNow.AddMinutes(i),
+            };
+            db.Matches.Add(match);
+            db.MatchSets.Add(new MatchSet { MatchId = match.Id, SetNumber = 1, Team1Score = 6, Team2Score = 2 });
+            await db.SaveChangesAsync();
+            await service.CalculateAndApplyAsync(match.Id, db);
+            await db.SaveChangesAsync();
+            matchIds.Add(match.Id);
+        }
+
+        var originalRatings = await db.CircleMemberships.AsNoTracking()
+            .Where(m => m.CircleId == circleId)
+            .ToDictionaryAsync(m => m.UserId, m => m.Rating);
+
+        // Replay escludendo un id inesistente: equivale a rigiocare tutta la storia identica
+        await service.ResetAndReplayCircleAsync(circleId, Guid.NewGuid(), db);
+        await db.SaveChangesAsync();
+
+        var replayedRatings = await db.CircleMemberships.AsNoTracking()
+            .Where(m => m.CircleId == circleId)
+            .ToDictionaryAsync(m => m.UserId, m => m.Rating);
+
+        Assert.Equal(originalRatings, replayedRatings);
+    }
+
+    // US-061 — regressione: il replay deve vedere la partita cancellata come già rimossa dal DB,
+    // non solo "tracciata per la rimozione". Se restasse visibile alle query di CountKAsync durante
+    // il replay, il K-value (cold-start sotto le 15 partite) delle partite successive risulterebbe
+    // gonfiato di 1 partita fantasma. Qui si crea la 16ª partita del circolo (K=32, count=15 prima
+    // della cancellazione) e si verifica che, dopo aver fisicamente rimosso una partita precedente
+    // e rieseguito il replay, il delta della 16ª partita rifletta K=48 (count=14, sotto cold-start).
+    [Fact]
+    public async Task ResetAndReplayCircle_PhysicallyRemovedMatch_DoesNotInflateColdStartCount()
+    {
+        using var db = CreateDb();
+        var circleId = Guid.NewGuid();
+        var playerIds = Enumerable.Range(0, 4).Select(_ => Guid.NewGuid()).ToArray();
+        db.CircleMemberships.AddRange(playerIds.Select(p =>
+            new CircleMembership { CircleId = circleId, UserId = p, Rating = 1000 }));
+        await db.SaveChangesAsync();
+
+        // Vincitore alternato per tenere i rating vicini a 1000: altrimenti dopo molte partite
+        // vinte sempre dalla stessa squadra il margine collassa verso 0 e il delta diventa ±1
+        // indipendentemente da K, mascherando la regressione che questo test vuole verificare.
+        var service = new RatingService();
+        var matchIds = new List<Guid>();
+        for (int i = 0; i < 16; i++)
+        {
+            bool team1Wins = i % 2 == 0;
+            var match = new Match
+            {
+                CircleId = circleId, CreatedById = playerIds[0], Status = "confirmed", WinnerTeam = team1Wins ? 1 : 2,
+                Team1Player1Id = playerIds[0], Team1Player2Id = playerIds[1],
+                Team2Player1Id = playerIds[2], Team2Player2Id = playerIds[3],
+                CreatedAt = DateTimeOffset.UtcNow.AddMinutes(i),
+            };
+            db.Matches.Add(match);
+            db.MatchSets.Add(team1Wins
+                ? new MatchSet { MatchId = match.Id, SetNumber = 1, Team1Score = 6, Team2Score = 4 }
+                : new MatchSet { MatchId = match.Id, SetNumber = 1, Team1Score = 4, Team2Score = 6 });
+            await db.SaveChangesAsync();
+            await service.CalculateAndApplyAsync(match.Id, db);
+            await db.SaveChangesAsync();
+            matchIds.Add(match.Id);
+        }
+
+        // 16ª partita (indice 15, team2 vince): count prima = 15 confirmed → K=32 (fuori cold-start)
+        var match16Before = await db.Matches.AsNoTracking().SingleAsync(m => m.Id == matchIds[15]);
+        var deltaBefore = Math.Abs(match16Before.DeltaTeam2Player1!.Value);
+
+        // Simula l'endpoint: rimuove fisicamente una partita precedente (indice 0) PRIMA del replay
+        var toRemove = await db.Matches.Include(m => m.Sets).SingleAsync(m => m.Id == matchIds[0]);
+        db.MatchSets.RemoveRange(toRemove.Sets);
+        db.Matches.Remove(toRemove);
+        await db.SaveChangesAsync();
+
+        await service.ResetAndReplayCircleAsync(circleId, Guid.NewGuid(), db);
+        await db.SaveChangesAsync();
+
+        // Con la partita rimossa, la 16ª ha ora solo 14 confirmed precedenti → K=48 (cold-start)
+        var match16After = await db.Matches.AsNoTracking().SingleAsync(m => m.Id == matchIds[15]);
+        var deltaAfter = Math.Abs(match16After.DeltaTeam2Player1!.Value);
+
+        Assert.True(deltaAfter > deltaBefore,
+            $"Atteso delta più alto con K=48 dopo la rimozione fisica (K=32 pre-rimozione): before={deltaBefore}, after={deltaAfter}");
+    }
+
+    // US-061 — cancellare (escludere dal replay) una partita intermedia ricostruisce la storia
+    // come se quella partita non fosse mai avvenuta: qui una partita "equilibratrice" persa da team1
+    // nel mezzo, se esclusa, lascia team1 con rating più alto di quanto risulterebbe includendola.
+    [Fact]
+    public async Task ResetAndReplayCircle_ExcludingIntermediateMatch_RebuildsHistoryWithoutIt()
+    {
+        using var db = CreateDb();
+        var circleId = Guid.NewGuid();
+        var playerIds = Enumerable.Range(0, 4).Select(_ => Guid.NewGuid()).ToArray();
+        db.CircleMemberships.AddRange(playerIds.Select(p =>
+            new CircleMembership { CircleId = circleId, UserId = p, Rating = 1000 }));
+
+        var service = new RatingService();
+
+        // Match 1: team1 vince
+        var match1 = new Match
+        {
+            CircleId = circleId, CreatedById = playerIds[0], Status = "confirmed", WinnerTeam = 1,
+            Team1Player1Id = playerIds[0], Team1Player2Id = playerIds[1],
+            Team2Player1Id = playerIds[2], Team2Player2Id = playerIds[3],
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+        db.Matches.Add(match1);
+        db.MatchSets.Add(new MatchSet { MatchId = match1.Id, SetNumber = 1, Team1Score = 6, Team2Score = 2 });
+        await db.SaveChangesAsync();
+        await service.CalculateAndApplyAsync(match1.Id, db);
+        await db.SaveChangesAsync();
+
+        // Match 2 (da cancellare): team2 vince, riporta i rating verso 1000
+        var match2 = new Match
+        {
+            CircleId = circleId, CreatedById = playerIds[0], Status = "confirmed", WinnerTeam = 2,
+            Team1Player1Id = playerIds[0], Team1Player2Id = playerIds[1],
+            Team2Player1Id = playerIds[2], Team2Player2Id = playerIds[3],
+            CreatedAt = DateTimeOffset.UtcNow.AddMinutes(1),
+        };
+        db.Matches.Add(match2);
+        db.MatchSets.Add(new MatchSet { MatchId = match2.Id, SetNumber = 1, Team1Score = 2, Team2Score = 6 });
+        await db.SaveChangesAsync();
+        await service.CalculateAndApplyAsync(match2.Id, db);
+        await db.SaveChangesAsync();
+
+        var ratingsWithBothMatches = await db.CircleMemberships.AsNoTracking()
+            .Where(m => m.CircleId == circleId)
+            .ToDictionaryAsync(m => m.UserId, m => m.Rating);
+
+        await service.ResetAndReplayCircleAsync(circleId, match2.Id, db);
+        await db.SaveChangesAsync();
+
+        var ratingsExcludingMatch2 = await db.CircleMemberships.AsNoTracking()
+            .Where(m => m.CircleId == circleId)
+            .ToDictionaryAsync(m => m.UserId, m => m.Rating);
+
+        // Senza match2, team1 resta col vantaggio di match1 invece di essere riportato verso 1000
+        Assert.True(ratingsExcludingMatch2[playerIds[0]].CompareTo(ratingsWithBothMatches[playerIds[0]]) > 0);
+        Assert.True(ratingsExcludingMatch2[playerIds[2]].CompareTo(ratingsWithBothMatches[playerIds[2]]) < 0);
+
+        // Il match escluso non viene toccato dal replay (resta persistito coi suoi delta originali finché
+        // non è l'endpoint DELETE a rimuoverlo fisicamente)
+        var match2AfterReplay = await db.Matches.AsNoTracking().SingleAsync(m => m.Id == match2.Id);
+        Assert.NotNull(match2AfterReplay.DeltaTeam1Player1);
+    }
 }

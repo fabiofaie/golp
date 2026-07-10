@@ -98,7 +98,7 @@
             @for (p of match.team1; track p.userId) {
               <div class="pub-player-row">
                 <span class="pub-player-name">{{ p.name }}</span>
-                @if (!p.isActivated) { <span class="pub-guest-badge">ospite</span> }
+                @if (!p.isActivated) { <span class="pub-guest-badge">nuovo giocatore</span> }
               </div>
             }
           </div>
@@ -107,7 +107,7 @@
             @for (p of match.team2; track p.userId) {
               <div class="pub-player-row">
                 <span class="pub-player-name">{{ p.name }}</span>
-                @if (!p.isActivated) { <span class="pub-guest-badge">ospite</span> }
+                @if (!p.isActivated) { <span class="pub-guest-badge">nuovo giocatore</span> }
               </div>
             }
           </div>
@@ -177,7 +177,7 @@
           <div class="pub-cta-icon">🏆</div>
           <div class="pub-cta-title">Crea il tuo account GOLP</div>
           <p class="pub-cta-desc">
-            Sei già nel circolo con un profilo ospite. Registrati per vedere il tuo rating ELO, lo storico partite e sfidare i tuoi avversari.
+            Sei già nel circolo come nuovo giocatore. Registrati per vedere il tuo rating ELO, lo storico partite e sfidare i tuoi avversari.
           </p>
           <a routerLink="/register" class="btn-primary" style="display:inline-block;">
             Crea account gratuito →

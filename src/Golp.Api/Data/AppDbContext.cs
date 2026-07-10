@@ -19,6 +19,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<AwardNotificationSent> AwardNotificationsSent => Set<AwardNotificationSent>();
     public DbSet<MatchConfirmationToken> MatchConfirmationTokens => Set<MatchConfirmationToken>();
     public DbSet<ImpersonationAuditLog> ImpersonationAuditLogs => Set<ImpersonationAuditLog>();
+    public DbSet<MatchDeletionAuditLog> MatchDeletionAuditLogs => Set<MatchDeletionAuditLog>();
+    public DbSet<MatchResultEditAuditLog> MatchResultEditAuditLogs => Set<MatchResultEditAuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -37,6 +39,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasKey(l => l.Id);
             e.HasOne<User>().WithMany().HasForeignKey(l => l.SuperAdminId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<User>().WithMany().HasForeignKey(l => l.TargetUserId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MatchDeletionAuditLog>(e =>
+        {
+            e.HasKey(l => l.Id);
+            e.Property(l => l.MatchSnapshotJson).IsRequired();
+            e.HasOne<User>().WithMany().HasForeignKey(l => l.SuperAdminId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Circle>().WithMany().HasForeignKey(l => l.CircleId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MatchResultEditAuditLog>(e =>
+        {
+            e.HasKey(l => l.Id);
+            e.Property(l => l.PreviousResultJson).IsRequired();
+            e.Property(l => l.NewResultJson).IsRequired();
+            e.HasOne<User>().WithMany().HasForeignKey(l => l.SuperAdminId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Circle>().WithMany().HasForeignKey(l => l.CircleId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<PasswordResetToken>(e =>

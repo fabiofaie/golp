@@ -110,7 +110,7 @@ type Step = "sport" | "players" | "picker" | "score";
                       <span class="qm-slot-badge">Tu</span>
                     }
                     @if (slots[i].isGuest) {
-                      <span class="qm-slot-guest-badge">ospite</span>
+                      <span class="qm-slot-guest-badge">nuovo giocatore</span>
                     }
                   } @else {
                     <span class="qm-slot-placeholder">+ Aggiungi</span>
@@ -127,7 +127,7 @@ type Step = "sport" | "players" | "picker" | "score";
                     <span class="qm-slot-name">{{ slots[i].displayName }}</span>
                     <button class="qm-slot-remove" (click)="clearSlot(i)">×</button>
                     @if (slots[i].isGuest) {
-                      <span class="qm-slot-guest-badge">ospite</span>
+                      <span class="qm-slot-guest-badge">nuovo giocatore</span>
                     }
                   } @else {
                     <span class="qm-slot-placeholder">+ Aggiungi</span>
@@ -170,7 +170,7 @@ type Step = "sport" | "players" | "picker" | "score";
 
               <!-- Guest form -->
               @if (!showGuestForm) {
-                <button class="qm-add-guest-btn" (click)="showGuestForm = true">+ Aggiungi come ospite</button>
+                <button class="qm-add-guest-btn" (click)="showGuestForm = true">+ Aggiungi nuovo giocatore</button>
               } @else {
                 <div class="qm-guest-form">
                   @if (contactPickerAvailable) {
@@ -179,7 +179,7 @@ type Step = "sport" | "players" | "picker" | "score";
                     </button>
                     <div class="qm-guest-divider">o inserisci manualmente</div>
                   }
-                  <input class="qm-input" type="text" placeholder="Nome ospite *" [(ngModel)]="guestName" />
+                  <input class="qm-input" type="text" placeholder="Nome nuovo giocatore *" [(ngModel)]="guestName" />
                   <input class="qm-input" type="email" placeholder="Email" [(ngModel)]="guestEmail" />
                   <input class="qm-input" type="tel" placeholder="Telefono" [(ngModel)]="guestPhone" />
                   @if (guestName.trim() && !guestEmail.trim() && !guestPhone.trim()) {

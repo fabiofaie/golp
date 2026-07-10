@@ -174,16 +174,16 @@ export class RecordMatchComponent implements OnInit {
     for (const i of this.activeSlots) {
       const s = this.slots[i];
       if (s.mode === 'membro' && !s.userId) {
-        this.errorMessage = `Seleziona il giocatore ${i + 1} o scegli modalità ospite.`;
+        this.errorMessage = `Seleziona il giocatore ${i + 1} o scegli modalità nuovo giocatore.`;
         return;
       }
       if (s.mode === 'ospite') {
         if (!s.guestName.trim()) {
-          this.errorMessage = `Inserisci il nome dell'ospite per il giocatore ${i + 1}.`;
+          this.errorMessage = `Inserisci il nome del nuovo giocatore ${i + 1}.`;
           return;
         }
         if (!s.guestEmail.trim() && !s.guestPhone.trim()) {
-          this.errorMessage = `Inserisci email o telefono per l'ospite ${i + 1}.`;
+          this.errorMessage = `Inserisci email o telefono per il nuovo giocatore ${i + 1}.`;
           return;
         }
       }

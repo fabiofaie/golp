@@ -326,6 +326,8 @@ public class PublicMatchRatingService : IRatingService
         _called.Add(matchId);
         return Task.FromResult<IReadOnlyList<(Guid, int)>>([]);
     }
+
+    public Task ResetAndReplayCircleAsync(Guid circleId, Guid excludeMatchId, AppDbContext db) => Task.CompletedTask;
 }
 
 // ─── Factory ─────────────────────────────────────────────────────────────────

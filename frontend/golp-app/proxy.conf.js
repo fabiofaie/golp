@@ -10,4 +10,5 @@ module.exports = {
   '/api':     { target: 'http://localhost:5120', secure: false, changeOrigin: true, logLevel: 'warn', bypass },
   '/m/':      { target: 'http://localhost:5120', secure: false, changeOrigin: true, logLevel: 'warn', bypass },
   '/match':   { target: 'http://localhost:5120', secure: false, changeOrigin: true, logLevel: 'warn', bypass },
+  '/admin':   { target: 'http://localhost:5120', secure: false, changeOrigin: true, logLevel: 'warn', bypass },
 };

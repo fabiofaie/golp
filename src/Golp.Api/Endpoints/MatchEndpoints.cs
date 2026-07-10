@@ -96,38 +96,10 @@ public static class MatchEndpoints
         if (!creatorInTeam && circle.OwnerId != userId)
             return Results.BadRequest(new { error = "L'inseritore deve essere uno dei giocatori o il proprietario del circolo" });
 
-        if (req.Sets == null || req.Sets.Length == 0)
-            return Results.BadRequest(new { error = "Il punteggio è obbligatorio" });
-
-        if (!circle.Sets && req.Sets.Length != 1)
-            return Results.BadRequest(new { error = "Gli sport senza set richiedono esattamente un punteggio" });
-
-        int team1Wins = req.Sets.Count(s => s.Team1 > s.Team2);
-        int team2Wins = req.Sets.Count(s => s.Team2 > s.Team1);
-
-        int winnerTeam;
-        if (circle.Sets)
-        {
-            if (team1Wins == team2Wins)
-            {
-                int totalGamesTeam1 = req.Sets.Sum(s => s.Team1);
-                int totalGamesTeam2 = req.Sets.Sum(s => s.Team2);
-                if (totalGamesTeam1 == totalGamesTeam2)
-                    return Results.BadRequest(new { error = "La partita deve avere un vincitore (pareggio totale non ammesso)" });
-                winnerTeam = totalGamesTeam1 > totalGamesTeam2 ? 1 : 2;
-            }
-            else
-            {
-                winnerTeam = team1Wins > team2Wins ? 1 : 2;
-            }
-        }
-        else
-        {
-            var score = req.Sets[0];
-            if (score.Team1 == score.Team2)
-                return Results.BadRequest(new { error = "La partita deve avere un vincitore (pareggio non ammesso)" });
-            winnerTeam = score.Team1 > score.Team2 ? 1 : 2;
-        }
+        var (winnerTeamOrNull, setsError) = ValidateSetsAndComputeWinner(req.Sets, circle.Sets);
+        if (setsError != null)
+            return Results.BadRequest(new { error = setsError });
+        int winnerTeam = winnerTeamOrNull!.Value;
 
         var match = new Match
         {
@@ -651,6 +623,48 @@ public static class MatchEndpoints
         return Results.Ok(new { status = match.Status, forceConfirmedBy = userId });
     }
 
+    // ─── Shared set validation (usata da CreateMatchAsync e da AdminEndpoints.EditMatchResultAsync) ──
+
+    /// <summary>
+    /// Valida i punteggi di una partita e ne deriva il vincitore (mai accettato in input, sempre
+    /// calcolato server-side per evitare incoerenza tra set inseriti e vincitore dichiarato).
+    /// Ritorna (null, messaggio errore) se non validi, altrimenti (1|2, null).
+    /// </summary>
+    internal static (int? WinnerTeam, string? Error) ValidateSetsAndComputeWinner(SetScoreDto[]? sets, bool circleUsesSets)
+    {
+        if (sets == null || sets.Length == 0)
+            return (null, "Il punteggio è obbligatorio");
+
+        if (!circleUsesSets && sets.Length != 1)
+            return (null, "Gli sport senza set richiedono esattamente un punteggio");
+
+        if (sets.Any(s => s.Team1 < 0 || s.Team2 < 0))
+            return (null, "I punteggi non possono essere negativi");
+
+        int team1Wins = sets.Count(s => s.Team1 > s.Team2);
+        int team2Wins = sets.Count(s => s.Team2 > s.Team1);
+
+        if (circleUsesSets)
+        {
+            if (team1Wins == team2Wins)
+            {
+                int totalGamesTeam1 = sets.Sum(s => s.Team1);
+                int totalGamesTeam2 = sets.Sum(s => s.Team2);
+                if (totalGamesTeam1 == totalGamesTeam2)
+                    return (null, "La partita deve avere un vincitore (pareggio totale non ammesso)");
+                return (totalGamesTeam1 > totalGamesTeam2 ? 1 : 2, null);
+            }
+            return (team1Wins > team2Wins ? 1 : 2, null);
+        }
+        else
+        {
+            var score = sets[0];
+            if (score.Team1 == score.Team2)
+                return (null, "La partita deve avere un vincitore (pareggio non ammesso)");
+            return (score.Team1 > score.Team2 ? 1 : 2, null);
+        }
+    }
+
     private static async Task<Guid> ResolveOrCreateGuestAsync(
         PlayerSlotDto slot,
         Guid circleId,
@@ -697,4 +711,4 @@ public static class MatchEndpoints
 
 record PlayerSlotDto(Guid? UserId, string? GuestName, string? GuestEmail, string? GuestPhone);
 record CreateMatchRequest(PlayerSlotDto[] Team1, PlayerSlotDto[] Team2, SetScoreDto[] Sets, bool IsSingles = false);
-record SetScoreDto(int Team1, int Team2);
+public record SetScoreDto(int Team1, int Team2);

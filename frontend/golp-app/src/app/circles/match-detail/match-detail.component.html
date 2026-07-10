@@ -126,5 +126,68 @@
     } @else {
       <div class="muted-info">Il rating verrà aggiornato solo a conferma avvenuta.</div>
     }
+
+    @if (isSuperAdmin) {
+      <div class="section-heading" style="margin-top:24px;">Amministrazione</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        @if (match.status === 'confirmed') {
+          <button type="button" class="btn-detail" (click)="openEditForm()">
+            Modifica risultato
+          </button>
+        }
+        <button type="button" class="btn-detail" style="color:var(--color-error); border-color:var(--color-error);" (click)="openDeleteConfirm()">
+          Cancella partita
+        </button>
+      </div>
+    }
+  }
+
+  @if (showEditForm) {
+    <div role="dialog" aria-modal="true"
+      style="position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000;">
+      <div style="background:var(--color-surface); border-radius:12px; padding:20px; max-width:400px; width:90%;">
+        <h3>Modifica risultato</h3>
+        <p style="font-size:13px; color:var(--color-text-secondary);">
+          Risultato attuale: <strong>{{ scoreLabel() }}</strong> — il vincitore viene ricalcolato automaticamente dai nuovi punteggi.
+        </p>
+        @for (s of editSets; track $index) {
+          <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+            <span style="font-size:12px; color:var(--color-text-secondary);">Set {{ $index + 1 }}</span>
+            <input type="number" class="score-input" style="width:70px; padding:6px;" [(ngModel)]="s.team1" [name]="'team1-' + $index" />
+            <span>-</span>
+            <input type="number" class="score-input" style="width:70px; padding:6px;" [(ngModel)]="s.team2" [name]="'team2-' + $index" />
+          </div>
+        }
+        @if (editError) {
+          <div class="form-error" style="margin-top:12px;">{{ editError }}</div>
+        }
+        <div style="display:flex; gap:8px; margin-top:16px;">
+          <button type="button" class="btn-detail" (click)="cancelEdit()" [disabled]="editInProgress">Annulla</button>
+          <button type="button" class="btn-detail" (click)="confirmEdit()" [disabled]="editInProgress">
+            {{ editInProgress ? 'Salvataggio…' : 'Conferma modifica' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showDeleteConfirm) {
+    <div role="dialog" aria-modal="true"
+      style="position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000;">
+      <div style="background:var(--color-surface); border-radius:12px; padding:20px; max-width:360px; width:90%;">
+        <h3>Cancellare questa partita?</h3>
+        <p>Azione irreversibile. La partita verrà rimossa e, se confermata, la classifica del circolo verrà ricalcolata escludendola.</p>
+        @if (deleteError) {
+          <div class="form-error">{{ deleteError }}</div>
+        }
+        <div style="display:flex; gap:8px; margin-top:16px;">
+          <button type="button" class="btn-detail" (click)="cancelDelete()" [disabled]="deleteInProgress">Annulla</button>
+          <button type="button" class="btn-detail" style="color:var(--color-error); border-color:var(--color-error);"
+            (click)="confirmDelete()" [disabled]="deleteInProgress">
+            {{ deleteInProgress ? 'Cancellazione…' : 'Conferma cancellazione' }}
+          </button>
+        </div>
+      </div>
+    </div>
   }
 </div>
