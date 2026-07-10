@@ -4,9 +4,9 @@
 
 ## Riepilogo
 
-- Epic totali: 10
-- Storie totali: 60
-- Storie TODO: 8 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 6 | DONE: 46
+- Epic totali: 11
+- Storie totali: 68
+- Storie TODO: 16 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 6 | DONE: 46
 
 ---
 
@@ -2186,4 +2186,223 @@ Da un pannello di amministrazione il super admin apre una partita, modifica i pu
 
 ---
 
-> **PROSSIMO PASSO:** invoca `/eq-plan US-061` per pianificare la cancellazione partite da parte del super admin.
+## EP-009 — Revisione Dashboard Personale
+
+#### US-063: Redesign dashboard con gerarchia azioni urgenti/contesto/personale/storico
+
+**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 8 | **Status:** TODO
+**Blocked by:** -
+
+**Story**
+Come giocatore, voglio che la dashboard mostri prima le cose che richiedono la mia azione, poi la situazione del mio circolo attivo, poi la mia situazione personale e infine le ultime partite, così che apra l'app e capisca subito cosa fare senza dover cercare tra link di navigazione.
+
+**Demonstrates**
+Dopo il login, la dashboard mostra dall'alto verso il basso: 1) sezione richieste urgenti (conferme/contestazioni pendenti, se presenti), 2) card del circolo attivo con rating, posizione in classifica e statistiche sintetiche, 3) situazione personale (es. serie positiva/negativa), 4) elenco ultime partite. L'unico pulsante di azione primaria è il "+" nella bottom-nav, nessun CTA duplicato altrove nella pagina.
+
+**Acceptance Criteria**
+- [ ] Con richieste urgenti presenti, la sezione "azioni urgenti" appare come primo blocco della dashboard, sopra la card del circolo attivo
+- [ ] La card del circolo attivo mostra rating corrente, posizione in classifica e statistiche sintetiche del circolo selezionato (da US-066 per la selezione)
+- [ ] La sezione "situazione personale" mostra la serie corrente dell'utente secondo la definizione: sequenza di vittorie consecutive più recenti nel circolo attivo; una sconfitta o un pareggio azzera la serie; se l'ultima partita non è una vittoria, la serie mostrata è 0 (nessuna indicazione di "serie negativa")
+- [ ] L'elenco "ultime partite" mostra le partite `confirmed` più recenti del circolo attivo (o filtro corrente), con esito e avversari
+- [ ] Nella pagina dashboard non è presente alcun pulsante "Registra partita" o equivalente al di fuori del "+" della bottom-nav
+- [ ] Se il circolo attivo ha meno di 4 membri (per sport 2v2), il "+" della bottom-nav non porta a un flusso di registrazione impossibile: l'utente riceve un messaggio esplicativo (es. "Servono almeno 4 membri nel circolo per registrare una partita") invece di un form incompleto o un errore a metà flusso
+- [ ] La dashboard non genera più di una chiamata di rete aggregata per popolare rating, posizione, statistiche, richieste urgenti e ultime partite (vedi US-070 per il dettaglio del requisito di performance)
+
+**Out of scope**
+- Logica di calcolo del rating/classifica (già esistente, qui solo visualizzazione)
+- Personalizzazione dell'ordine delle sezioni da parte dell'utente
+
+**Open questions**
+- Nessuna
+
+---
+
+#### US-064: Bottom-nav condizionale limitata alle aree principali
+
+**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 3 | **Status:** TODO
+**Blocked by:** -
+
+**Story**
+Come utente, voglio vedere la barra di navigazione inferiore solo quando sono nelle sezioni principali dell'app, così che nei flussi di inserimento dati o nei wizard non ci siano scorciatoie che interrompano un'azione a metà.
+
+**Demonstrates**
+La bottom-nav (Home/Partite/+/Circoli/Profilo) è visibile in dashboard, elenco partite, elenco circoli e profilo. È assente in: registrazione/conferma partita, creazione/modifica circolo, login/registrazione, qualunque wizard o modale a step, pagine pubbliche raggiunte via link di invito. In questi flussi è presente invece un header con pulsante "Indietro" e titolo della pagina.
+
+**Acceptance Criteria**
+- [ ] La bottom-nav è visibile su dashboard, elenco partite, elenco circoli, profilo
+- [ ] La bottom-nav è assente su registrazione partita, conferma/contestazione partita, creazione circolo, modifica circolo, login, registrazione utente, reset password
+- [ ] La bottom-nav è assente su qualunque pagina pubblica raggiunta tramite link di invito (utente non autenticato o in fase di adesione)
+- [ ] Ogni pagina priva di bottom-nav mostra un header con pulsante "Indietro" funzionante e il titolo della pagina corrente
+- [ ] Navigare da una pagina senza bottom-nav a una con bottom-nav (es. completando la registrazione partita) ripristina correttamente la barra senza refresh manuale
+
+**Out of scope**
+- Animazioni di transizione tra header e bottom-nav
+- Gestione di rotte non ancora esistenti nell'app
+
+**Open questions**
+- Nessuna
+
+---
+
+#### US-065: Correzione mockup dashboard-v2 — rimozione CTA duplicato in header
+
+**Epic:** EP-009 | **Priority:** MEDIUM | **Story Points:** 1 | **Status:** TODO
+**Blocked by:** -
+
+**Story**
+Come team di prodotto, voglio che il mockup di riferimento della dashboard non contenga un pulsante "+ Partita" duplicato in header, così che il mockup rifletta fedelmente la decisione di un solo CTA primario e non generi ambiguità in fase di implementazione.
+
+**Demonstrates**
+Aprendo `docs/mockups/dashboard-v2/index.html`, l'unico controllo per registrare una partita è il pulsante centrale "+" della bottom-nav con etichetta "Registra"; l'header non contiene alcun pulsante di azione equivalente.
+
+**Acceptance Criteria**
+- [ ] Il pulsante "+ Partita" (o testo equivalente) è rimosso dall'header del mockup
+- [ ] Il pulsante centrale "+" nella bottom-nav del mockup resta presente e riporta l'etichetta "Registra" sotto l'icona
+- [ ] Nessun altro elemento del mockup (card, sezioni) contiene un secondo invito ad azione per la registrazione partita
+
+**Out of scope**
+- Modifiche di layout non collegate al CTA duplicato
+- Implementazione del comportamento reale (il mockup resta statico)
+
+**Open questions**
+- Nessuna
+
+---
+
+#### US-066: Selettore circolo attivo e filtro dei contenuti dashboard
+
+**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 5 | **Status:** TODO
+**Blocked by:** -
+
+**Story**
+Come giocatore membro di più circoli, voglio poter scegliere quale circolo è "attivo" nella dashboard, così che rating, posizione, statistiche, classifica e partite recenti che vedo si riferiscano al circolo che mi interessa in quel momento.
+
+**Demonstrates**
+Toccando il selettore "Circolo attivo" si apre un pannello dal basso con l'opzione "Tutti i circoli" seguita dalla lista dei circoli dell'utente (nome, sport, rating, posizione per ciascuno). Selezionando un circolo, la dashboard si aggiorna mostrando i dati filtrati per quel circolo, e la destinazione di default del "+" (registra partita) diventa quel circolo. La scelta viene ricordata al successivo accesso.
+
+**Acceptance Criteria**
+- [ ] Il pannello del selettore mostra "Tutti i circoli" più un elemento per ciascun circolo di cui l'utente è membro, con nome, sport, rating e posizione in classifica
+- [ ] Selezionando un circolo, rating/posizione/statistiche/classifica/partite recenti nella dashboard si aggiornano per riflettere solo quel circolo
+- [ ] Il "+" (registra partita) usa il circolo attivo selezionato come destinazione di default del flusso di registrazione
+- [ ] L'ultimo circolo selezionato viene ricordato e riproposto come circolo attivo al successivo accesso alla dashboard, senza richiedere una nuova selezione
+- [ ] Con più di 5-6 circoli tra cui scegliere, il pannello espone un campo di ricerca testuale e la possibilità di marcare circoli come preferiti, mostrati in cima alla lista
+- [ ] Le richieste urgenti (conferme/contestazioni) mostrate in dashboard restano sempre relative a tutti i circoli dell'utente, indipendentemente dal circolo attivo selezionato, indicando per ciascuna il circolo di appartenenza
+
+**Out of scope**
+- Modifica dell'elenco di circoli dell'utente (iscrizione/uscita) da questo pannello
+- Ordinamento personalizzato manuale dei circoli diverso da "preferiti in cima"
+
+**Open questions**
+- Nessuna
+
+---
+
+#### US-067: Vista aggregata "Tutti i circoli"
+
+**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 5 | **Status:** TODO
+**Blocked by:** US-066
+
+**Story**
+Come giocatore membro di più circoli, voglio una vista d'insieme quando seleziono "Tutti i circoli", così che possa farmi un'idea complessiva della mia attività senza dover interpretare rating incompatibili tra loro come se fossero un unico numero.
+
+**Demonstrates**
+Selezionando "Tutti i circoli" dal pannello (US-066), la dashboard mostra: numero di circoli attivi, totale partite giocate, percentuale di vittorie aggregata su tutti i circoli, numero di risultati da confermare, e una card sintetica per ciascun circolo (nome, sport, rating, posizione). Non viene mostrato alcun "rating totale" o somma di rating tra circoli diversi.
+
+**Acceptance Criteria**
+- [ ] In modalità "Tutti i circoli" la dashboard non mostra in nessun punto un rating aggregato o una somma di rating tra circoli
+- [ ] Vengono mostrati: numero di circoli attivi, numero totale di partite `confirmed`, percentuale di vittorie aggregata calcolata sul totale delle partite `confirmed` dell'utente in tutti i circoli, numero di risultati da confermare
+- [ ] Per ciascun circolo dell'utente è visibile una card sintetica con nome, sport, rating e posizione in classifica di quel circolo
+- [ ] Le richieste urgenti mostrate in questa modalità sono le stesse mostrate in modalità circolo singolo (sempre globali, non filtrate)
+- [ ] Il "+" (registra partita) in modalità "Tutti i circoli" richiede esplicitamente all'utente di scegliere il circolo di destinazione, non avendo un circolo attivo unico da usare come default
+
+**Out of scope**
+- Grafici o trend storici aggregati tra circoli
+- Confronto diretto di performance tra circoli (es. "in quale circolo vinco di più")
+
+**Open questions**
+- Nessuna
+
+---
+
+#### US-068: Trattamento visivo distinto per conferme e contestazioni pendenti
+
+**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 3 | **Status:** TODO
+**Blocked by:** -
+
+**Story**
+Come giocatore, voglio distinguere a colpo d'occhio tra una partita in attesa di mia conferma e una partita contestata da qualcuno, così che capisca subito se devo semplicemente confermare un risultato o intervenire in una disputa.
+
+**Demonstrates**
+Nella sezione "azioni urgenti" della dashboard, le partite `pending` in attesa di conferma dell'utente sono mostrate con badge/colore arancione e azione "Conferma", mentre le partite `disputed` sono mostrate con badge/colore rosso e un'azione distinta che porta al flusso di gestione della contestazione, non a una semplice conferma.
+
+**Acceptance Criteria**
+- [ ] Le partite con stato `pending` in attesa della conferma dell'utente corrente sono mostrate con indicatore visivo arancione ed etichetta "Da confermare"
+- [ ] Le partite con stato `disputed` sono mostrate con indicatore visivo rosso, distinto da quello delle `pending`, ed etichetta "Contestata"
+- [ ] Toccare una richiesta `pending` porta al flusso di conferma/rifiuto risultato esistente
+- [ ] Toccare una richiesta `disputed` porta a una schermata che mostra il dettaglio della contestazione, distinta dal semplice flusso di conferma
+- [ ] Se sono presenti sia richieste `pending` sia `disputed`, entrambe le categorie sono visibili contemporaneamente nella sezione azioni urgenti, non nascoste l'una dall'altra
+- [ ] Il conteggio delle richieste urgenti (se mostrato come numero/badge) somma `pending` e `disputed` ma la lista sottostante le mantiene visivamente separate
+
+**Out of scope**
+- Il flusso di risoluzione della contestazione in sé (già esistente altrove), qui solo l'ingresso da dashboard
+- Notifiche push per nuove contestazioni
+
+**Open questions**
+- Nessuna
+
+---
+
+#### US-069: Stati vuoti della dashboard per utenti nuovi
+
+**Epic:** EP-009 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** TODO
+**Blocked by:** -
+
+**Story**
+Come utente appena registrato o senza attività recente, voglio che la dashboard mi spieghi cosa fare invece di mostrarmi sezioni vuote o rotte, così che capisca il prossimo passo anche prima di avere circoli o partite.
+
+**Demonstrates**
+Un utente senza circoli vede un messaggio che lo invita a creare o unirsi a un circolo, con azione diretta per farlo. Un utente con circoli ma senza partite vede un invito a registrare la prima partita (o un messaggio esplicativo se il circolo ha meno di 4 membri). Un utente senza richieste urgenti non vede una sezione vuota ma nessuna sezione "azioni urgenti" o un messaggio neutro tipo "Nessuna azione in sospeso".
+
+**Acceptance Criteria**
+- [ ] Un utente senza alcun circolo vede, al posto della card circolo attivo, un messaggio con azioni per creare un circolo o unirsi a uno esistente
+- [ ] Un utente con almeno un circolo ma senza partite registrate vede un invito esplicito a registrare la prima partita al posto di un elenco "ultime partite" vuoto
+- [ ] Un utente senza richieste urgenti non vede una sezione "azioni urgenti" vuota o con bordo/contenitore visibile senza testo: la sezione è assente oppure mostra un messaggio neutro (es. "Nessuna azione in sospeso")
+- [ ] Nessuno degli stati vuoti mostra elementi di layout rotti (card senza contenuto, spazi bianchi anomali, valori "undefined"/"null"/"NaN")
+- [ ] Lo stato vuoto per "nessuna partita" tiene conto del vincolo dei 4 membri minimi (US-063): se il circolo ha meno di 4 membri, il messaggio invita a completare il circolo prima di registrare partite, non semplicemente a "registrare la prima partita"
+
+**Out of scope**
+- Onboarding guidato multi-step per nuovi utenti (tutorial, tour dell'app)
+- Contenuti didattici estesi (es. spiegazione dell'algoritmo di rating) negli stati vuoti
+
+**Open questions**
+- Nessuna
+
+---
+
+#### US-070: Endpoint aggregato per il caricamento performante della dashboard
+
+**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 5 | **Status:** TODO
+**Blocked by:** -
+
+**Story**
+Come giocatore, voglio che la dashboard si carichi rapidamente anche se mostra molti dati diversi (rating, posizione, statistiche, richieste urgenti, ultime partite), così che l'app risulti reattiva invece di mostrare spinner multipli in sequenza.
+
+**Demonstrates**
+Aprendo la dashboard, il client effettua un'unica chiamata coordinata (o un numero fisso e ridotto di chiamate lanciate in parallelo, non seriali) per ottenere tutti i dati necessari a popolare le sezioni della dashboard, invece di N chiamate seriali che si attendono a catena.
+
+**Acceptance Criteria**
+- [ ] Il caricamento iniziale della dashboard per un circolo attivo richiede al massimo una chiamata di rete che restituisce rating, posizione, statistiche sintetiche, richieste urgenti e ultime partite in un'unica risposta
+- [ ] Se per vincoli tecnici sono necessarie più chiamate, queste vengono eseguite in parallelo (non l'una in attesa del completamento dell'altra) e la dashboard mostra i dati man mano che arrivano, senza bloccare l'intera pagina sull'ultima risposta
+- [ ] Il tempo di caricamento percepito della dashboard (dal ingresso nella pagina al popolamento di tutte le sezioni) è misurabile e non degrada linearmente con il numero di circoli dell'utente
+- [ ] Il fallimento di una singola porzione di dati (es. statistiche non disponibili) non impedisce la visualizzazione delle altre sezioni già arrivate
+
+**Out of scope**
+- Caching lato client persistente tra sessioni
+- Ottimizzazioni di database specifiche (indici, query plan) — qui solo il contratto di caricamento osservabile dal client
+
+**Open questions**
+- Nessuna
+
+---
+
+> **PROSSIMO PASSO:** invoca `/eq-plan US-063` per pianificare il redesign della dashboard.
