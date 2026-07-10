@@ -14,7 +14,7 @@ import { CircleService, CircleSummary } from '../circles/circle.service';
   standalone: true,
   imports: [RouterLink, PwaInstallGuideComponent, FormsModule],
   template: `
-    <div class="page">
+    <div class="page" style="padding-bottom: 100px">
       <header class="auth-header">
         <a routerLink="/dashboard" class="back-nav">← Indietro</a>
         <span class="brand">GOLP</span>

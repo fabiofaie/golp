@@ -1,37 +1,63 @@
-import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
+import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
-import { Router } from '@angular/router';
 import { AppVersionComponent } from '../shared/version/app-version.component';
+import { ActiveCircleService } from '../shared/active-circle.service';
+import { MatchService, MyMatchSummary, MatchSummary } from '../circles/match.service';
+import { computeCurrentWinStreak, didUserWin } from './dashboard.utils';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [RouterLink, AppVersionComponent],
-  template: `
-    <div class="page">
-      <header class="auth-header">
-        <span class="brand">GOLP</span>
-        <button (click)="logout()" style="background:none;border:none;color:var(--color-text-secondary);cursor:pointer;font-size:13px">Esci</button>
-      </header>
-      <main class="auth-main">
-        <h1 class="auth-title">Dashboard</h1>
-        <p class="auth-subtitle">Cosa vuoi fare oggi?</p>
-        <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
-          <a routerLink="/match/quick" class="btn-primary" style="text-align:center;text-decoration:none">⚡ Registra Partita</a>
-          <a routerLink="/my-matches" class="btn-ghost">📋 Le mie partite</a>
-          <a routerLink="/circles" class="btn-ghost">I miei circoli</a>
-          <a routerLink="/elo-info" class="btn-ghost">Simula una partita</a>
-          <a routerLink="/profilo" class="btn-ghost">Profilo</a>
-        </div>
-      </main>
-
-      <app-version></app-version>
-    </div>
-  `
+  templateUrl: './dashboard.component.html',
+  styleUrl: './dashboard.component.scss',
 })
-export class DashboardComponent {
-  constructor(private auth: AuthService, private router: Router) {}
+export class DashboardComponent implements OnInit {
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly matchService = inject(MatchService);
+  readonly activeCircleService = inject(ActiveCircleService);
+
+  readonly urgentMatches = signal<MyMatchSummary[]>([]);
+  readonly recentMatches = signal<MatchSummary[]>([]);
+
+  readonly loading = this.activeCircleService.loading;
+  readonly circles = this.activeCircleService.circles;
+  readonly activeCircle = this.activeCircleService.activeCircle;
+
+  readonly winStreak = computed(() => {
+    const userId = this.auth.getCurrentUserId();
+    if (!userId) return 0;
+    return computeCurrentWinStreak(this.recentMatches(), userId);
+  });
+
+  private lastFetchedCircleId: string | null = null;
+
+  constructor() {
+    effect(() => {
+      const active = this.activeCircleService.activeCircle();
+      if (!active || active.id === this.lastFetchedCircleId) return;
+      this.lastFetchedCircleId = active.id;
+      this.matchService.getMatches(active.id).subscribe(matches => {
+        this.recentMatches.set(matches.filter(m => m.status === 'confirmed'));
+      });
+    });
+  }
+
+  ngOnInit(): void {
+    this.activeCircleService.ensureLoaded();
+
+    // Azioni urgenti: tutte le pending dell'utente, cross-circolo (mai filtrate sul circolo attivo)
+    this.matchService.getMyMatches(1, 20, 'pending').subscribe(page => {
+      this.urgentMatches.set(page.items);
+    });
+  }
+
+  didWin(match: MatchSummary): boolean {
+    const userId = this.auth.getCurrentUserId();
+    return !!userId && didUserWin(match, userId) === true;
+  }
 
   logout(): void {
     this.auth.logout();

@@ -1,0 +1,43 @@
+{
+  "colors": {
+    "light": {
+      "bg": "#f7f8f6",
+      "surface": "#ffffff",
+      "surface-2": "#f0f2ef",
+      "line": "#e2e5e1",
+      "text": "#12160f",
+      "muted": "#6b756b",
+      "orange": "#ff5a1f",
+      "green": "#1f9d4d",
+      "red": "#d92d2d"
+    },
+    "dark": {
+      "bg": "#080a09",
+      "surface": "#111412",
+      "surface-2": "#181c19",
+      "line": "#282d29",
+      "text": "#f5f7f5",
+      "muted": "#8c968e",
+      "orange": "#ff5a1f",
+      "green": "#54d477",
+      "red": "#ff6b6b"
+    }
+  },
+  "typography": {
+    "fontFamily": "Inter, system-ui, sans-serif",
+    "weights": [400, 500, 600, 700, 800, 900]
+  },
+  "spacing": {
+    "contentPadding": "22px",
+    "sectionGap": "25px",
+    "cardRadius": "14px",
+    "pillRadius": "10px"
+  },
+  "components": {
+    "primaryButton": { "bg": "orange", "text": "#fff", "radius": "10px" },
+    "pendingCard": { "border": "orange @ 42% alpha", "accentText": "orange" },
+    "disputedCard": { "border": "red @ 42% alpha", "accentText": "red" },
+    "emptyState": { "text": "muted", "border": "line dashed" },
+    "guardBanner": { "bg": "orange @ 12% alpha", "text": "orange" }
+  }
+}

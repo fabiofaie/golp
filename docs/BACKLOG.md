@@ -5,8 +5,8 @@
 ## Riepilogo
 
 - Epic totali: 11
-- Storie totali: 68
-- Storie TODO: 16 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 6 | DONE: 46
+- Storie totali: 71
+- Storie TODO: 11 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 2 | DONE: 58
 
 ---
 
@@ -2190,7 +2190,11 @@ Da un pannello di amministrazione il super admin apre una partita, modifica i pu
 
 #### US-063: Redesign dashboard con gerarchia azioni urgenti/contesto/personale/storico
 
-**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 8 | **Status:** TODO
+**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 8 | **Status:** DONE
+**Approved (2026-07-10):** Review umana OK.
+**Nota post-approvazione (2026-07-10):** AC6 (guardia CTA su circolo <4 membri) è stato superato da una decisione successiva durante il test manuale: il "+" ora naviga sempre a Quick Match (`/match/quick`), che gestisce da solo scelta/creazione circolo e ospiti, non richiede più un precheck sui membri. Motivo: Quick Match era raggiungibile dalla vecchia dashboard e il redesign lo aveva reso irraggiungibile — fix applicato contestualmente a US-064. Guardia rimossa da `ActiveCircleService`/`BottomNavComponent`, AC6 non più applicabile as-is.
+**Review note (2026-07-10):** Codice in `frontend/golp-app/src/app/dashboard/` (dashboard.component.ts/html/scss, dashboard.utils.ts) + `src/Golp.Api/Endpoints/CircleEndpoints.cs` (joinedAt). Test in `dashboard.utils.spec.ts`, `dashboard.component.spec.ts`, `CircleIntegrationTests.cs`. Reviewer APPROVE (0 Critical, 2 Important risolti). E2E (`us-063-dashboard.spec.ts`) eseguito con successo dopo retry (blip HMR transitorio iniziale). > **PROSSIMO PASSO:** revisione umana, poi `/eq-approve US-063`.
+**Visual evidence (2026-07-10):** docs/test-results/US-063/report.md (6 AC pass / 0 AC fail / 0 console errors)
 **Blocked by:** -
 
 **Story**
@@ -2219,7 +2223,8 @@ Dopo il login, la dashboard mostra dall'alto verso il basso: 1) sezione richiest
 
 #### US-064: Bottom-nav condizionale limitata alle aree principali
 
-**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 3 | **Status:** TODO
+**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 3 | **Status:** REVIEW
+**Review note (2026-07-10):** Codice in `frontend/golp-app/src/app/shell/`, `frontend/golp-app/src/app/shared/active-circle.service.ts`, `frontend/golp-app/src/app/shared/bottom-nav/`, `app.routes.ts` (wrap sotto AppShellComponent), `dashboard.component.ts/html/scss` (ripulito, CTA delegato a ActiveCircleService), `auth.service.ts` (reset ActiveCircleService su login/logout/impersonate). Test in `active-circle.service.spec.ts`, `app-shell.component.spec.ts`, `dashboard.component.spec.ts` (migrato), `auth.service.spec.ts` (2 nuovi test regressione), `us-064-conditional-bottom-nav.spec.ts`. Reviewer round 1: REQUEST CHANGES (1 Critical — ensureLoaded() non chiamato da bottom-nav globale). Fix + Reviewer round 2: APPROVE. **Bug trovato in test manuale post-review:** ActiveCircleService (providedIn:'root') non veniva resettato al logout — dopo logout→login i circoli del vecchio utente restavano in cache, causando "Circolo non trovato o non sei membro" su Registra Partita. Fix: `reset()` chiamato da login/register/logout/logoutAllDevices/deleteAccount/impersonate. **Secondo cambio post-review (2026-07-10):** il redesign dashboard (US-063) aveva reso irraggiungibile Quick Match dalla home; il "+" ora naviga sempre a `/match/quick` invece che al form standard su circolo attivo — guardia sui 4 membri rimossa (non più pertinente, Quick Match gestisce da solo scelta/creazione circolo e ospiti). Vedi nota su US-063. Suite verde: 371 backend + 290 frontend unit + 5 e2e. > **PROSSIMO PASSO:** revisione umana (incluso entrambi i fix post-review), poi `/eq-approve US-064`.
 **Blocked by:** -
 
 **Story**
@@ -2405,4 +2410,33 @@ Aprendo la dashboard, il client effettua un'unica chiamata coordinata (o un nume
 
 ---
 
-> **PROSSIMO PASSO:** invoca `/eq-plan US-063` per pianificare il redesign della dashboard.
+#### US-071: Registrazione partita da parte del proprietario del circolo senza partecipare
+
+**Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 3 | **Status:** REVIEW
+**Review note (2026-07-10):** Codice in `src/Golp.Api/Endpoints/QuickMatchEndpoints.cs`, `frontend/golp-app/src/app/circles/quick-match/quick-match.component.ts`, `frontend/golp-app/src/app/circles/match.service.ts`. Test in `src/Golp.Tests/Integration/QuickMatchEndpointsTests.cs` (+5 nuovi), `quick-match.component.spec.ts` (+6 nuovi), `e2e/us-071-quick-match-owner-not-playing.spec.ts` (2 scenari). Reviewer APPROVE. Nota: design frontend rivisto in corso d'opera (slot0 sempre sbloccabile + filtro circoli non posseduti, invece di `slot0Locked` calcolato su circolo selezionato — vedi `docs/planning/US-071.md` TASK-11). > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-071` (o aggiorna manualmente lo status a `DONE`).
+**Blocked by:** -
+
+**Story**
+Come proprietario di un circolo, voglio poter registrare una partita tramite Quick Match anche senza essere uno dei 4 giocatori, così che possa inserire i risultati per conto del gruppo (es. torneo, serata al circolo) senza dover forzatamente prendere uno slot.
+
+**Demonstrates**
+Aprendo Quick Match, se l'utente è proprietario di almeno un circolo (oppure sta creando un nuovo circolo al volo, scenario in cui è automaticamente proprietario) il primo slot giocatore non è più bloccato su "io" ma è selezionabile/deselezionabile come gli altri tre. Se l'utente rimuove se stesso dallo slot, la partita viene comunque registrata correttamente con 4 giocatori/ospiti diversi da lui, e lui riceve comunque i link di conferma da condividere. Per un utente che NON è proprietario di alcun circolo coinvolto nel flusso, il comportamento resta invariato: il primo slot è bloccato su "io" come oggi.
+
+**Acceptance Criteria**
+- [ ] Se l'utente sta creando un nuovo circolo tramite Quick Match (nessun circolo esistente compatibile trovato), lo slot 0 non è vincolato a "io": può essere lasciato vuoto, assegnato a un membro diverso o a un ospite
+- [ ] Se l'utente è proprietario (`ownerId`) di un circolo già esistente che risulta compatibile con i giocatori scelti, lo slot 0 non è vincolato a "io" all'interno di quel flusso
+- [ ] Se l'utente NON è proprietario di alcun circolo coinvolto e non sta creando un circolo nuovo, lo slot 0 resta bloccato su "io" (comportamento attuale invariato)
+- [ ] Quando lo slot 0 non è "io", l'utente riceve comunque (se non partecipa) accesso ai link di conferma di tutti e 4 i partecipanti nella schermata di successo, per poterli condividere
+- [ ] La partita registrata senza il proprietario tra i giocatori segue lo stesso ciclo di conferma a 4/4 già esistente (nessuna conferma implicita per il proprietario non giocante)
+- [ ] Il backend valida che chi crea la partita sia effettivamente proprietario del circolo target (o stia creando un circolo nuovo, di cui diventa proprietario) prima di accettare una richiesta senza il creatore tra i 4 giocatori — nessun utente può registrare partite "per conto di altri" in un circolo che non possiede
+
+**Out of scope**
+- Estendere questa possibilità a membri non proprietari (es. admin di circolo, se introdotto in futuro)
+- Modifica del flusso di registrazione partita "standard" (`record-match`, non Quick Match) — resta invariato
+
+**Open questions**
+- Nessuna
+
+---
+
+> **PROSSIMO PASSO:** invoca `/eq-plan US-071` per pianificare la modifica a Quick Match.

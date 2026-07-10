@@ -315,6 +315,37 @@ public class JoinCircleTests : IClassFixture<JoinCircleTestFactory>
         Assert.Equal(2, me.GetArrayLength());
     }
 
+    // US-063 TASK-2 — GET /circles/me espone joinedAt, coerente con l'ordine di iscrizione
+    [Fact]
+    public async Task GetMyCircles_MultipleCircles_ExposesJoinedAtInJoinOrder()
+    {
+        var owner1Token = await RegisterAndGetTokenAsync();
+        SetAuth(owner1Token);
+        var circle1 = await CreatePublicCircleAsync();
+
+        var owner2Token = await RegisterAndGetTokenAsync();
+        SetAuth(owner2Token);
+        var circle2 = await CreatePublicCircleAsync();
+
+        var joinerToken = await RegisterAndGetTokenAsync();
+        SetAuth(joinerToken);
+
+        await _client.PostAsync($"/circles/{circle1}/join", null);
+        await _client.PostAsync($"/circles/{circle2}/join", null);
+
+        var me = await _client.GetFromJsonAsync<JsonElement>("/circles/me");
+        var circles = me.EnumerateArray().ToList();
+
+        Assert.All(circles, c => Assert.True(c.TryGetProperty("joinedAt", out _)));
+
+        var joinedAt1 = circles.First(c => c.GetProperty("id").GetString() == circle1.ToString())
+            .GetProperty("joinedAt").GetDateTime();
+        var joinedAt2 = circles.First(c => c.GetProperty("id").GetString() == circle2.ToString())
+            .GetProperty("joinedAt").GetDateTime();
+
+        Assert.True(joinedAt1 <= joinedAt2);
+    }
+
     // AC4 — doppio join → 409
     [Fact]
     public async Task JoinCircle_Duplicate_Returns409()

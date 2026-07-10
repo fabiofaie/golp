@@ -10,7 +10,7 @@ type Filter = "all" | "pending" | "disputed";
   standalone: true,
   imports: [CommonModule, RouterLink, DatePipe],
   template: `
-    <div class="page">
+    <div class="page" style="padding-bottom: 100px">
       <header class="auth-header">
         <a routerLink="/dashboard" class="back-nav">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

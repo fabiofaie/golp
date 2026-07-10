@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { AuthService } from './auth.service';
 import { PushNotificationService } from '../push/push-notification.service';
+import { ActiveCircleService } from '../shared/active-circle.service';
 
 describe('AuthService — integrazione push (US-006)', () => {
   let service: AuthService;
@@ -75,6 +76,35 @@ describe('AuthService — integrazione push (US-006)', () => {
     expect(localStorage.getItem('golp_token')).toBeNull();
     expect(localStorage.getItem('golp_refresh_token')).toBeNull();
     expect(service.isAuthenticated()).toBeFalse();
+  });
+
+  // Regressione: US-064 rese ActiveCircleService un singleton app-lifetime;
+  // senza reset i circoli dell'utente precedente restavano in cache dopo logout→login.
+  it('logout → resetta ActiveCircleService (niente circoli residui del vecchio utente)', () => {
+    localStorage.setItem('golp_token', fakeJwt);
+    localStorage.setItem('golp_refresh_token', 'refresh-1');
+
+    const activeCircleService = TestBed.inject(ActiveCircleService);
+    activeCircleService.circles.set([
+      { id: 'stale-circle', name: 'Vecchio', sport: 'padel', sets: true, pointUnit: 'games', ownerId: 'x', memberCount: 4, myRating: 1000, myRank: 1, joinedAt: '2026-01-01T00:00:00Z' },
+    ]);
+
+    service.logout();
+    httpMock.expectOne('/auth/logout').flush({});
+
+    expect(activeCircleService.circles().length).toBe(0);
+  });
+
+  it('login con successo → resetta ActiveCircleService', () => {
+    const activeCircleService = TestBed.inject(ActiveCircleService);
+    activeCircleService.circles.set([
+      { id: 'stale-circle', name: 'Vecchio', sport: 'padel', sets: true, pointUnit: 'games', ownerId: 'x', memberCount: 4, myRating: 1000, myRank: 1, joinedAt: '2026-01-01T00:00:00Z' },
+    ]);
+
+    service.login({ email: 'a@b.com', password: 'pw' }).subscribe();
+    httpMock.expectOne('/auth/login').flush({ accessToken: fakeJwt, refreshToken: 'refresh-1' });
+
+    expect(activeCircleService.circles().length).toBe(0);
   });
 
   it('logoutAllDevices → push unregister chiamato e token rimosso', () => {

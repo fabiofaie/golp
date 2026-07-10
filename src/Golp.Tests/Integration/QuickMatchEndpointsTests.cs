@@ -442,6 +442,136 @@ public class QuickMatchEndpointsTests : IClassFixture<QuickMatchTestFactory>
         Assert.Equal(1000, membership!.Rating);
     }
 
+    [Fact]
+    public async Task Check_ReturnsOwnerIdForEachCircle()
+    {
+        var (circleId, ids, tokens) = await SetupAsync("basket2v2");
+
+        SetAuth(tokens[0]);
+        var resp = await _client.PostAsJsonAsync("/match/quick/check", new
+        {
+            sport   = "basket2v2",
+            userIds = ids,
+            guests  = Array.Empty<object>(),
+        });
+
+        var body = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        var circle = body.GetProperty("circles")[0];
+        Assert.Equal(circleId, Guid.Parse(circle.GetProperty("id").GetString()!));
+        Assert.Equal(ids[0], Guid.Parse(circle.GetProperty("ownerId").GetString()!));
+    }
+
+    // ─── US-071: owner registers without playing ───────────────────────────────
+
+    [Fact]
+    public async Task QuickMatch_OwnerNotPlaying_ExistingCircle_CreatesMatchWithoutOwnerConfirmation()
+    {
+        var (circleId, ids, tokens) = await SetupAsync("basket2v2");
+        // owner = ids[0]/tokens[0]; register 4 other players not the owner
+        var otherTokens = await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => RegisterTokenAsync()));
+        var otherIds = otherTokens.Select(ExtractUserIdFromJwt).ToArray();
+
+        SetAuth(tokens[0]); // owner creates, not among the 4 players
+        var resp = await _client.PostAsJsonAsync("/match/quick", new
+        {
+            sport   = "basket2v2",
+            circleId,
+            team1   = new object[] { new { userId = otherIds[0] }, new { userId = otherIds[1] } },
+            team2   = new object[] { new { userId = otherIds[2] }, new { userId = otherIds[3] } },
+            sets    = new[] { new { team1 = 21, team2 = 15 } },
+        });
+
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        var body = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        var matchId = Guid.Parse(body.GetProperty("matchId").GetString()!);
+        Assert.Equal(4, body.GetProperty("confirmationLinks").GetArrayLength());
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var ownerId = ids[0];
+        var ownerConfirmed = await db.MatchConfirmations
+            .AnyAsync(c => c.MatchId == matchId && c.UserId == ownerId);
+        Assert.False(ownerConfirmed);
+
+        var tokenCount = await db.MatchConfirmationTokens.CountAsync(t => t.MatchId == matchId);
+        Assert.Equal(4, tokenCount);
+    }
+
+    [Fact]
+    public async Task QuickMatch_NonOwnerNotPlaying_ExistingCircle_Returns403()
+    {
+        var (circleId, ids, tokens) = await SetupAsync("basket2v2");
+        // p2 (non-owner) tries to register a match without being one of the 4 players
+        var otherTokens = await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => RegisterTokenAsync()));
+        var otherIds = otherTokens.Select(ExtractUserIdFromJwt).ToArray();
+
+        SetAuth(tokens[1]); // non-owner member creates, not among the 4 players
+        var resp = await _client.PostAsJsonAsync("/match/quick", new
+        {
+            sport   = "basket2v2",
+            circleId,
+            team1   = new object[] { new { userId = otherIds[0] }, new { userId = otherIds[1] } },
+            team2   = new object[] { new { userId = otherIds[2] }, new { userId = otherIds[3] } },
+            sets    = new[] { new { team1 = 21, team2 = 15 } },
+        });
+
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task QuickMatch_CreatorPlaying_ExistingCircle_ConfirmationUnchanged()
+    {
+        // Regression: creator among the 4 players, non-owner circle member → unchanged behaviour
+        var (circleId, ids, tokens) = await SetupAsync("basket2v2");
+
+        SetAuth(tokens[1]); // non-owner, but plays
+        var resp = await PostQuickMatchAsync(circleId, "basket2v2", ids[1], ids[0], ids[2], ids[3]);
+
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        var body = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        var matchId = Guid.Parse(body.GetProperty("matchId").GetString()!);
+        Assert.Equal(3, body.GetProperty("confirmationLinks").GetArrayLength());
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var creatorConfirmed = await db.MatchConfirmations
+            .AnyAsync(c => c.MatchId == matchId && c.UserId == ids[1]);
+        Assert.True(creatorConfirmed);
+    }
+
+    [Fact]
+    public async Task QuickMatch_OwnerNotPlaying_NewCircle_CreatesMatchWithoutOwnerConfirmation()
+    {
+        var creatorToken = await RegisterTokenAsync();
+        var otherTokens = await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => RegisterTokenAsync()));
+        var otherIds = otherTokens.Select(ExtractUserIdFromJwt).ToArray();
+
+        SetAuth(creatorToken); // creates new circle, becomes owner, but excludes self from players
+        var resp = await _client.PostAsJsonAsync("/match/quick", new
+        {
+            sport      = "basket2v2",
+            circleName = "Torneo del Circolo",
+            team1      = new object[] { new { userId = otherIds[0] }, new { userId = otherIds[1] } },
+            team2      = new object[] { new { userId = otherIds[2] }, new { userId = otherIds[3] } },
+            sets       = new[] { new { team1 = 21, team2 = 15 } },
+        });
+
+        Assert.Equal(HttpStatusCode.Created, resp.StatusCode);
+        var body = await resp.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(body.GetProperty("circleCreated").GetBoolean());
+        Assert.Equal(4, body.GetProperty("confirmationLinks").GetArrayLength());
+
+        var matchId = Guid.Parse(body.GetProperty("matchId").GetString()!);
+        var creatorId = ExtractUserIdFromJwt(creatorToken);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var creatorConfirmed = await db.MatchConfirmations
+            .AnyAsync(c => c.MatchId == matchId && c.UserId == creatorId);
+        Assert.False(creatorConfirmed);
+    }
+
     // ─── Helpers ──────────────────────────────────────────────────────────────
 
     private async Task<(Guid CircleId, Guid[] Ids, string[] Tokens)> SetupAsync(string sport = "basket2v2")

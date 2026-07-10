@@ -4,6 +4,7 @@ import { tap, catchError } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { PushNotificationService } from '../push/push-notification.service';
+import { ActiveCircleService } from '../shared/active-circle.service';
 
 interface AuthResponse { accessToken: string; refreshToken: string; }
 interface RefreshResponse { accessToken: string; refreshToken: string; }
@@ -20,6 +21,7 @@ export class AuthService {
   private readonly api = `${environment.apiUrl}/auth`;
   private readonly adminApi = `${environment.apiUrl}/admin`;
   private readonly pushService = inject(PushNotificationService);
+  private readonly activeCircleService = inject(ActiveCircleService);
   readonly isAuthenticated = signal(this.hasValidToken());
 
   constructor(private http: HttpClient) {}
@@ -28,6 +30,7 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.api}/register`, data).pipe(
       tap(r => {
         this.storeTokens(r.accessToken, r.refreshToken);
+        this.activeCircleService.reset();
         void this.pushService.register();
       })
     );
@@ -37,6 +40,7 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.api}/login`, data).pipe(
       tap(r => {
         this.storeTokens(r.accessToken, r.refreshToken);
+        this.activeCircleService.reset();
         void this.pushService.register();
       })
     );
@@ -89,6 +93,7 @@ export class AuthService {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     this.isAuthenticated.set(false);
+    this.activeCircleService.reset();
   }
 
   getToken(): string | null {
@@ -129,6 +134,7 @@ export class AuthService {
         if (currentRefresh) localStorage.setItem(PRE_IMPERSONATION_REFRESH_KEY, currentRefresh);
 
         this.storeTokens(r.accessToken, r.refreshToken);
+        this.activeCircleService.reset();
       })
     );
   }
@@ -145,6 +151,7 @@ export class AuthService {
     const originalRefresh = localStorage.getItem(PRE_IMPERSONATION_REFRESH_KEY);
     if (originalToken && originalRefresh) {
       this.storeTokens(originalToken, originalRefresh);
+      this.activeCircleService.reset();
     }
     localStorage.removeItem(PRE_IMPERSONATION_TOKEN_KEY);
     localStorage.removeItem(PRE_IMPERSONATION_REFRESH_KEY);

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GOLP — Dashboard US-063 (stati edge case)</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+  <header class="topbar" style="max-width:900px;margin:auto">
+    <div class="brand">GOLP<span></span></div>
+    <div class="topbar-actions">
+      <button class="theme-toggle" aria-label="Cambia tema">☾</button>
+    </div>
+  </header>
+
+  <div class="states-grid">
+
+    <section class="state-block">
+      <h3>Nessuna azione urgente (AC1 — sezione nascosta)</h3>
+      <div class="content">
+        <p style="color:var(--muted);font-size:12px;margin:0 0 14px">
+          Quando non ci sono richieste pending/disputed, la sezione "Richiede attenzione"
+          non viene renderizzata affatto — non un contenitore vuoto.
+        </p>
+        <button class="circle-picker">
+          <span class="sport-icon">P</span>
+          <span><small>Circolo attivo</small><strong>Padel Club Roma</strong></span>
+          <span class="chevron">⌄</span>
+        </button>
+        <div style="height:14px"></div>
+        <div class="rating-card">
+          <div class="rating-main">
+            <div><small>RATING</small><strong>1.142</strong><span class="positive">↗ +18</span></div>
+            <div class="rank"><small>POSIZIONE</small><strong>#3</strong><span>su 14</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="state-block">
+      <h3>Circolo attivo con &lt;4 membri (AC6 — CTA bloccata)</h3>
+      <div class="content">
+        <button class="circle-picker">
+          <span class="sport-icon">A</span>
+          <span><small>Circolo attivo</small><strong>Amici del Martedì (2 membri)</strong></span>
+          <span class="chevron">⌄</span>
+        </button>
+        <div style="height:14px"></div>
+        <div class="guard-banner">
+          <span>⚠</span>
+          <span>Servono almeno 4 membri nel circolo per registrare una partita 2v2. Invita altri giocatori dalla pagina del circolo.</span>
+        </div>
+        <div style="height:14px"></div>
+        <p style="color:var(--muted);font-size:11px;margin:0">
+          Toccando il "+" della bottom-nav con questo circolo attivo, l'utente vede questo
+          messaggio invece di aprire il form di registrazione partita.
+        </p>
+      </div>
+    </section>
+
+    <section class="state-block">
+      <h3>Circolo attivo senza partite (AC3/AC4 — serie 0, elenco vuoto)</h3>
+      <div class="content">
+        <div class="rating-card">
+          <div class="rating-main">
+            <div><small>RATING</small><strong>1.000</strong></div>
+            <div class="rank"><small>POSIZIONE</small><strong>#—</strong><span>su 4</span></div>
+          </div>
+          <div class="stats">
+            <div><strong>0</strong><span>Partite</span></div>
+            <div><strong>—</strong><span>Vittorie</span></div>
+            <div><strong>0</strong><span>Serie positiva</span></div>
+          </div>
+        </div>
+        <div style="height:14px"></div>
+        <div class="empty-state">
+          <strong>Nessuna partita ancora</strong>
+          <p>Registra la prima partita per iniziare a costruire il tuo rating in questo circolo.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="state-block">
+      <h3>Sola contestazione (senza pending)</h3>
+      <div class="content">
+        <div class="section-title-row">
+          <h2>Richiede attenzione</h2><span class="count">1</span>
+        </div>
+        <article class="pending-card disputed">
+          <div class="card-top">
+            <span class="status disputed">CONTESTATA</span>
+            <time>2 giorni fa</time>
+          </div>
+          <div class="match-row"><strong>Tu &amp; Sara</strong><b>3–6&nbsp; 7–5&nbsp; 4–6</b></div>
+          <div class="match-row muted"><span class="circle-tag">Beach Arena Ostia</span><span>1 contestazione</span></div>
+          <a class="primary" href="#" style="background:var(--red);box-shadow:none">Vedi la contestazione</a>
+        </article>
+      </div>
+    </section>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -22,6 +22,7 @@ export interface CircleSummary {
   memberCount: number;
   myRating: number;
   myRank: number;
+  joinedAt?: string;
   ratingMethod?: 'Elo' | 'GameBonus';
   gameBonusWindowMatches?: number;
   gameBonusWindowWeeks?: number;

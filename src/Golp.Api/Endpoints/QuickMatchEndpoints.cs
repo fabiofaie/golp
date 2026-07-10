@@ -161,7 +161,7 @@ public static class QuickMatchEndpoints
         bool isExact = unresolvedCount == 0 && knownIds.Count == requiredPlayers;
         string mode = isExact ? "exact" : "partial";
 
-        var circlesRaw = new List<(Guid Id, string Name, DateTimeOffset? LastMatchAt)>();
+        var circlesRaw = new List<(Guid Id, string Name, Guid OwnerId, DateTimeOffset? LastMatchAt)>();
 
         if (isExact)
         {
@@ -173,12 +173,13 @@ public static class QuickMatchEndpoints
                 {
                     c.Id,
                     c.Name,
+                    c.OwnerId,
                     LastMatchAt = (DateTimeOffset?)db.Matches
                         .Where(m => m.CircleId == c.Id)
                         .Max(m => (DateTimeOffset?)m.CreatedAt),
                 })
                 .ToListAsync()
-                .ContinueWith(t => t.Result.Select(x => (x.Id, x.Name, x.LastMatchAt)).ToList());
+                .ContinueWith(t => t.Result.Select(x => (x.Id, x.Name, x.OwnerId, x.LastMatchAt)).ToList());
         }
         else if (knownIds.Count > 0)
         {
@@ -191,18 +192,19 @@ public static class QuickMatchEndpoints
                 {
                     c.Id,
                     c.Name,
+                    c.OwnerId,
                     LastMatchAt = (DateTimeOffset?)db.Matches
                         .Where(m => m.CircleId == c.Id)
                         .Max(m => (DateTimeOffset?)m.CreatedAt),
                 })
                 .ToListAsync()
-                .ContinueWith(t => t.Result.Select(x => (x.Id, x.Name, x.LastMatchAt)).ToList());
+                .ContinueWith(t => t.Result.Select(x => (x.Id, x.Name, x.OwnerId, x.LastMatchAt)).ToList());
         }
 
         return Results.Ok(new
         {
             mode,
-            circles = circlesRaw.Select(c => new { id = c.Id, name = c.Name, lastMatchAt = c.LastMatchAt }),
+            circles = circlesRaw.Select(c => new { id = c.Id, name = c.Name, ownerId = c.OwnerId, lastMatchAt = c.LastMatchAt }),
         });
     }
 
@@ -286,13 +288,18 @@ public static class QuickMatchEndpoints
             if (resolvedA.Distinct().Count() != expectedTotal)
                 return Results.BadRequest(new { error = $"I {expectedTotal} giocatori devono essere distinti" });
 
+            bool creatorPlaysA = resolvedA.Contains(userId);
+            if (!creatorPlaysA && circle.OwnerId != userId)
+                return Results.Json(new { error = "Solo il proprietario del circolo può registrare partite senza parteciparvi" }, statusCode: 403);
+
             var matchA      = BuildMatch(circle.Id, userId, resolvedA, winnerTeam, isSingles);
             var setsA       = BuildSets(matchA.Id, req.Sets);
             var tokensA     = BuildTokens(matchA.Id, userId, resolvedA, frontendBase, out var recipientsA, out var linksA);
 
             db.Matches.Add(matchA);
             db.MatchSets.AddRange(setsA);
-            db.MatchConfirmations.Add(new MatchConfirmation { MatchId = matchA.Id, UserId = userId });
+            if (creatorPlaysA)
+                db.MatchConfirmations.Add(new MatchConfirmation { MatchId = matchA.Id, UserId = userId });
             db.MatchConfirmationTokens.AddRange(tokensA);
             await db.SaveChangesAsync();
 
@@ -344,13 +351,16 @@ public static class QuickMatchEndpoints
             if (resolvedB.Distinct().Count() != expectedTotalB)
                 return Results.BadRequest(new { error = $"I {expectedTotalB} giocatori devono essere distinti" });
 
+            bool creatorPlaysB = resolvedB.Contains(userId);
+
             var matchB   = BuildMatch(newCircle.Id, userId, resolvedB, winnerTeam, isSingles);
             var setsB    = BuildSets(matchB.Id, req.Sets);
             var tokensB  = BuildTokens(matchB.Id, userId, resolvedB, frontendBase, out var recipientsB, out var linksB);
 
             db.Matches.Add(matchB);
             db.MatchSets.AddRange(setsB);
-            db.MatchConfirmations.Add(new MatchConfirmation { MatchId = matchB.Id, UserId = userId });
+            if (creatorPlaysB)
+                db.MatchConfirmations.Add(new MatchConfirmation { MatchId = matchB.Id, UserId = userId });
             db.MatchConfirmationTokens.AddRange(tokensB);
             await db.SaveChangesAsync();
             await tx.CommitAsync();

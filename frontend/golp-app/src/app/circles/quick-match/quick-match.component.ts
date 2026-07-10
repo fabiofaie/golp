@@ -103,9 +103,7 @@ type Step = "sport" | "players" | "picker" | "score";
                 <div class="qm-slot" [class.filled]="slots[i].filled" [class.me-slot]="slots[i].isMe">
                   @if (slots[i].filled) {
                     <span class="qm-slot-name">{{ slots[i].displayName }}</span>
-                    @if (!slots[i].isMe) {
-                      <button class="qm-slot-remove" (click)="clearSlot(i)">×</button>
-                    }
+                    <button class="qm-slot-remove" (click)="clearSlot(i)">×</button>
                     @if (slots[i].isMe) {
                       <span class="qm-slot-badge">Tu</span>
                     }
@@ -170,6 +168,9 @@ type Step = "sport" | "players" | "picker" | "score";
 
               <!-- Guest form -->
               @if (!showGuestForm) {
+                @if (meAvailableToAdd) {
+                  <button class="qm-add-guest-btn" (click)="addMe()">+ Aggiungi te stesso</button>
+                }
                 <button class="qm-add-guest-btn" (click)="showGuestForm = true">+ Aggiungi nuovo giocatore</button>
               } @else {
                 <div class="qm-guest-form">
@@ -979,8 +980,24 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
     this.onSlotsChanged();
   }
 
+  get meAvailableToAdd(): boolean {
+    return !this.isUsed(this.currentUserId) && this.activeSlotIndices.some(i => !this.slots[i].filled);
+  }
+
+  addMe(): void {
+    const idx = this.activeSlotIndices.find(i => !this.slots[i].filled);
+    if (idx === undefined) return;
+    this.slots[idx] = {
+      filled: true,
+      userId: this.currentUserId,
+      displayName: this.currentUserName,
+      isMe: idx === 0,
+      isGuest: false
+    };
+    this.onSlotsChanged();
+  }
+
   clearSlot(i: number): void {
-    if (this.slots[i].isMe) return;
     this.slots[i] = { filled: false, displayName: "", isMe: false, isGuest: false };
     this.checkResult = null;
     this.selectedCircle = null;
@@ -1054,7 +1071,11 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (result) => {
-          this.checkResult = result;
+          // US-071: se il creatore non è tra i giocatori, può usare solo circoli di cui è proprietario
+          const creatorPlays = activeSlots.some(s => s.filled && s.userId === this.currentUserId);
+          this.checkResult = creatorPlays
+            ? result
+            : { ...result, circles: result.circles.filter(c => c.ownerId === this.currentUserId) };
           this.checkingCircles = false;
         },
         error: () => {

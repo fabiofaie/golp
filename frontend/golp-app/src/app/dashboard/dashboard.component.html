@@ -1,0 +1,106 @@
+<div class="page dashboard">
+  <header class="auth-header">
+    <span class="brand">GOLP</span>
+    <button (click)="logout()" class="logout-btn">Esci</button>
+  </header>
+
+  @if (loading()) {
+    <main class="auth-main">
+      <p class="auth-subtitle">Caricamento…</p>
+    </main>
+  } @else if (circles().length === 0) {
+    <main class="auth-main">
+      <h1 class="auth-title">Ciao!</h1>
+      <p class="auth-subtitle">Non fai ancora parte di nessun circolo.</p>
+      <div class="actions-stack">
+        <a routerLink="/circles/create" class="btn-primary">Crea un circolo</a>
+        <a routerLink="/circles/browse" class="btn-ghost">Esplora circoli esistenti</a>
+      </div>
+    </main>
+  } @else {
+    <main class="dashboard-content">
+
+      @if (urgentMatches().length > 0) {
+        <section class="attention">
+          <div class="section-title-row">
+            <h2>Richiede attenzione</h2>
+            <span class="count">{{ urgentMatches().length }}</span>
+          </div>
+          @for (m of urgentMatches(); track m.matchId) {
+            <article class="pending-card" [class.disputed]="m.status === 'disputed'">
+              <div class="card-top">
+                <span class="status" [class.disputed]="m.status === 'disputed'">
+                  {{ m.status === 'disputed' ? 'CONTESTATA' : 'DA CONFERMARE' }}
+                </span>
+              </div>
+              <div class="match-row muted">
+                <span class="circle-tag">{{ m.circleName }}</span>
+                <span>{{ m.confirmationsCount }} di 4 conferme</span>
+              </div>
+              <a class="primary" [class.dispute]="m.status === 'disputed'" [routerLink]="['/circles', m.circleId, 'matches', m.matchId]">
+                {{ m.status === 'disputed' ? 'Vedi la contestazione' : 'Conferma il risultato' }}
+              </a>
+            </article>
+          }
+        </section>
+      }
+
+      @if (activeCircle(); as active) {
+        <!-- Selettore non ancora attivo: il cambio circolo arriva con US-066 -->
+        <button class="circle-picker" type="button" disabled>
+          <span class="sport-icon">{{ active.sport.charAt(0).toUpperCase() }}</span>
+          <span><small>Circolo attivo</small><strong>{{ active.name }}</strong></span>
+          <span class="chevron">⌄</span>
+        </button>
+
+        <section class="performance">
+          <div class="section-title-row">
+            <h2>Il tuo momento</h2>
+            <a [routerLink]="['/circles', active.id, 'leaderboard']">Classifica →</a>
+          </div>
+          <article class="rating-card">
+            <div class="rating-main">
+              <div><small>RATING</small><strong>{{ active.myRating }}</strong></div>
+              <div class="rank"><small>POSIZIONE</small><strong>#{{ active.myRank }}</strong><span>su {{ active.memberCount }}</span></div>
+            </div>
+            <div class="stats">
+              <div><strong>{{ recentMatches().length }}</strong><span>Partite</span></div>
+              <div><strong>{{ winStreak() }}</strong><span>Serie positiva</span></div>
+            </div>
+          </article>
+        </section>
+
+        <section>
+          <div class="section-title-row">
+            <h2>Ultime partite</h2>
+            <a [routerLink]="['/circles', active.id, 'matches']">Vedi tutte →</a>
+          </div>
+          @if (recentMatches().length === 0) {
+            <div class="empty-state">
+              <strong>Nessuna partita ancora</strong>
+              <p>Registra la prima partita per iniziare a costruire il tuo rating in questo circolo.</p>
+            </div>
+          } @else {
+            <div class="recent-list">
+              @for (m of recentMatches().slice(0, 5); track m.id) {
+                <article class="recent">
+                  <span class="result" [class.win]="didWin(m)" [class.loss]="!didWin(m)">
+                    {{ didWin(m) ? 'V' : 'S' }}
+                  </span>
+                  <div>
+                    <strong>{{ m.team1[0].name }} vs {{ m.team2[0].name }}</strong>
+                  </div>
+                  <b [class.positive]="didWin(m)" [class.negative]="!didWin(m)">
+                    {{ m.myDelta !== null ? (m.myDelta >= 0 ? '+' : '') + m.myDelta : '' }}
+                  </b>
+                </article>
+              }
+            </div>
+          }
+        </section>
+      }
+    </main>
+  }
+
+  <app-version></app-version>
+</div>

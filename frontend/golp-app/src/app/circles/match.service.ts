@@ -138,6 +138,7 @@ export interface QuickCheckRequest {
 export interface CirclePick {
   id: string;
   name: string;
+  ownerId: string;
   lastMatchAt: string | null;
 }
 

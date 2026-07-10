@@ -4,7 +4,7 @@ const CI = !!process.env['CI'];
 
 export default defineConfig({
   testDir: './e2e',
-  testMatch: ['auth.spec.ts', 'circle-leaderboard.spec.ts', 'circle-match-history.spec.ts', 'circle-awards.spec.ts', 'circle-stats.spec.ts', 'invite.spec.ts', 'join-invite.spec.ts', 'add-member.spec.ts', 'pwa-install.spec.ts', 'profile-theme.spec.ts', 'profile-push.spec.ts', 'profile-logout-all.spec.ts', 'profile-delete-account.spec.ts', 'match-detail.spec.ts', 'profile-circles-summary.spec.ts', 'quick-match.spec.ts', 'record-match-share.spec.ts', 'dashboard-match-history.spec.ts', 'circle-rating-config.spec.ts'],
+  testMatch: ['auth.spec.ts', 'circle-leaderboard.spec.ts', 'circle-match-history.spec.ts', 'circle-awards.spec.ts', 'circle-stats.spec.ts', 'invite.spec.ts', 'join-invite.spec.ts', 'add-member.spec.ts', 'pwa-install.spec.ts', 'profile-theme.spec.ts', 'profile-push.spec.ts', 'profile-logout-all.spec.ts', 'profile-delete-account.spec.ts', 'match-detail.spec.ts', 'profile-circles-summary.spec.ts', 'quick-match.spec.ts', 'record-match-share.spec.ts', 'dashboard-match-history.spec.ts', 'circle-rating-config.spec.ts', 'us-063-dashboard.spec.ts', 'us-064-conditional-bottom-nav.spec.ts', 'us-071-quick-match-owner-not-playing.spec.ts'],
   fullyParallel: false,
   forbidOnly: CI,
   retries: CI ? 1 : 0,
