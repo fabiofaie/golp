@@ -1,12 +1,12 @@
 ﻿# Backlog — GOLP
 
-**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-07-09
+**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-07-11
 
 ## Riepilogo
 
 - Epic totali: 11
-- Storie totali: 71
-- Storie TODO: 11 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 2 | DONE: 58
+- Storie totali: 74
+- Storie TODO: 14 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 2 | DONE: 58
 
 ---
 
@@ -1124,6 +1124,64 @@ Dopo una partita confermata di padel, il delta ELO assegnato tiene conto sia dei
 **Open questions**
 
 - (nessuna — scelte definite in analisi)
+
+---
+
+#### US-073: Posizione in classifica coerente col metodo di punteggio del circolo
+
+**Epic:** EP-003 | **Priority:** HIGH | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-07-11):** Review umana OK.
+**Review note (2026-07-11):** Bug confermato nel backend: `GetMyCirclesAsync` (`src/Golp.Api/Endpoints/CircleEndpoints.cs`) calcolava sempre `myRating`/`myRank` dal campo ELO, ignorando `Circle.RatingMethod`. Fix: per circoli `GameBonus` riusa `GameBonusRatingService.GetWindowScoresAsync` (stesso pattern già usato da `GetCircleLeaderboardAsync`/US-052) per calcolare punteggio e posizione nella finestra rolling; per `Elo` invariato. Frontend: etichetta "Rating"/"Punteggio" condizionale su `circle.ratingMethod` in `my-circles.component.html`. Test: nuovo `MyCirclesGameBonusEndpointTests.cs` (2 integration, verificano coerenza con la pagina Classifica) + nuovo `my-circles.component.spec.ts` (2 unit). Suite completa: backend 385/385, frontend 334/334 verdi. Reviewer APPROVE (0 Critical). TASK-6 (verifica visiva manuale) rimandata a revisione umana, non bloccante. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-073` (o aggiorna manualmente lo status a `DONE`).
+**Blocked by:** -
+
+**Story**
+Come Marco iscritto a un circolo che usa il metodo Game+Bonus, voglio che la card "I miei circoli" mostri la mia posizione e il mio punteggio calcolati secondo il metodo effettivamente attivo nel circolo, così che non veda un numero (rating ELO) che non corrisponde a come il circolo classifica davvero i giocatori.
+
+**Demonstrates**
+Aprendo "I miei circoli", per un circolo con `RatingMethod = GameBonus` la card mostra il punteggio Game+Bonus (finestra rolling) e la posizione calcolata su quella classifica, non il rating ELO e la posizione ELO. Per un circolo con `RatingMethod = Elo` il comportamento resta quello attuale.
+
+**Acceptance Criteria**
+- [ ] La card circolo in "I miei circoli" mostra l'etichetta e il valore punteggio coerenti con `Circle.RatingMethod` (Elo → "Rating" + valore ELO; GameBonus → punteggio Game+Bonus della finestra rolling)
+- [ ] La "Posizione" mostrata nella card è calcolata ordinando i membri secondo lo stesso criterio del metodo attivo (non sempre per rating ELO)
+- [ ] Per un circolo Game+Bonus, la posizione coincide con quella mostrata nella pagina "Classifica" dello stesso circolo (nessuna discrepanza tra le due viste)
+- [ ] Un circolo che passa da ELO a Game+Bonus (o viceversa, se supportato) aggiorna la card coerentemente al refresh successivo, senza richiedere modifiche manuali
+- [ ] Nessuna regressione sulla card dei circoli che usano ancora il metodo ELO
+
+**Out of scope**
+- Modifica ai due metodi di calcolo in sé (già esistenti da US-051/US-052)
+- Persistenza/cache della classifica su DB (vedi US-074)
+
+**Open questions**
+- Nessuna
+
+---
+
+#### US-074: Persistenza della classifica su DB per evitare il ricalcolo ad ogni richiesta
+
+**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** TODO
+**Blocked by:** US-073
+
+**Story**
+Come sistema, voglio salvare su DB la classifica calcolata di un circolo (posizione e punteggio per membro, per il metodo attivo) invece di ricalcolarla ad ogni richiesta, così che le pagine che mostrano posizione/classifica restino rapide anche con circoli grandi o molte partite in finestra rolling.
+
+**Demonstrates**
+La classifica di un circolo viene ricalcolata e salvata una sola volta al momento in cui una partita passa a `confirmed` (o viene modificata/cancellata con ricalcolo, vedi US-061/US-062), non ad ogni GET di "I miei circoli", dashboard o pagina Classifica. Le richieste di lettura leggono il dato già persistito.
+
+**Acceptance Criteria**
+- [ ] Esiste una struttura dati persistita (es. tabella `CircleLeaderboardEntry` con `circleId`, `userId`, `score`, `position`, `ratingMethod`, `updatedAt`) aggiornata ad ogni conferma partita
+- [ ] L'aggiornamento della classifica persistita avviene nella stessa transazione (o subito dopo, in modo atomico) della conferma/modifica/cancellazione partita che already ricalcola i rating (US-007, US-052, US-061, US-062)
+- [ ] Gli endpoint che oggi calcolano posizione/classifica al volo (leaderboard, dashboard summary, "I miei circoli") leggono dalla struttura persistita invece di ricalcolare su ogni richiesta
+- [ ] Il cambio di `RatingMethod` di un circolo (US-051) invalida e rigenera la classifica persistita per quel circolo prima che venga letta di nuovo
+- [ ] Nessuna discrepanza tra il valore persistito e quello che si otterrebbe ricalcolando da zero (verificato con test che confrontano i due risultati su uno stesso stato di partite)
+- [ ] Tempo di risposta delle letture di classifica non degrada con il numero di partite storiche del circolo (a differenza del ricalcolo al volo su finestra rolling)
+
+**Out of scope**
+- Cache in-memory (Redis o simile) — qui si parla di persistenza su DB relazionale, coerente con lo stack esistente
+- Storico delle classifiche nel tempo (snapshot per data) — solo lo stato corrente
+- Ricalcolo retroattivo di dati storici già persistiti in altre tabelle
+
+**Open questions**
+- Nessuna
 
 ---
 
@@ -2454,4 +2512,34 @@ Aprendo Quick Match, se l'utente è proprietario di almeno un circolo (oppure st
 
 ---
 
-> **PROSSIMO PASSO:** invoca `/eq-plan US-071` per pianificare la modifica a Quick Match.
+---
+
+#### US-072: Ordinamento alfabetico delle chips giocatore in ricerca
+
+**Epic:** EP-002 | **Priority:** LOW | **Story Points:** 1 | **Status:** DONE
+**Approved (2026-07-11):** Review umana OK.
+**Review note (2026-07-11):** Codice in `frontend/golp-app/src/app/circles/quick-match/quick-match.component.ts` (getter `groupedSuggestions`, ordinamento `users` per `name` con `localeCompare('it', {sensitivity:'base'})`, stesso pattern già usato per i label di circolo). Test in `quick-match.component.spec.ts` (+1 nuovo, case-insensitive + accenti). Suite completa 332/332 verde. Reviewer APPROVE (nessun Critical/Important). > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-072` (o aggiorna manualmente lo status a `DONE`).
+**Blocked by:** -
+
+**Story**
+Come giocatore che registra una partita, voglio che le chips dei giocatori proposte nella ricerca (step 2 di Registra Partita) siano ordinate alfabeticamente per nome, così che possa trovare rapidamente chi cerco senza scorrere una lista disordinata.
+
+**Demonstrates**
+Nello step 2 di "Registra Partita" (Doppio o Singolo), sotto il campo "Cerca giocatore...", la lista delle chips raggruppate per circolo (es. "PADEL CLUB ROMA") è ordinata alfabeticamente per nome visualizzato, invece che nell'ordine di inserimento/registrazione.
+
+**Acceptance Criteria**
+- [ ] Le chips giocatore mostrate nella sezione di ricerca sono ordinate alfabeticamente (A→Z) per nome completo visualizzato
+- [ ] L'ordinamento si applica sia alla lista completa iniziale sia ai risultati filtrati mentre si digita nel campo "Cerca giocatore..."
+- [ ] L'ordinamento è case-insensitive e gestisce correttamente lettere accentate (es. nomi italiani)
+- [ ] L'ordine resta stabile e coerente sia per Squadra A che Squadra B, e sia in modalità Doppio che Singolo
+
+**Out of scope**
+- Ordinamento configurabile dall'utente (es. per rating, per ultima partita giocata)
+- Modifiche al raggruppamento per circolo esistente
+
+**Open questions**
+- Nessuna
+
+---
+
+> **PROSSIMO PASSO:** invoca `/eq-plan US-073` per pianificare il fix di coerenza classifica/metodo punteggio.

@@ -87,6 +87,18 @@ describe('QuickMatchComponent — US-057 groupedSuggestions', () => {
     const labels = component.groupedSuggestions.map(g => g.label);
     expect(labels).toEqual(['Alpha', 'Zeta']);
   });
+
+  it('orders users within a group alphabetically by name, case-insensitive and accent-aware (US-072)', () => {
+    component.suggestions = [
+      suggestion('u1', 'Zeta', [{ id: 'c1', name: 'Circolo' }]),
+      suggestion('u2', 'anna', [{ id: 'c1', name: 'Circolo' }]),
+      suggestion('u3', 'Élena', [{ id: 'c1', name: 'Circolo' }]),
+      suggestion('u4', 'Marco', [{ id: 'c1', name: 'Circolo' }]),
+    ];
+
+    const names = component.groupedSuggestions[0].users.map(u => u.name);
+    expect(names).toEqual(['anna', 'Élena', 'Marco', 'Zeta']);
+  });
 });
 
 describe('QuickMatchComponent — US-071 slot0 unlock', () => {

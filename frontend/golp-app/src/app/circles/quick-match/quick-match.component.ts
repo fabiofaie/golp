@@ -896,6 +896,13 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
       }
     }
 
+    const byName = (a: SuggestionUser, b: SuggestionUser) =>
+      a.name.localeCompare(b.name, 'it', { sensitivity: 'base' });
+
+    for (const g of groups.values()) {
+      g.users.sort(byName);
+    }
+
     const recent = groups.get(recentLabel);
     const circleGroups = [...groups.values()]
       .filter(g => g.circleId !== null)

@@ -149,13 +149,49 @@ public static class CircleEndpoints
                 CircleOwnerId    = m.Circle.OwnerId,
                 MyRating         = m.Rating,
                 MemberCount      = db.CircleMemberships.Count(x => x.CircleId == m.CircleId),
-                MyRank           = db.CircleMemberships.Count(x => x.CircleId == m.CircleId && x.Rating > m.Rating) + 1,
                 JoinedAt                = m.JoinedAt,
                 RatingMethod            = m.Circle.RatingMethod,
                 GameBonusWindowMatches  = m.Circle.GameBonusWindowMatches,
                 GameBonusWindowWeeks    = m.Circle.GameBonusWindowWeeks,
             })
             .ToListAsync();
+
+        // US-073: la posizione/punteggio devono riflettere il metodo di calcolo attivo sul circolo
+        // (ELO vs Game+Bonus), non sempre il rating ELO — stesso criterio già usato da GetCircleLeaderboardAsync.
+        var ranks = new Dictionary<Guid, (int rank, int? gameBonusScore)>();
+        foreach (var circleId in memberships.Select(m => m.CircleId).Distinct())
+        {
+            var circle = await db.Circles.FirstOrDefaultAsync(c => c.Id == circleId);
+            if (circle == null)
+                continue;
+
+            var circleMembers = await db.CircleMemberships
+                .Where(x => x.CircleId == circleId)
+                .Select(x => new { x.UserId, x.Rating })
+                .ToListAsync();
+
+            if (circle.RatingMethod == "GameBonus")
+            {
+                var scores = await GameBonusRatingService.GetWindowScoresAsync(
+                    db, circleId, circle.GameBonusWindowMatches, circle.GameBonusWindowWeeks,
+                    circleMembers.Select(x => x.UserId));
+
+                var ordered = circleMembers
+                    .OrderByDescending(x => scores.GetValueOrDefault(x.UserId, 0))
+                    .ThenBy(x => x.UserId)
+                    .ToList();
+
+                for (var i = 0; i < ordered.Count; i++)
+                    if (ordered[i].UserId == userId)
+                        ranks[circleId] = (i + 1, scores.GetValueOrDefault(userId, 0));
+            }
+            else
+            {
+                var myRating = circleMembers.First(x => x.UserId == userId).Rating;
+                var rank = circleMembers.Count(x => x.Rating > myRating) + 1;
+                ranks[circleId] = (rank, null);
+            }
+        }
 
         return Results.Ok(memberships.Select(m => new
         {
@@ -166,8 +202,8 @@ public static class CircleEndpoints
             pointUnit              = m.CirclePointUnit,
             ownerId                = m.CircleOwnerId,
             memberCount            = m.MemberCount,
-            myRating               = m.MyRating,
-            myRank                 = m.MyRank,
+            myRating               = m.RatingMethod == "GameBonus" ? ranks.GetValueOrDefault(m.CircleId).gameBonusScore ?? 0 : m.MyRating,
+            myRank                 = ranks.GetValueOrDefault(m.CircleId, (rank: 1, gameBonusScore: (int?)null)).rank,
             joinedAt               = m.JoinedAt,
             ratingMethod           = m.RatingMethod,
             gameBonusWindowMatches = m.GameBonusWindowMatches,

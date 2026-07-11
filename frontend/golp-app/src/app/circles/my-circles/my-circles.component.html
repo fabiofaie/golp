@@ -48,7 +48,7 @@
             <h2 class="circle-name">{{ circle.name }}</h2>
             <div class="circle-rating-row">
               <div class="rating-group">
-                <span class="rating-label">Rating</span>
+                <span class="rating-label">{{ circle.ratingMethod === 'GameBonus' ? 'Punteggio' : 'Rating' }}</span>
                 <span class="rating-value">{{ circle.myRating }}</span>
               </div>
               <div class="ranking-group">
