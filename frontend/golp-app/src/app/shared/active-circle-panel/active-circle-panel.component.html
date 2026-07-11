@@ -1,0 +1,76 @@
+@if (open) {
+  <div class="sheet-overlay" (click)="close()"></div>
+  <div class="circle-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h2>Circolo attivo</h2>
+    </div>
+
+    @if (showSearch()) {
+      <div class="sheet-search">
+        <span class="icon">⌕</span>
+        <input
+          type="text"
+          placeholder="Cerca circolo…"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+        />
+      </div>
+    }
+
+    <div class="sheet-list">
+      <button type="button" class="circle-row" [class.selected]="activeSelection() === ALL_CIRCLES_ID" (click)="select(ALL_CIRCLES_ID)">
+        <span class="sport-swatch all-swatch">∀</span>
+        <span class="row-info">
+          <span class="row-name">Tutti i circoli</span>
+          <span class="row-meta">Vista aggregata su tutti i tuoi circoli</span>
+        </span>
+        @if (activeSelection() === ALL_CIRCLES_ID) {
+          <span class="check-badge">✓</span>
+        }
+      </button>
+
+      @if (hasFavorites()) {
+        <div class="sheet-group-label">Preferiti</div>
+      }
+      @for (circle of favoriteCircles(); track trackById($index, circle)) {
+        <button type="button" class="circle-row" [class.selected]="isSelected(circle.id)" (click)="select(circle.id)">
+          <span class="sport-swatch">{{ circle.sport.charAt(0).toUpperCase() }}</span>
+          <span class="row-info">
+            <span class="row-name">
+              {{ circle.name }}
+              <button type="button" class="fav-star active" (click)="toggleFavorite($event, circle)">★</button>
+            </span>
+            <span class="row-meta">{{ circle.sport }} · {{ circle.memberCount }} membri</span>
+          </span>
+          <span class="row-rating"><strong>{{ circle.myRating }}</strong><span>#{{ circle.myRank }}</span></span>
+          @if (isSelected(circle.id)) {
+            <span class="check-badge">✓</span>
+          }
+        </button>
+      }
+
+      @if (hasFavorites()) {
+        <div class="sheet-group-label">Altri circoli</div>
+      }
+      @for (circle of otherCircles(); track trackById($index, circle)) {
+        <button type="button" class="circle-row" [class.selected]="isSelected(circle.id)" (click)="select(circle.id)">
+          <span class="sport-swatch">{{ circle.sport.charAt(0).toUpperCase() }}</span>
+          <span class="row-info">
+            <span class="row-name">
+              {{ circle.name }}
+              @if (showSearch()) {
+                <button type="button" class="fav-star" (click)="toggleFavorite($event, circle)">★</button>
+              }
+            </span>
+            <span class="row-meta">{{ circle.sport }} · {{ circle.memberCount }} membri</span>
+          </span>
+          <span class="row-rating"><strong>{{ circle.myRating }}</strong><span>#{{ circle.myRank }}</span></span>
+          @if (isSelected(circle.id)) {
+            <span class="check-badge">✓</span>
+          }
+        </button>
+      }
+    </div>
+  </div>
+}

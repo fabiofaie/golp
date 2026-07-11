@@ -46,8 +46,7 @@
       }
 
       @if (activeCircle(); as active) {
-        <!-- Selettore non ancora attivo: il cambio circolo arriva con US-066 -->
-        <button class="circle-picker" type="button" disabled>
+        <button class="circle-picker" type="button" (click)="openPanel()">
           <span class="sport-icon">{{ active.sport.charAt(0).toUpperCase() }}</span>
           <span><small>Circolo attivo</small><strong>{{ active.name }}</strong></span>
           <span class="chevron">⌄</span>
@@ -64,7 +63,7 @@
               <div class="rank"><small>POSIZIONE</small><strong>#{{ active.myRank }}</strong><span>su {{ active.memberCount }}</span></div>
             </div>
             <div class="stats">
-              <div><strong>{{ recentMatches().length }}</strong><span>Partite</span></div>
+              <div><strong>{{ confirmedMatchesCount() }}</strong><span>Partite</span></div>
               <div><strong>{{ winStreak() }}</strong><span>Serie positiva</span></div>
             </div>
           </article>
@@ -77,8 +76,14 @@
           </div>
           @if (recentMatches().length === 0) {
             <div class="empty-state">
-              <strong>Nessuna partita ancora</strong>
-              <p>Registra la prima partita per iniziare a costruire il tuo rating in questo circolo.</p>
+              @if (active.memberCount < 4) {
+                <strong>Il circolo ha bisogno di altri giocatori</strong>
+                <p>Servono almeno 4 membri per registrare partite in questo sport. Invita altri giocatori per iniziare.</p>
+                <a routerLink="/circles" class="btn-ghost">Vai ai tuoi circoli</a>
+              } @else {
+                <strong>Nessuna partita ancora</strong>
+                <p>Registra la prima partita per iniziare a costruire il tuo rating in questo circolo.</p>
+              }
             </div>
           } @else {
             <div class="recent-list">
@@ -98,9 +103,57 @@
             </div>
           }
         </section>
+      } @else if (activeCircleService.isAllCirclesSelected()) {
+        <button class="circle-picker" type="button" (click)="openPanel()">
+          <span class="sport-icon">∀</span>
+          <span><small>Circolo attivo</small><strong>Tutti i circoli</strong></span>
+          <span class="chevron">⌄</span>
+        </button>
+
+        <section class="aggregate-stats">
+          <div class="aggregate-stat">
+            <strong>{{ aggregateStats().circlesCount }}</strong>
+            <span>Circoli attivi</span>
+          </div>
+          <div class="aggregate-stat">
+            <strong>{{ aggregateStats().confirmedMatchesCount }}</strong>
+            <span>Partite giocate</span>
+          </div>
+          <div class="aggregate-stat">
+            <strong>{{ aggregateStats().winRate }}%</strong>
+            <span>Vittorie</span>
+          </div>
+          <div class="aggregate-stat">
+            <strong>{{ aggregateStats().urgentCount }}</strong>
+            <span>Da confermare</span>
+          </div>
+        </section>
+
+        <section>
+          <div class="section-title-row">
+            <h2>I tuoi circoli</h2>
+          </div>
+          <div class="all-circles-list">
+            @for (c of circles(); track c.id) {
+              <a class="circle-summary-card" [routerLink]="['/circles', c.id, 'leaderboard']">
+                <span class="sport-icon">{{ c.sport.charAt(0).toUpperCase() }}</span>
+                <span class="circle-summary-info">
+                  <strong>{{ c.name }}</strong>
+                  <small>{{ c.sport }}</small>
+                </span>
+                <span class="circle-summary-rating">
+                  <strong>{{ c.myRating }}</strong>
+                  <span>#{{ c.myRank }}</span>
+                </span>
+              </a>
+            }
+          </div>
+        </section>
       }
     </main>
   }
 
   <app-version></app-version>
+
+  <app-active-circle-panel [open]="panelOpen()" (closed)="closePanel()"></app-active-circle-panel>
 </div>

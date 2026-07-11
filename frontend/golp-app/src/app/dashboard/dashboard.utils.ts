@@ -1,5 +1,5 @@
 import { CircleSummary } from '../circles/circle.service';
-import { MatchSummary } from '../circles/match.service';
+import { MatchSummary, MyMatchSummary } from '../circles/match.service';
 
 /**
  * Criterio provvisorio in attesa del selettore persistito (US-066):
@@ -38,6 +38,17 @@ export function computeCurrentWinStreak(matches: MatchSummary[], userId: string)
     streak++;
   }
   return streak;
+}
+
+/**
+ * Percentuale di vittorie (0-100, arrotondata) su partite confirmed cross-circolo (US-067).
+ * Usa myTeam/winnerTeam di MyMatchSummary, già relativi all'utente corrente — nessun filtro per userId necessario.
+ */
+export function computeAggregateWinRate(matches: MyMatchSummary[]): number {
+  const confirmed = matches.filter(m => m.status === 'confirmed');
+  if (confirmed.length === 0) return 0;
+  const wins = confirmed.filter(m => m.myTeam === m.winnerTeam).length;
+  return Math.round((wins / confirmed.length) * 100);
 }
 
 export function didUserWin(match: MatchSummary, userId: string): boolean | null {

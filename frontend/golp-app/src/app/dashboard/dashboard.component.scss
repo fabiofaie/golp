@@ -231,3 +231,61 @@
 
 .positive { color: var(--color-success) !important; }
 .negative { color: var(--color-error) !important; }
+
+/* ---- Vista aggregata "Tutti i circoli" (US-067) ---- */
+.aggregate-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.aggregate-stat {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  strong { font-size: 24px; font-weight: 900; color: var(--color-accent); letter-spacing: -0.5px; }
+  span { font-size: 10px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .06em; }
+}
+
+.all-circles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.circle-summary-card {
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  align-items: center;
+  gap: 11px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+  padding: 11px;
+  text-decoration: none;
+  color: var(--color-text-primary);
+}
+
+.circle-summary-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  strong { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  small { color: var(--color-text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
+}
+
+.circle-summary-rating {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+
+  strong { font-size: 15px; color: var(--color-accent); }
+  span { font-size: 10px; color: var(--color-text-secondary); }
+}

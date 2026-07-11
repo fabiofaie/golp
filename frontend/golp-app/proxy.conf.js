@@ -6,6 +6,7 @@ const bypass = (req) => {
 module.exports = {
   '/auth':    { target: 'http://localhost:5120', secure: false, changeOrigin: true, logLevel: 'warn', bypass },
   '/circles': { target: 'http://localhost:5120', secure: false, changeOrigin: true, logLevel: 'warn', bypass },
+  '/dashboard': { target: 'http://localhost:5120', secure: false, changeOrigin: true, logLevel: 'warn', bypass },
   '/sports':  { target: 'http://localhost:5120', secure: false, changeOrigin: true, logLevel: 'warn', bypass },
   '/api':     { target: 'http://localhost:5120', secure: false, changeOrigin: true, logLevel: 'warn', bypass },
   '/m/':      { target: 'http://localhost:5120', secure: false, changeOrigin: true, logLevel: 'warn', bypass },

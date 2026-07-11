@@ -2,7 +2,7 @@ import { CommonModule } from "@angular/common";
 import { HttpClient } from "@angular/common/http";
 import { Component, OnDestroy, OnInit, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { Router, RouterLink } from "@angular/router";
+import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from "rxjs";
 
 import { environment } from "../../../environments/environment";
@@ -820,6 +820,7 @@ type Step = "sport" | "players" | "picker" | "score";
 })
 export class QuickMatchComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly authSvc = inject(AuthService);
   private readonly circleSvc = inject(CircleService);
   private readonly matchSvc = inject(MatchService);
@@ -862,6 +863,10 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
   checkResult: QuickCheckResponse | null = null;
   selectedCircle: CirclePick | null = null;
 
+  // US-066: circolo attivo passato dalla dashboard, usato come pre-selezione opzionale
+  // quando compare tra i circoli candidati — l'utente può comunque sceglierne un altro.
+  private preferredCircleId: string | null = null;
+
   sets: SetRow[] = [{ team1: null, team2: null }];
   newCircleName = "";
 
@@ -900,6 +905,7 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.preferredCircleId = this.route.snapshot.queryParamMap.get("circleId");
     this.currentUserId = this.authSvc.getCurrentUserId() ?? "";
 
     // Load user name from /auth/me
@@ -1096,7 +1102,13 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
         this.selectedCircle = circles[0];
         this.step = "score";
       } else if (circles.length > 1) {
-        this.step = "picker";
+        const preferred = this.preferredCircleId && circles.find(c => c.id === this.preferredCircleId);
+        if (preferred) {
+          this.selectedCircle = preferred;
+          this.step = "score";
+        } else {
+          this.step = "picker";
+        }
       } else {
         this.selectedCircle = null;
         this.buildAutoName();
@@ -1105,7 +1117,13 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
     } else {
       // partial
       if (circles.length > 0) {
-        this.step = "picker";
+        const preferred = this.preferredCircleId && circles.find(c => c.id === this.preferredCircleId);
+        if (preferred) {
+          this.selectedCircle = preferred;
+          this.step = "score";
+        } else {
+          this.step = "picker";
+        }
       } else {
         this.selectedCircle = null;
         this.buildAutoName();

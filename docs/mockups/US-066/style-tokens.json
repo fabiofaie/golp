@@ -1,0 +1,79 @@
+{
+  "source": "docs/mockups/US-066/shared.css",
+  "colors": {
+    "bg":               "#0A0A0A",
+    "surface":          "#141414",
+    "surface-elevated": "#1F1F1F",
+    "border":           "#2C2C2C",
+    "accent":           "#FF5500",
+    "accent-hover":     "#E64D00",
+    "accent-dim":       "rgba(255,85,0,0.12)",
+    "text-primary":     "#FFFFFF",
+    "text-secondary":   "#9A9A9A",
+    "text-placeholder": "#484848",
+    "success":          "#22C55E",
+    "team1":            "#FF5500",
+    "team2":            "#0EA5E9",
+    "favorite":         "#F5B700"
+  },
+  "typography": {
+    "family": "Inter",
+    "sizes": {
+      "xs": "11px", "sm": "13px", "base": "15px", "lg": "18px", "xl": "24px"
+    },
+    "weights": { "regular": 400, "medium": 500, "bold": 700, "black": 900 }
+  },
+  "spacing": {
+    "1": "4px", "2": "8px", "3": "12px", "4": "16px", "5": "20px", "6": "24px", "8": "32px"
+  },
+  "radii": { "sm": "4px", "md": "8px", "lg": "14px", "full": "9999px" },
+  "components": {
+    "circle-picker": {
+      "background": "surface",
+      "border": "1px solid border",
+      "sport-icon": "36px circle, accent-dim bg, accent text"
+    },
+    "sheet-overlay": {
+      "background": "rgba(0,0,0,0.6)",
+      "transition": "opacity 0.2s ease"
+    },
+    "circle-sheet": {
+      "background": "surface",
+      "border-radius": "14px 14px 0 0",
+      "max-height": "82vh",
+      "transition": "transform 0.25s cubic-bezier(0.2,0.9,0.3,1)",
+      "handle": "36x4px pill, border color, centered"
+    },
+    "circle-row": {
+      "padding": "12px",
+      "border-radius": "8px",
+      "hover-bg": "surface-elevated",
+      "selected-bg": "accent-dim",
+      "sport-swatch": "40px circle, sport color at 12% opacity bg + full color text",
+      "check-badge": "accent checkmark, shown only on selected row"
+    },
+    "fav-star": {
+      "default-color": "border",
+      "active-color": "favorite (#F5B700)",
+      "active-transform": "scale(1.1)"
+    },
+    "sheet-search": {
+      "visible-when": "circles.length > 5",
+      "background": "surface-elevated",
+      "border": "1px solid border",
+      "border-radius": "8px"
+    },
+    "sheet-group-label": {
+      "text": "uppercase, xs, bold, text-secondary",
+      "groups": ["Preferiti", "Altri circoli"],
+      "visible-when": "favorites.length > 0 (altrimenti lista piatta senza gruppi)"
+    }
+  },
+  "behavior_notes": {
+    "sheet_open_trigger": "click su .circle-picker (oggi disabled in dashboard.component.html, va abilitato)",
+    "sheet_close_trigger": "click su overlay, o selezione di una riga",
+    "all_circles_row": "sempre prima riga, nessun swatch specifico sport (simbolo ∀ generico, sostituibile con icona)",
+    "search_threshold": "> 5 circoli totali (esclusa riga 'Tutti i circoli')",
+    "favorites_grouping": "se almeno 1 preferito, lista si divide in 'Preferiti' + 'Altri circoli'; altrimenti lista piatta"
+  }
+}

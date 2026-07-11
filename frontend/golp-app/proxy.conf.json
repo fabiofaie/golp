@@ -11,6 +11,12 @@
     "changeOrigin": true,
     "logLevel": "warn"
   },
+  "/dashboard": {
+    "target": "http://localhost:5120",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "warn"
+  },
   "/sports": {
     "target": "http://localhost:5120",
     "secure": false,

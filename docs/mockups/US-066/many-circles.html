@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>US-066 — Selettore, molti circoli</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+  <div class="demo-strip">
+    <button onclick="location.href='index.html'">Pochi circoli (3)</button>
+    <button class="active" onclick="location.href='many-circles.html'">Molti circoli (8, ricerca+preferiti)</button>
+  </div>
+
+  <div class="page" style="padding-top: 40px;">
+    <header class="app-header">
+      <span class="brand">GOLP</span>
+      <button class="logout-btn">Esci</button>
+    </header>
+
+    <main class="dashboard-content">
+      <button class="circle-picker open" onclick="toggleSheet()">
+        <span class="sport-icon">P</span>
+        <span><small>Circolo attivo</small><strong>Padel Amici</strong></span>
+        <span class="chevron">⌄</span>
+      </button>
+    </main>
+
+    <div class="sheet-overlay visible" id="overlay" onclick="toggleSheet()"></div>
+    <div class="circle-sheet visible" id="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h2>Circolo attivo</h2>
+      </div>
+
+      <div class="sheet-search">
+        <span class="icon">⌕</span>
+        <input type="text" placeholder="Cerca circolo…" oninput="filterRows(this.value)">
+      </div>
+
+      <div class="sheet-list" id="list">
+        <button class="circle-row" data-name="tutti i circoli" onclick="selectRow(this)">
+          <span class="sport-swatch all-swatch">∀</span>
+          <span class="row-info">
+            <span class="row-name">Tutti i circoli</span>
+            <span class="row-meta">Vista aggregata su tutti i tuoi circoli</span>
+          </span>
+        </button>
+
+        <div class="sheet-group-label" data-group="fav">Preferiti</div>
+
+        <button class="circle-row selected" data-name="padel amici" data-group="fav" onclick="selectRow(this)">
+          <span class="sport-swatch" style="background: rgba(255,85,0,0.12); color: var(--color-team1);">P</span>
+          <span class="row-info">
+            <span class="row-name">Padel Amici <button class="fav-star active" onclick="toggleFav(event,this)">★</button></span>
+            <span class="row-meta">Padel · 12 membri</span>
+          </span>
+          <span class="row-rating"><strong>1284</strong><span>#2</span></span>
+          <span class="check-badge">✓</span>
+        </button>
+
+        <button class="circle-row" data-name="basket ufficio" data-group="fav" onclick="selectRow(this)">
+          <span class="sport-swatch" style="background: rgba(34,197,94,0.12); color: var(--color-success);">B</span>
+          <span class="row-info">
+            <span class="row-name">Basket Ufficio <button class="fav-star active" onclick="toggleFav(event,this)">★</button></span>
+            <span class="row-meta">Basket 2v2 · 6 membri</span>
+          </span>
+          <span class="row-rating"><strong>980</strong><span>#4</span></span>
+        </button>
+
+        <div class="sheet-group-label" data-group="rest">Altri circoli</div>
+
+        <button class="circle-row" data-name="beach tennis estate" data-group="rest" onclick="selectRow(this)">
+          <span class="sport-swatch" style="background: rgba(14,165,233,0.12); color: var(--color-team2);">BT</span>
+          <span class="row-info">
+            <span class="row-name">Beach Tennis Estate <button class="fav-star" onclick="toggleFav(event,this)">★</button></span>
+            <span class="row-meta">Beach Tennis · 8 membri</span>
+          </span>
+          <span class="row-rating"><strong>1050</strong><span>#5</span></span>
+        </button>
+
+        <button class="circle-row" data-name="padel lavoro" data-group="rest" onclick="selectRow(this)">
+          <span class="sport-swatch" style="background: rgba(255,85,0,0.12); color: var(--color-team1);">P</span>
+          <span class="row-info">
+            <span class="row-name">Padel Lavoro <button class="fav-star" onclick="toggleFav(event,this)">★</button></span>
+            <span class="row-meta">Padel · 10 membri</span>
+          </span>
+          <span class="row-rating"><strong>1102</strong><span>#3</span></span>
+        </button>
+
+        <button class="circle-row" data-name="burraco nonne" data-group="rest" onclick="selectRow(this)">
+          <span class="sport-swatch" style="background: rgba(245,183,0,0.12); color: var(--color-favorite);">Bu</span>
+          <span class="row-info">
+            <span class="row-name">Burraco Nonne <button class="fav-star" onclick="toggleFav(event,this)">★</button></span>
+            <span class="row-meta">Burraco · 4 membri</span>
+          </span>
+          <span class="row-rating"><strong>1000</strong><span>#2</span></span>
+        </button>
+
+        <button class="circle-row" data-name="padel sabato" data-group="rest" onclick="selectRow(this)">
+          <span class="sport-swatch" style="background: rgba(255,85,0,0.12); color: var(--color-team1);">P</span>
+          <span class="row-info">
+            <span class="row-name">Padel Sabato <button class="fav-star" onclick="toggleFav(event,this)">★</button></span>
+            <span class="row-meta">Padel · 14 membri</span>
+          </span>
+          <span class="row-rating"><strong>1310</strong><span>#1</span></span>
+        </button>
+
+        <button class="circle-row" data-name="beach tennis inverno" data-group="rest" onclick="selectRow(this)">
+          <span class="sport-swatch" style="background: rgba(14,165,233,0.12); color: var(--color-team2);">BT</span>
+          <span class="row-info">
+            <span class="row-name">Beach Tennis Inverno <button class="fav-star" onclick="toggleFav(event,this)">★</button></span>
+            <span class="row-meta">Beach Tennis · 6 membri</span>
+          </span>
+          <span class="row-rating"><strong>990</strong><span>#6</span></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

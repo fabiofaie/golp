@@ -135,6 +135,7 @@ app.MapSimulateGameBonusEndpoints();
 app.MapQuickMatchEndpoints();
 app.MapMyMatchEndpoints();
 app.MapAdminEndpoints();
+app.MapDashboardEndpoints();
 
 app.Run();
 

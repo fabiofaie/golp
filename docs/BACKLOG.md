@@ -2223,7 +2223,8 @@ Dopo il login, la dashboard mostra dall'alto verso il basso: 1) sezione richiest
 
 #### US-064: Bottom-nav condizionale limitata alle aree principali
 
-**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 3 | **Status:** REVIEW
+**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-07-11):** Review umana OK.
 **Review note (2026-07-10):** Codice in `frontend/golp-app/src/app/shell/`, `frontend/golp-app/src/app/shared/active-circle.service.ts`, `frontend/golp-app/src/app/shared/bottom-nav/`, `app.routes.ts` (wrap sotto AppShellComponent), `dashboard.component.ts/html/scss` (ripulito, CTA delegato a ActiveCircleService), `auth.service.ts` (reset ActiveCircleService su login/logout/impersonate). Test in `active-circle.service.spec.ts`, `app-shell.component.spec.ts`, `dashboard.component.spec.ts` (migrato), `auth.service.spec.ts` (2 nuovi test regressione), `us-064-conditional-bottom-nav.spec.ts`. Reviewer round 1: REQUEST CHANGES (1 Critical — ensureLoaded() non chiamato da bottom-nav globale). Fix + Reviewer round 2: APPROVE. **Bug trovato in test manuale post-review:** ActiveCircleService (providedIn:'root') non veniva resettato al logout — dopo logout→login i circoli del vecchio utente restavano in cache, causando "Circolo non trovato o non sei membro" su Registra Partita. Fix: `reset()` chiamato da login/register/logout/logoutAllDevices/deleteAccount/impersonate. **Secondo cambio post-review (2026-07-10):** il redesign dashboard (US-063) aveva reso irraggiungibile Quick Match dalla home; il "+" ora naviga sempre a `/match/quick` invece che al form standard su circolo attivo — guardia sui 4 membri rimossa (non più pertinente, Quick Match gestisce da solo scelta/creazione circolo e ospiti). Vedi nota su US-063. Suite verde: 371 backend + 290 frontend unit + 5 e2e. > **PROSSIMO PASSO:** revisione umana (incluso entrambi i fix post-review), poi `/eq-approve US-064`.
 **Blocked by:** -
 
@@ -2251,7 +2252,9 @@ La bottom-nav (Home/Partite/+/Circoli/Profilo) è visibile in dashboard, elenco 
 
 #### US-065: Correzione mockup dashboard-v2 — rimozione CTA duplicato in header
 
-**Epic:** EP-009 | **Priority:** MEDIUM | **Story Points:** 1 | **Status:** TODO
+**Epic:** EP-009 | **Priority:** MEDIUM | **Story Points:** 1 | **Status:** DONE
+**Approved (2026-07-11):** Review umana OK.
+**Review note (2026-07-11):** Modifica in `docs/mockups/dashboard-v2/index.html` (rimosso CTA "+ Partita" duplicato, aggiunta etichetta "Registra" alla bottom-nav). Nessun test applicabile (mockup statico). Reviewer APPROVE, nessun finding. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-065` (o aggiorna manualmente lo status a `DONE`).
 **Blocked by:** -
 
 **Story**
@@ -2276,7 +2279,10 @@ Aprendo `docs/mockups/dashboard-v2/index.html`, l'unico controllo per registrare
 
 #### US-066: Selettore circolo attivo e filtro dei contenuti dashboard
 
-**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 5 | **Status:** TODO
+**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-07-10):** Review umana OK.
+**Review note (2026-07-10):** Codice in `frontend/golp-app/src/app/shared/active-circle.service.ts`, `shared/active-circle-panel/`, `dashboard/dashboard.component.*`, `circles/quick-match/quick-match.component.ts`; test in `*.spec.ts` + `e2e/us-066-active-circle-selector.spec.ts`. Reviewer APPROVE (1 Important risolto: badge selezione allineato al fallback `pickActiveCircle`). > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-066` (o aggiorna manualmente lo status a `DONE`).
+**Visual evidence (2026-07-10):** docs/test-results/US-066/report.md (4 AC pass visivamente / 2 AC coperti solo da test automatizzati / 0 console errors rilevanti / 0 network failures)
 **Blocked by:** -
 
 **Story**
@@ -2304,7 +2310,9 @@ Toccando il selettore "Circolo attivo" si apre un pannello dal basso con l'opzio
 
 #### US-067: Vista aggregata "Tutti i circoli"
 
-**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 5 | **Status:** TODO
+**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-07-10):** Review umana OK.
+**Review note (2026-07-10):** Codice in `frontend/golp-app/src/app/dashboard/dashboard.component.*`, `dashboard/dashboard.utils.ts`; test in `*.spec.ts` + `e2e/us-067-all-circles-view.spec.ts`. Reviewer APPROVE (1 Important risolto: commento chiarificatore su filtro `confirmed` ridondante come difesa in profondità). > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-067` (o aggiorna manualmente lo status a `DONE`).
 **Blocked by:** US-066
 
 **Story**
@@ -2331,7 +2339,9 @@ Selezionando "Tutti i circoli" dal pannello (US-066), la dashboard mostra: numer
 
 #### US-068: Trattamento visivo distinto per conferme e contestazioni pendenti
 
-**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 3 | **Status:** TODO
+**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-07-11):** Review umana OK.
+**Review note (2026-07-10):** Codice in `frontend/golp-app/src/app/dashboard/dashboard.component.ts` (fix: `forkJoin` pending+disputed in `ngOnInit`, styling/routing già esistenti); test in `dashboard.component.spec.ts` + `e2e/us-068-urgent-matches-distinction.spec.ts`. Reviewer APPROVE (1 Important non-bloccante: mancanza `catchError` sui fetch dashboard, pattern pre-esistente, proposto come hardening futuro separato). > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-068` (o aggiorna manualmente lo status a `DONE`).
 **Blocked by:** -
 
 **Story**
@@ -2359,7 +2369,9 @@ Nella sezione "azioni urgenti" della dashboard, le partite `pending` in attesa d
 
 #### US-069: Stati vuoti della dashboard per utenti nuovi
 
-**Epic:** EP-009 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** TODO
+**Epic:** EP-009 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-07-11):** Review umana OK.
+**Review note (2026-07-11):** Codice in `frontend/golp-app/src/app/dashboard/dashboard.component.html` (AC1/AC3 già esistenti, ora testati; AC5 aggiunto: messaggio differenziato per circoli <4 membri); test in `dashboard.component.spec.ts` (+7) + `e2e/us-069-dashboard-empty-states.spec.ts`. Reviewer APPROVE (1 Important risolto: testo CTA ammorbidito da "Gestisci circolo" a "Vai ai tuoi circoli" perché `/circles` è generica, non scoped al singolo circolo). > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-069` (o aggiorna manualmente lo status a `DONE`).
 **Blocked by:** -
 
 **Story**
@@ -2386,7 +2398,9 @@ Un utente senza circoli vede un messaggio che lo invita a creare o unirsi a un c
 
 #### US-070: Endpoint aggregato per il caricamento performante della dashboard
 
-**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 5 | **Status:** TODO
+**Epic:** EP-009 | **Priority:** HIGH | **Story Points:** 5 | **Status:** DONE
+**Approved (2026-07-11):** Review umana OK.
+**Review note (2026-07-11):** Codice in `src/Golp.Api/Endpoints/DashboardEndpoints.cs` (nuovo endpoint `GET /dashboard/summary`), `Program.cs`; frontend in `frontend/golp-app/src/app/dashboard/dashboard.service.ts` (nuovo) + `dashboard.component.ts` (refactor); fix `proxy.conf.js`/`proxy.conf.json` (mancava `/dashboard`, scoperto da e2e). Test in `Golp.Tests/Integration/DashboardSummaryEndpointTests.cs` (6) + `dashboard.service.spec.ts` + `dashboard.component.spec.ts` (riscritto) + `e2e/us-070-dashboard-single-call.spec.ts`. Reviewer APPROVE (1 Important risolto: try/catch aggiunto anche su `GetCirclesAsync`; 1 Important solo chiarimento — AC1 è soddisfatto per le chiamate proprie della dashboard, `ActiveCircleService` mantiene un fetch separato di `/circles/me` per il selettore/bottom-nav globale, condiviso app-wide e intenzionalmente fuori scope, vedi piano). > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-070` (o aggiorna manualmente lo status a `DONE`).
 **Blocked by:** -
 
 **Story**
@@ -2412,7 +2426,8 @@ Aprendo la dashboard, il client effettua un'unica chiamata coordinata (o un nume
 
 #### US-071: Registrazione partita da parte del proprietario del circolo senza partecipare
 
-**Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 3 | **Status:** REVIEW
+**Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-07-10):** Review umana OK.
 **Review note (2026-07-10):** Codice in `src/Golp.Api/Endpoints/QuickMatchEndpoints.cs`, `frontend/golp-app/src/app/circles/quick-match/quick-match.component.ts`, `frontend/golp-app/src/app/circles/match.service.ts`. Test in `src/Golp.Tests/Integration/QuickMatchEndpointsTests.cs` (+5 nuovi), `quick-match.component.spec.ts` (+6 nuovi), `e2e/us-071-quick-match-owner-not-playing.spec.ts` (2 scenari). Reviewer APPROVE. Nota: design frontend rivisto in corso d'opera (slot0 sempre sbloccabile + filtro circoli non posseduti, invece di `slot0Locked` calcolato su circolo selezionato — vedi `docs/planning/US-071.md` TASK-11). > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-071` (o aggiorna manualmente lo status a `DONE`).
 **Blocked by:** -
 
