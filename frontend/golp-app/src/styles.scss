@@ -166,13 +166,35 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
-  min-height: 100%;
+  height: 100%;
+  overflow: hidden;
   background: var(--color-bg);
   color: var(--color-text-primary);
   font-family: var(--font-family);
   font-size: var(--font-size-base);
   line-height: var(--line-height);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Lo scroll avviene qui, non su body: su iOS/PWA standalone, se body stesso scrolla,
+   il ridimensionamento della toolbar dinamica di Safari durante lo swipe fa "saltare"
+   temporaneamente gli elementi position:fixed (come .bottom-nav) a metà schermo. */
+app-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+app-shell {
+  display: block;
+  flex: 1;
+  min-height: 0;
+}
+
+.app-scroll {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Riserva spazio per il bottom-sheet di invito installazione PWA (US-024), così non sovrappone bottoni/contenuto sottostante */
