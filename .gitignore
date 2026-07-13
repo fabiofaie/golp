@@ -23,3 +23,6 @@ frontend/golp-app/src/app/version.ts
 
 # PromptOps session assets
 .promptops-assets/
+
+# Password cifrate DPAPI per script locali (mai committare)
+scripts/.secrets/
