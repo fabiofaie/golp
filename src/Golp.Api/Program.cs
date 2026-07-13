@@ -34,6 +34,9 @@ builder.Services.AddScoped<IRatingService, RatingService>();
 // Game+Bonus rating service (US-052) — metodo alternativo, per-circolo (Circle.RatingMethod)
 builder.Services.AddScoped<IGameBonusRatingService, GameBonusRatingService>();
 
+// Matchmaking per il raduno al circolo (US-049) — solo suggerimento, nessun calcolo punteggio nuovo
+builder.Services.AddScoped<IMatchmakingService, MatchmakingService>();
+
 // Sports config da DB (US-016)
 builder.Services.AddScoped<ISportsService, SportsService>();
 

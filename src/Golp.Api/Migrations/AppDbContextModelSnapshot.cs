@@ -123,6 +123,31 @@ namespace Golp.Api.Migrations
                     b.ToTable("Circles");
                 });
 
+            modelBuilder.Entity("Golp.Api.Data.Entities.CircleAttendance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CircleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("CircleId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("CircleAttendances");
+                });
+
             modelBuilder.Entity("Golp.Api.Data.Entities.CircleAward", b =>
                 {
                     b.Property<Guid>("Id")
@@ -701,6 +726,25 @@ namespace Golp.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("Golp.Api.Data.Entities.CircleAttendance", b =>
+                {
+                    b.HasOne("Golp.Api.Data.Entities.Circle", "Circle")
+                        .WithMany()
+                        .HasForeignKey("CircleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Golp.Api.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Circle");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Golp.Api.Data.Entities.CircleMembership", b =>

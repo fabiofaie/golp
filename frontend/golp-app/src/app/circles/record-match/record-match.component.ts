@@ -99,6 +99,20 @@ export class RecordMatchComponent implements OnInit {
       next: m => { this.members = m; },
       error: () => { this.errorMessage = 'Impossibile caricare i membri del circolo.'; },
     });
+
+    this.applyPrefillFromQueryParams();
+  }
+
+  // US-049: pre-fill dei 4 giocatori quando si arriva dal piano accoppiamenti del raduno
+  // (circle-gathering). Nessun nuovo stato: riusa gli stessi slot della registrazione manuale.
+  private applyPrefillFromQueryParams(): void {
+    const qp = this.route.snapshot.queryParamMap;
+    const prefill = [qp.get('team1p1'), qp.get('team1p2'), qp.get('team2p1'), qp.get('team2p2')];
+    if (prefill.every(v => !v)) return;
+
+    this.slots = this.slots.map((slot, i) =>
+      prefill[i] ? { ...slot, mode: 'membro', userId: prefill[i] as string } : slot
+    );
   }
 
   setSlotMode(index: number, mode: 'membro' | 'ospite'): void {

@@ -1,0 +1,137 @@
+<div class="page">
+  <header class="gathering-header">
+    <a [routerLink]="['/circles']" class="back" aria-label="Torna ai circoli">←</a>
+    <div>
+      <h1>Raduno al circolo</h1>
+    </div>
+  </header>
+
+  <div *ngIf="loading" class="hint-text">Caricamento membri…</div>
+  <div *ngIf="errorMessage" class="error-text">{{ errorMessage }}</div>
+
+  <section *ngIf="!loading" class="section">
+    <div class="presence-counter">
+      <strong [class.ready]="canGeneratePlan">{{ presentCount }} present{{ presentCount === 1 ? 'e' : 'i' }}</strong>
+      <span class="hint">
+        {{ canGeneratePlan ? 'pronto per generare il piano' : 'servono almeno 4 presenti (mancano ' + (4 - presentCount) + ')' }}
+      </span>
+    </div>
+
+    <div class="member-grid">
+      <button
+        type="button"
+        class="member-chip"
+        *ngFor="let m of members"
+        [class.present]="m.present"
+        (click)="toggleMemberPresence(m)"
+      >
+        <div class="avatar">{{ initials(m.name) }}</div>
+        <div class="name">{{ m.name }}</div>
+      </button>
+    </div>
+
+    <div class="plan-config">
+      <div class="config-row">
+        <div>
+          <span class="config-label">Campi disponibili</span>
+          <span class="config-sublabel">quante partite in parallelo per turno</span>
+        </div>
+        <div class="stepper">
+          <button type="button" (click)="adjustCourts(-1)" aria-label="Meno campi">−</button>
+          <span class="stepper-value">{{ courts }}</span>
+          <button type="button" (click)="adjustCourts(1)" aria-label="Più campi">+</button>
+        </div>
+      </div>
+
+      <div class="config-row">
+        <div>
+          <span class="config-label">Obiettivo partite</span>
+          <span class="config-sublabel">
+            {{ targetMode === 'Total' ? 'quante partite in totale nel raduno' : 'quante partite vuole giocare ciascun presente' }}
+          </span>
+        </div>
+        <div class="target-toggle">
+          <button type="button" [class.active]="targetMode === 'Total'" (click)="toggleTargetMode('Total')">Totale raduno</button>
+          <button type="button" [class.active]="targetMode === 'PerPlayer'" (click)="toggleTargetMode('PerPlayer')">A testa</button>
+        </div>
+      </div>
+
+      <div class="config-row">
+        <span class="config-label">{{ targetMode === 'Total' ? 'Partite totali' : 'Partite a testa' }}</span>
+        <div class="stepper">
+          <button type="button" (click)="adjustTargetValue(-1)" aria-label="Meno partite">−</button>
+          <span class="stepper-value">{{ targetValue }}</span>
+          <button type="button" (click)="adjustTargetValue(1)" aria-label="Più partite">+</button>
+        </div>
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="generate-btn"
+      [class.ready]="canGeneratePlan"
+      [disabled]="!canGeneratePlan || planLoading"
+      (click)="generatePlan()"
+    >
+      {{ plan ? 'Rigenera piano' : (canGeneratePlan ? 'Genera piano (' + presentCount + ' presenti)' : 'Genera piano (min. 4 presenti)') }}
+    </button>
+
+    <div *ngIf="planError" class="error-text">{{ planError }}</div>
+  </section>
+
+  <section *ngIf="plan" class="section proposal-section">
+    <div class="proposal-title">Piano accoppiamenti</div>
+    <div class="proposal-subtitle">Coppie meno giocate di recente, bilanciate per punteggio. Modifica prima di registrare.</div>
+    <div class="plan-summary">
+      Piano di <strong>{{ plan.rounds.length }}</strong> turni su <strong>{{ courts }}</strong> campi
+    </div>
+
+    <div class="round-tabs">
+      <button
+        type="button"
+        class="round-tab"
+        *ngFor="let r of plan.rounds; let i = index"
+        [class.active]="i === activeRoundIndex"
+        (click)="selectRound(i)"
+      >
+        Turno {{ i + 1 }}
+      </button>
+    </div>
+
+    <ng-container *ngIf="activeRound as round">
+      <div class="round-card" *ngFor="let match of round.matches; let mi = index">
+        <div class="round-header">Campo {{ mi + 1 }}</div>
+        <div class="round-teams">
+          <div class="team-block team1">
+            <div
+              class="player"
+              *ngFor="let userId of match.team1"
+              [class.selected]="isSelected(mi, userId)"
+              (click)="onPlayerClick(mi, 1, userId)"
+            >
+              <span>{{ memberName(userId) }}</span>
+            </div>
+          </div>
+          <div class="vs-divider">VS</div>
+          <div class="team-block team2">
+            <div
+              class="player"
+              *ngFor="let userId of match.team2"
+              [class.selected]="isSelected(mi, userId)"
+              (click)="onPlayerClick(mi, 2, userId)"
+            >
+              <span>{{ memberName(userId) }}</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="confirm-round-btn" (click)="registerMatch(match)">Registra questa partita</button>
+      </div>
+
+      <div class="resting-strip" *ngIf="round.resting.length > 0">
+        Riposa in questo turno: {{ round.resting.length }} — priorità nel prossimo turno
+      </div>
+    </ng-container>
+
+    <div class="swap-hint">Tocca due giocatori nello stesso campo per scambiarli tra le squadre</div>
+  </section>
+</div>

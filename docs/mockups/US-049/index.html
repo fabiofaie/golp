@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>US-049 — Raduno al circolo</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="page">
+
+  <header class="app-header">
+    <span class="back">←</span>
+    <div>
+      <h1>Raduno al circolo</h1>
+      <span class="circle-name">Padel Sunset Club</span>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="presence-counter">
+      <strong id="presence-count">0 presenti</strong>
+      <span class="hint" id="presence-hint">servono almeno 4 presenti</span>
+    </div>
+
+    <div class="member-grid" id="member-grid">
+      <!-- membri iniettati da app.js -->
+      <button class="member-chip add-guest" id="add-guest-chip" type="button">
+        <div class="avatar">+</div>
+        <div class="name">Ospite</div>
+      </button>
+      <div class="guest-input-row" id="guest-input-row">
+        <input type="text" id="guest-name-input" placeholder="Nome ospite" />
+        <button type="button" id="guest-confirm-btn">Aggiungi</button>
+      </div>
+    </div>
+
+    <div class="plan-config">
+      <div class="config-row">
+        <div>
+          <span class="config-label">Campi disponibili</span>
+          <span class="config-sublabel">quante partite in parallelo per turno</span>
+        </div>
+        <div class="stepper" id="courts-stepper">
+          <button type="button" data-delta="-1" aria-label="Meno campi">−</button>
+          <span class="stepper-value" id="courts-value">1</span>
+          <button type="button" data-delta="1" aria-label="Più campi">+</button>
+        </div>
+      </div>
+
+      <div class="config-row">
+        <div>
+          <span class="config-label">Obiettivo partite</span>
+          <span class="config-sublabel" id="target-sublabel">quante partite in totale nel raduno</span>
+        </div>
+        <div class="target-toggle" id="target-toggle">
+          <button type="button" class="active" data-mode="Total">Totale raduno</button>
+          <button type="button" data-mode="PerPlayer">A testa</button>
+        </div>
+      </div>
+
+      <div class="config-row">
+        <div><span class="config-label" id="target-value-label">Partite totali</span></div>
+        <div class="stepper" id="target-stepper">
+          <button type="button" data-delta="-1" aria-label="Meno partite">−</button>
+          <span class="stepper-value" id="target-value">4</span>
+          <button type="button" data-delta="1" aria-label="Più partite">+</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section proposal-section" id="proposal-section">
+    <div class="proposal-title">Piano accoppiamenti</div>
+    <div class="proposal-subtitle">Coppie meno giocate di recente, bilanciate per punteggio. Modifica prima di registrare.</div>
+    <div class="plan-summary" id="plan-summary"></div>
+
+    <div class="round-tabs" id="round-tabs"><!-- tab turno iniettate da app.js --></div>
+    <div id="rounds-container"><!-- round card del turno attivo iniettate da app.js --></div>
+
+    <div class="swap-hint">Tocca due giocatori nello stesso campo per scambiarli tra le squadre</div>
+  </section>
+
+  <div class="sticky-cta">
+    <button id="generate-btn" type="button">Genera proposta (min. 4 presenti)</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

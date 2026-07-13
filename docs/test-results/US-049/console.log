@@ -1,0 +1,19 @@
+[debug] [vite] connecting...
+[log] Angular is running in development mode.
+[debug] [vite] connected.
+[warning] Calling Firebase APIs outside of an Injection context may destabilize your application leading to subtle change-detection and hydration bugs. Find more at https://github.com/angular/angularfire/blob/main/docs/zones.md
+[warning] Firebase API called outside injection context: getToken2
+[debug] Push registration skipped: FirebaseError: Messaging: The notification permission was not granted and blocked instead. (messaging/permission-blocked).
+    at http://localhost:4200/@fs/C:/Users/fabio/source/repos/golp/frontend/golp-app/.angular/cache/19.2.27/golp-app/vite/deps/@angular_fire_messaging.js?v=01f19f5c:1376:28
+    at Generator.next (<anonymous>)
+    at http://localhost:4200/@fs/C:/Users/fabio/source/repos/golp/frontend/golp-app/.angular/cache/19.2.27/golp-app/vite/deps/chunk-IVSRFTZX.js?v=01f19f5c:49:61
+    at new ZoneAwarePromise (http://localhost:4200/polyfills.js:2166:23)
+    at __async (http://localhost:4200/@fs/C:/Users/fabio/source/repos/golp/frontend/golp-app/.angular/cache/19.2.27/golp-app/vite/deps/chunk-IVSRFTZX.js?v=01f19f5c:33:10)
+    at getToken$1 (http://localhost:4200/@fs/C:/Users/fabio/source/repos/golp/frontend/golp-app/.angular/cache/19.2.27/golp-app/vite/deps/@angular_fire_messaging.js?v=01f19f5c:1365:10)
+    at http://localhost:4200/@fs/C:/Users/fabio/source/repos/golp/frontend/golp-app/.angular/cache/19.2.27/golp-app/vite/deps/@angular_fire_messaging.js?v=01f19f5c:1514:12
+    at Generator.next (<anonymous>)
+    at http://localhost:4200/@fs/C:/Users/fabio/source/repos/golp/frontend/golp-app/.angular/cache/19.2.27/golp-app/vite/deps/chunk-IVSRFTZX.js?v=01f19f5c:49:61
+    at new ZoneAwarePromise (http://localhost:4200/polyfills.js:2166:23)
+[debug] [vite] connecting...
+[log] Angular is running in development mode.
+[debug] [vite] connected.

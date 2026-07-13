@@ -40,7 +40,15 @@ describe('RecordMatchComponent — US-048 singles', () => {
       providers: [
         { provide: CircleService, useValue: circleSvc },
         { provide: MatchService,  useValue: matchSvc },
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => CIRCLE_ID } } } },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              paramMap: { get: () => CIRCLE_ID },
+              queryParamMap: { get: () => null },
+            },
+          },
+        },
       ],
     }).compileComponents();
   });

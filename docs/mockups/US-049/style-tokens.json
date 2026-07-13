@@ -1,0 +1,77 @@
+{
+  "source": "docs/mockups/US-049/style.css",
+  "colors": {
+    "bg":               "#0A0A0A",
+    "surface":          "#141414",
+    "surface-elevated": "#1F1F1F",
+    "border":           "#2C2C2C",
+    "accent":           "#FF5500",
+    "accent-hover":     "#E64D00",
+    "accent-dim":       "rgba(255,85,0,0.12)",
+    "text-primary":     "#FFFFFF",
+    "text-secondary":   "#9A9A9A",
+    "text-placeholder": "#484848",
+    "success":          "#22C55E",
+    "team1":            "#FF5500",
+    "team2":            "#0EA5E9",
+    "resting":          "#6B6B6B"
+  },
+  "typography": {
+    "family": "Inter",
+    "sizes": { "xs": "11px", "sm": "13px", "base": "15px", "lg": "18px", "xl": "24px" },
+    "weights": { "regular": 400, "medium": 500, "bold": 700, "black": 900 }
+  },
+  "spacing": { "1": "4px", "2": "8px", "3": "12px", "4": "16px", "5": "20px", "6": "24px", "8": "32px" },
+  "radii": { "sm": "4px", "md": "8px", "lg": "14px", "full": "9999px" },
+  "components": {
+    "member-chip": {
+      "shape": "avatar circle 44px + nome sotto, layout a griglia wrap",
+      "default": "surface bg, border 1px border, text-secondary",
+      "present": "accent-dim bg, accent border, text-primary, check-badge accent in overlay sull'avatar",
+      "tap-target": "intero chip (avatar+nome), min 64x76px"
+    },
+    "presence-counter": {
+      "text": "N presenti (bold accent se >=4, text-secondary altrimenti)",
+      "hint": "servono almeno 4 presenti per generare la proposta"
+    },
+    "generate-cta": {
+      "state-disabled": "surface-elevated bg, text-placeholder, non cliccabile, <4 presenti",
+      "state-enabled": "accent bg, text-primary bold, full width, sticky bottom"
+    },
+    "round-card": {
+      "background": "surface",
+      "border": "1px solid border",
+      "border-radius": "lg",
+      "header": "Campo N, xs uppercase text-secondary",
+      "team-block": "riga con 2 avatar+nomi affiancati, colore team1/team2 come accento sottile a sinistra (barra 3px)",
+      "vs-divider": "VS centrale, bold, text-secondary",
+      "swap-hint": "tap su un giocatore poi su un altro per scambiarli tra le squadre (icona swap sottile su hover/tap)"
+    },
+    "resting-strip": {
+      "background": "surface-elevated",
+      "text": "Riposa: nomi, xs text-secondary",
+      "icon": "pittogramma panchina/pausa"
+    },
+    "confirm-round-btn": {
+      "background": "accent-dim bg, accent text, border accent",
+      "text": "Registra questa partita",
+      "action": "naviga a record-match precompilato (simulato: alert/log in questo mockup)"
+    },
+    "plan-config": {
+      "layout": "due controlli affiancati sotto la griglia membri: stepper 'Campi disponibili' (- N +) e selettore obiettivo partite",
+      "target-toggle": "due pillole 'Totale raduno' / 'A testa', quella attiva accent bg + testo bianco, l'altra surface-elevated + text-secondary",
+      "target-stepper": "stesso stile campi (- N +), label dinamica: 'partite totali' o 'partite a testa' secondo il toggle"
+    },
+    "round-tabs": {
+      "layout": "tab orizzontali scrollabili 'Turno 1' 'Turno 2' ... sopra il piano, tab attivo accent underline + testo bianco, altri text-secondary",
+      "purpose": "il piano multi-turno mostra un turno alla volta per non affollare lo schermo mobile"
+    }
+  },
+  "behavior_notes": {
+    "flow": "step 1: griglia membri con toggle presenza (tap chip) -> counter aggiornato. step 2: imposta campi disponibili (stepper) e obiettivo partite (toggle Totale/A testa + stepper valore) -> CTA abilitata da 4 presenti in su. step 3: tap CTA genera piano multi-turno (simulato via JS: turni = ceil in base a courts/target) -> tabs 'Turno N' selezionabili, ogni turno mostra fino a 'courts' round-card + resting-strip per quel turno",
+    "swap_interaction": "click su giocatore in un round lo seleziona (evidenziato), click su un secondo giocatore nello stesso round (stesso turno, stesso campo) li scambia tra le due squadre; swap cross-turno non permesso in questo mockup",
+    "guest_slot": "chip 'Aggiungi ospite' sempre visibile in fondo alla griglia membri, separata visivamente (bordo tratteggiato) — nel mockup apre un piccolo input inline nome ospite",
+    "empty_state": "se presenti < 4, sotto il counter appare hint 'Servono almeno 4 giocatori presenti per generare la proposta'",
+    "target_mode_conversion": "'A testa' viene convertito in numero di turni nel mockup con un semplice ceil(target*presenti / (courts*4)); la vera euristica di bilanciamento equo è nel piano tecnico, non in questo JS"
+  }
+}

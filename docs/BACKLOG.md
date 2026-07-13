@@ -6,7 +6,7 @@
 
 - Epic totali: 11
 - Storie totali: 74
-- Storie TODO: 14 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 2 | DONE: 58
+- Storie TODO: 4 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 58 | ABANDONED: 1
 
 ---
 
@@ -923,7 +923,8 @@ Dall'elenco partite del circolo, cliccando su una partita (in qualsiasi stato: `
 
 #### US-006: Notifica push di richiesta conferma
 
-**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** REVIEW
+**Epic:** EP-002 | **Priority:** MEDIUM | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-07-11):** Review umana OK.
 **Review note (2026-06-12):** Backend: `FcmToken` entity + migration `AddFcmTokens`, `PushNotificationService`/`IFcmSender` (FirebaseAdmin) in `src/Golp.Api/Services/`, `PushEndpoints.cs` (`POST/DELETE /api/push/token`, `GET /api/push/vapid-public-key`), push fire-and-forget in `MatchEndpoints.CreateMatch`. Frontend: PWA (`@angular/pwa` + ngsw), `@angular/fire`, `push/push-notification.service.ts`, hook in `AuthService` (login/register → register, logout → unregister), `public/firebase-messaging-sw.js` (deep-link tap → `/circles/{circleId}/matches/{matchId}`). Test: 82 BE + 9 FE nuovi + 6 e2e verdi (2 fail FE pre-esistenti fuori scope). Reviewer APPROVE (2 iterazioni). ⚠️ Push reale richiede setup Firebase Console: vedi `docs/firebase-setup.md` (config in `environment.ts`, `firebase-messaging-sw.js` e user-secrets). > **PROSSIMO PASSO:** revisione umana. Quando approvi: `/eq-approve US-006`.
 **Blocked by:** US-005
 
@@ -1158,7 +1159,8 @@ Aprendo "I miei circoli", per un circolo con `RatingMethod = GameBonus` la card 
 
 #### US-074: Persistenza della classifica su DB per evitare il ricalcolo ad ogni richiesta
 
-**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** TODO
+**Epic:** EP-003 | **Priority:** MEDIUM | **Story Points:** 5 | **Status:** ON_HOLD
+**Held (2026-07-11):** Query GameBonus già bound da `Take(windowMatches)` + filtro `CreatedAt >= cutoff`, non full-table scan; ELO già O(1) su `CircleMembership.Rating`. Premessa "degrada col numero di partite" non verificata. Aspettiamo dati reali (circolo grande, molte partite) prima di costruire persistenza classifica — evitare ottimizzazione prematura.
 **Blocked by:** US-073
 
 **Story**
@@ -1635,7 +1637,8 @@ Apro la dashboard e vedo una lista paginata delle mie partite con: nome circolo,
 
 #### US-045: Pulsante "Torna all'ultimo circolo" nella dashboard
 
-**Epic:** EP-004 | **Priority:** MEDIUM | **Story Points:** 2 | **Status:** TODO
+**Epic:** EP-004 | **Priority:** MEDIUM | **Story Points:** 2 | **Status:** ABANDONED
+**Abandoned (2026-07-11):** Non serve più.
 **Blocked by:** -
 
 **Story**
@@ -1773,44 +1776,49 @@ In un circolo con sport `AllowsSingles=true`, il form "registra partita" mostra 
 
 ## EP-007 — Campionato del Circolo
 
-_Il circolo come campionato vivo: GOLP propone gli accoppiamenti migliori in base a chi è fisicamente presente e alimenta una classifica stagionale a punti solo positivi. Risolve la demotivazione del giocatore attivo scavalcato da chi non gioca e trasforma l'app da registro a organizzatore di serate. (da discussione classifica 2026-07-06, docs/proposte-classifica.txt opzione 17)_
+_Il circolo come campionato vivo: GOLP propone gli accoppiamenti migliori in base a chi è fisicamente presente e alimenta una classifica stagionale a punti solo positivi. Risolve la demotivazione del giocatore attivo scavalcato da chi non gioca e trasforma l'app da registro a organizzatore di raduni. (da discussione classifica 2026-07-06, docs/proposte-classifica.txt opzione 17)_
 
-#### US-049: Serata al circolo — proposta accoppiamenti dai presenti e punti campionato
+#### US-049: Raduno al circolo — suggerimento accoppiamenti per i presenti
 
-**Epic:** EP-007 | **Priority:** MEDIUM | **Story Points:** 8 | **Status:** TODO
+**Epic:** EP-007 | **Priority:** MEDIUM | **Story Points:** 8 | **Status:** DONE
+**Approved (2026-07-12):** Review umana OK.
+**Review note (2026-07-12):** Codice in `src/Golp.Api/Services/MatchmakingService.cs`, `src/Golp.Api/Endpoints/CircleEndpoints.cs` (attendance + matchmaking-suggestion), `src/Golp.Api/Data/Entities/CircleAttendance.cs`, frontend `frontend/golp-app/src/app/circles/circle-gathering/`. Test in `src/Golp.Tests/Services/MatchmakingServiceTests.cs`, `src/Golp.Tests/Integration/CircleAttendance*Tests.cs`, `src/Golp.Tests/Integration/MatchmakingSuggestionEndpointTests.cs`, `frontend/golp-app/src/app/circles/circle-gathering/circle-gathering.component.spec.ts`, `frontend/golp-app/e2e/us-049-circle-gathering.spec.ts`. Reviewer APPROVE. Suite verde: 413 backend + 345 frontend + 2 e2e. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-049` (o aggiorna manualmente lo status a `DONE`).
+**Visual evidence (2026-07-12):** docs/test-results/US-049/report.md (6 AC pass / 2 AC non esercitati visivamente ma coperti da test automatici / 0 console errors rilevanti)
 **Blocked by:** US-008
 
 **Story**
-Come giocatore presente al circolo, voglio segnalare chi c'è in questo momento e ricevere dall'app la proposta di accoppiamenti migliore per la serata, così che le partite giocate facciano avanzare un campionato a punti che premia chi gioca davvero.
+Come giocatore presente al circolo, voglio segnalare chi c'è in questo momento e ricevere dall'app un suggerimento di accoppiamenti per il raduno — rispettando quanti campi ho a disposizione e quante partite voglio giocare — così da non doverli decidere a mente e sfruttare combinazioni più eque e varie rispetto al passato.
 
 **Demonstrates**
-Quattro o più membri risultano presenti in una "serata" del circolo. L'app propone gli accoppiamenti (coppie e sfida) privilegiando le combinazioni non ancora giocate in stagione e, a parità, l'equilibrio dei rating. La partita viene giocata e confermata col flusso esistente: oltre al delta ELO, i giocatori ricevono punti campionato solo positivi (es. 3 vittoria / 1 sconfitta). La classifica campionato del circolo mostra i punti accumulati; chi non gioca resta a zero e non può essere scavalcato "da fermo".
+Quattro o più membri risultano presenti in un "raduno" del circolo (mattina, pomeriggio o sera: nessun vincolo di fascia oraria). L'organizzatore imposta il numero di campi disponibili e un obiettivo di partite (totale per il raduno, oppure per singolo giocatore). L'app genera un piano di turni multipli che rispetta i campi disponibili per round e l'obiettivo impostato, privilegiando le combinazioni non ancora giocate di recente e, a parità, l'equilibrio del punteggio corrente tra le due squadre; distribuisce i riposi in modo equo tra i turni. Da qui in poi è un normale turno di gioco: ogni partita del piano si registra e si conferma esattamente come oggi (pending → confirmed, delta ELO o punti Game+Bonus secondo il `RatingMethod` già configurato sul circolo, classifiche esistenti invariate). **L'unico valore aggiunto della storia è il suggerimento del piano accoppiamenti/turni**: nessuna nuova entità partita, nessun nuovo calcolo punteggio, nessuna nuova classifica.
 
 **Acceptance Criteria**
 
-- [ ] Un membro può aprire la "serata" del circolo e selezionare i presenti dalla lista membri (check-in per conto di tutti, un tap per giocatore)
-- [ ] Con almeno 4 presenti, l'app propone accoppiamenti: criterio primario le combinazioni coppia/avversari meno giocate nella stagione corrente, tie-break l'equilibrio della somma rating tra le due squadre
-- [ ] Con presenti non multipli di 4, l'app indica chi riposa nel turno e lo prioritizza nel turno successivo della stessa serata
-- [ ] La proposta è modificabile prima di avviare la partita (suggerita, non vincolante)
-- [ ] La partita creata dalla proposta segue il ciclo esistente pending → confirmed (conferma 4/4 o forzatura) e alla conferma assegna sia delta ELO sia punti campionato
-- [ ] I punti campionato sono solo positivi (vittoria > sconfitta > 0) e non vengono mai sottratti; chi non gioca non accumula nulla
-- [ ] Il circolo ha una classifica campionato separata dalla classifica rating, ordinata per punti stagionali
-- [ ] Uno slot presente può essere un ospite (flusso ospite esistente): entra nel matchmaking con rating 1000
+- [ ] Un membro può aprire il "raduno" del circolo e selezionare i presenti dalla lista membri (check-in per conto di tutti, un tap per giocatore)
+- [ ] L'organizzatore imposta il numero di campi disponibili (intero ≥ 1), che limita quante partite possono essere proposte in parallelo per ogni turno
+- [ ] L'organizzatore imposta un obiettivo di partite, in una delle due modalità: (a) numero totale di partite da giocare nel raduno, oppure (b) numero di partite per singolo giocatore presente; l'app converte la modalità (b) nel numero di turni necessari dati i campi disponibili
+- [ ] Con almeno 4 presenti, l'app genera un piano multi-turno: per ogni turno propone accoppiamenti su tutti i campi disponibili, criterio primario le combinazioni coppia/avversari meno giocate (tenendo conto anche dei turni già proposti nello stesso piano), tie-break l'equilibrio del punteggio squadra secondo il `RatingMethod` del circolo (somma rating ELO se "Elo", somma punteggio Game+Bonus nella finestra corrente se "GameBonus")
+- [ ] Quando i presenti eccedono la capacità dei campi in un turno (troppi giocatori rispetto a campi×4) o non sono multipli di 4, l'app indica chi riposa in quel turno e ruota i riposi nei turni successivi per equità (chi ha riposato di più viene prioritizzato a giocare)
+- [ ] Il piano (ogni turno e ogni campo) è modificabile prima di avviare le partite (suggerito, non vincolante); l'utente può ignorarlo e registrare partite con qualsiasi accoppiamento, come oggi
+- [ ] Accettando una partita proposta, si apre la schermata di registrazione partita esistente precompilata con i 4 giocatori proposti — nessun nuovo endpoint di creazione partita, nessun nuovo stato o ciclo di conferma
+- [ ] Uno slot presente può essere un ospite (flusso ospite esistente), incluso nel matchmaking con lo stesso punteggio iniziale che avrebbe registrando la partita manualmente oggi
 
 **Out of scope**
 
-- Calendario e giornate fisse di campionato (il campionato avanza solo per serate opportunistiche)
-- Chiusura stagione, premi di fine stagione, reset automatico dei punti (storia futura)
+- Qualsiasi campionato, classifica o sistema di punti nuovo/parallelo: si usano solo rating ELO e Game+Bonus già esistenti, senza modifiche
+- Calendario e giornate fisse di raduni (la funzione è on-demand, non pianificata)
 - Check-in automatico via geolocalizzazione o QR code
-- Gestione multi-campo (assegnazione a campi specifici)
-- Notifiche push "si sta formando una serata al circolo"
+- Assegnazione di un campo fisico specifico (es. "campo 3 vicino all'ingresso") — i campi sono conteggiati come slot generici, non identificati singolarmente
+- Notifiche push "si sta formando un raduno al circolo"
+- Tracking di orari/durata effettiva delle partite per pianificare gli slot campo nel tempo (il piano è per turni logici, non per fasce orarie)
 
 **Open questions**
 
 - Check-in: solo una persona spunta i presenti (organizzatore di fatto) o ognuno può fare check-in da sé? Nel dubbio l'AC 1 assume il primo modello (più semplice)
-- I punti campionato valgono solo per partite proposte dall'app o per tutte le partite confermate nella stagione (eventualmente con bonus per quelle proposte)?
-- Valori punti: 3/1 fissi, o bonus per sconfitta combattuta (es. 2 punti se il margine è sotto soglia)?
-- Durata stagione: allineata al "giocatore dell'anno" (anno solare) o configurabile per circolo?
+- "Combinazioni meno giocate di recente": su quale finestra si calcola (tutte le partite storiche vs ultime N/finestra Game+Bonus del circolo)?
+- Obiettivo "partite per singolo giocatore": se il numero di presenti cambia a metà raduno (qualcuno arriva/se ne va), il piano si ricalcola automaticamente o resta fisso sul numero di presenti al momento della generazione?
+- Se l'obiettivo di partite non è raggiungibile in modo equo con i campi disponibili (es. troppi pochi campi per il target), l'app deve segnalarlo prima di generare il piano o è sufficiente mostrare il piano parziale ottenuto?
+- Con più di 4 presenti, la proposta genera un unico turno (un campo) o più turni/campi in parallelo?
 
 ---
 

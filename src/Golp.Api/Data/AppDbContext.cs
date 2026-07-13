@@ -21,6 +21,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ImpersonationAuditLog> ImpersonationAuditLogs => Set<ImpersonationAuditLog>();
     public DbSet<MatchDeletionAuditLog> MatchDeletionAuditLogs => Set<MatchDeletionAuditLog>();
     public DbSet<MatchResultEditAuditLog> MatchResultEditAuditLogs => Set<MatchResultEditAuditLog>();
+    public DbSet<CircleAttendance> CircleAttendances => Set<CircleAttendance>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -195,6 +196,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
              .WithMany()
              .HasForeignKey(t => t.UserId)
              .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<CircleAttendance>(e =>
+        {
+            e.HasKey(a => a.Id);
+            e.HasIndex(a => new { a.CircleId, a.UserId }).IsUnique();
+            e.HasOne(a => a.Circle)
+             .WithMany()
+             .HasForeignKey(a => a.CircleId)
+             .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(a => a.User)
+             .WithMany()
+             .HasForeignKey(a => a.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Sport>(e =>

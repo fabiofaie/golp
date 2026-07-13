@@ -23,6 +23,8 @@ public static class CircleEndpoints
         circles.MapGet("/{id:guid}/leaderboard", GetCircleLeaderboardAsync);
         circles.MapGet("/{id:guid}/invite-link", GetInviteLinkAsync);
         circles.MapPut("/{id:guid}/rating-config", UpdateRatingConfigAsync);
+        circles.MapPost("/{id:guid}/attendance", SetAttendanceAsync);
+        circles.MapPost("/{id:guid}/matchmaking-suggestion", GetMatchmakingSuggestionAsync);
 
         return app;
     }
@@ -452,8 +454,102 @@ public static class CircleEndpoints
             gameBonusWindowWeeks   = circle.GameBonusWindowWeeks,
         });
     }
+
+    // TTL del check-in presenza per il raduno (US-049): oltre questa finestra un check-in
+    // non è più considerato "presente ora". Nessuna entità "raduno" persistita — v. piano tecnico.
+    private static readonly TimeSpan AttendanceTtl = TimeSpan.FromHours(6);
+
+    // POST /circles/{id}/attendance — check-in/check-out per il raduno. Self sempre permesso;
+    // per conto di un altro membro solo se il richiedente è owner del circolo.
+    private static async Task<IResult> SetAttendanceAsync(
+        Guid id,
+        SetAttendanceRequest req,
+        ClaimsPrincipal user,
+        AppDbContext db)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
+            return Results.Unauthorized();
+
+        var circle = await db.Circles.FindAsync(id);
+        if (circle == null)
+            return Results.NotFound(new { error = "Circolo non trovato" });
+
+        var targetUserId = req.UserId ?? userId;
+        if (targetUserId != userId && circle.OwnerId != userId)
+            return Results.Json(new { error = "Solo il proprietario del circolo può segnare la presenza di un altro membro" }, statusCode: 403);
+
+        var isMember = await db.CircleMemberships.AnyAsync(m => m.CircleId == id && m.UserId == targetUserId);
+        if (!isMember)
+            return Results.BadRequest(new { error = "L'utente non è membro di questo circolo" });
+
+        var existing = await db.CircleAttendances.FirstOrDefaultAsync(a => a.CircleId == id && a.UserId == targetUserId);
+
+        if (req.Present)
+        {
+            if (existing == null)
+                db.CircleAttendances.Add(new CircleAttendance { CircleId = id, UserId = targetUserId });
+            else
+                existing.CreatedAt = DateTimeOffset.UtcNow;
+        }
+        else if (existing != null)
+        {
+            db.CircleAttendances.Remove(existing);
+        }
+
+        await db.SaveChangesAsync();
+        return Results.Ok(new { userId = targetUserId, present = req.Present });
+    }
+
+    // POST /circles/{id}/matchmaking-suggestion — piano multi-turno di accoppiamenti per i presenti
+    // correnti (US-049). Stateless: nessuna proposta persistita, ricalcolata ad ogni chiamata.
+    private static async Task<IResult> GetMatchmakingSuggestionAsync(
+        Guid id,
+        MatchmakingSuggestionRequest req,
+        ClaimsPrincipal user,
+        AppDbContext db,
+        IMatchmakingService matchmakingService)
+    {
+        var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userIdStr == null || !Guid.TryParse(userIdStr, out _))
+            return Results.Unauthorized();
+
+        var circleExists = await db.Circles.AnyAsync(c => c.Id == id);
+        if (!circleExists)
+            return Results.NotFound(new { error = "Circolo non trovato" });
+
+        if (req.Courts < 1)
+            return Results.BadRequest(new { error = "courts deve essere >= 1" });
+        if (req.TargetValue < 1)
+            return Results.BadRequest(new { error = "targetValue deve essere >= 1" });
+        if (req.TargetMode is not ("Total" or "PerPlayer"))
+            return Results.BadRequest(new { error = "targetMode deve essere 'Total' o 'PerPlayer'" });
+
+        var cutoff = DateTimeOffset.UtcNow - AttendanceTtl;
+        var presentUserIds = await db.CircleAttendances
+            .Where(a => a.CircleId == id && a.CreatedAt >= cutoff)
+            .Select(a => a.UserId)
+            .ToListAsync();
+
+        if (presentUserIds.Count < 4)
+            return Results.BadRequest(new { error = "Servono almeno 4 presenti per generare una proposta" });
+
+        var plan = await matchmakingService.BuildPlanAsync(id, presentUserIds, req.Courts, req.TargetMode, req.TargetValue, db);
+
+        return Results.Ok(new
+        {
+            rounds = plan.Rounds.Select(r => new
+            {
+                index = r.Index,
+                matches = r.Matches.Select(m => new { team1 = m.Team1, team2 = m.Team2 }),
+                resting = r.Resting,
+            }),
+        });
+    }
 }
 
 record CreateCircleRequest(string Name, string Sport);
 record JoinByTokenRequest(string InviteToken);
 record UpdateRatingConfigRequest(string RatingMethod, int? GameBonusWindowMatches, int? GameBonusWindowWeeks);
+record SetAttendanceRequest(bool Present, Guid? UserId);
+record MatchmakingSuggestionRequest(int Courts, string TargetMode, int TargetValue);
