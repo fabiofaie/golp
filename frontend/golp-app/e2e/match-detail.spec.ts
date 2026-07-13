@@ -78,14 +78,18 @@ test.describe('MatchDetail — US-037', () => {
 
     await login(page, t1);
     await page.goto(`/circles/${circleId}/matches`);
-    await page.click('.match-date');
+    // Il click che apre il dettaglio è sul link "Dettagli", non sulla data (non cliccabile).
+    await page.click('.btn-detail');
 
     await expect(page).toHaveURL(new RegExp(`/circles/${circleId}/matches/${matchId}/detail`));
     await expect(page.locator('.status-badge--confirmed')).toBeVisible();
     await expect(page.locator('.score-hero')).toContainText('6-4');
     await expect(page.locator('.decision-strip')).toBeVisible();
     await expect(page.locator('.decision-title')).toContainText('Confermata da Giorgio');
-    await expect(page.locator('.player-delta-row')).toHaveCount(4);
+    // .player-delta-row appare sia nella sezione "Conferme" (1 per giocatore) sia in "Variazione rating"
+    // (1 per giocatore, solo se confermata): 4 + 4 = 8 righe totali.
+    await expect(page.locator('.player-delta-row')).toHaveCount(8);
+    await expect(page.locator('.section-heading', { hasText: 'Variazione rating' })).toBeVisible();
   });
 
   test('partita pending: il dettaglio non mostra delta né dati di conferma', async ({ page }) => {
@@ -111,7 +115,10 @@ test.describe('MatchDetail — US-037', () => {
 
     await expect(page.locator('.status-badge--pending')).toBeVisible();
     await expect(page.locator('.status-strip--pending')).toBeVisible();
-    await expect(page.locator('.player-delta-row')).toHaveCount(0);
+    // La sezione "Conferme" mostra sempre una riga per giocatore (4), a prescindere dallo status;
+    // solo la sezione "Variazione rating" (delta) è assente finché la partita non è confermata.
+    await expect(page.locator('.player-delta-row')).toHaveCount(4);
+    await expect(page.locator('.section-heading', { hasText: 'Variazione rating' })).toHaveCount(0);
     await expect(page.locator('.decision-strip')).toHaveCount(0);
   });
 

@@ -15,28 +15,12 @@ export interface PlayerSlotDto {
   guestPhone?: string;
 }
 
-export interface CreateMatchRequest {
-  team1: PlayerSlotDto[];
-  team2: PlayerSlotDto[];
-  sets: SetScore[];
-  isSingles?: boolean;
-}
-
 export interface ConfirmationLink {
   userId: string;
   name: string;
   phone: string | null;
   isActivated: boolean;
   tokenUrl: string;
-}
-
-export interface MatchCreated {
-  id: string;
-  circleId: string;
-  status: string;
-  winnerTeam: number;
-  createdAt: string;
-  confirmationLinks: ConfirmationLink[];
 }
 
 export interface PlayerInfo {
@@ -203,10 +187,6 @@ export interface PublicConfirmDisputeResponse {
 export class MatchService {
   private readonly http = inject(HttpClient);
   private readonly base = environment.apiUrl;
-
-  createMatch(circleId: string, body: CreateMatchRequest): Observable<MatchCreated> {
-    return this.http.post<MatchCreated>(`${this.base}/circles/${circleId}/matches`, body);
-  }
 
   getMatches(circleId: string): Observable<MatchSummary[]> {
     return this.http.get<MatchSummary[]>(`${this.base}/circles/${circleId}/matches`);

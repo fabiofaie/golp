@@ -74,10 +74,12 @@ test.describe('Raduno al circolo — US-049', () => {
     await expect(page.locator('.round-tab')).toHaveCount(1);
 
     await page.click('.confirm-round-btn');
-    await page.waitForURL(/\/match\/new\?.*team1p1=/, { timeout: 10000 });
+    // US-075: il raduno ora apre Quick Match con sport e giocatori precompilati.
+    await page.waitForURL(/\/match\/quick\?.*team1p1=/, { timeout: 10000 });
 
-    // la registrazione partita segue il flusso esistente, invariato: submit richiede solo il risultato
-    await expect(page.locator('h1, h2')).toContainText(/partita/i);
+    await expect(page.locator('text=Registra Partita')).toBeVisible();
+    // I 4 giocatori del turno sono già negli slot: lo step "Squadre" mostra gli slot pieni.
+    await expect(page.locator('.qm-slot.filled')).toHaveCount(4, { timeout: 5000 });
   });
 
   test('meno di 4 presenti — CTA disabilitata', async ({ page }) => {

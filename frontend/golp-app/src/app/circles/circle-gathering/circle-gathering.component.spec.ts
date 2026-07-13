@@ -161,7 +161,7 @@ describe('CircleGatheringComponent', () => {
     expect(match.team2).toContain('user-1');
   });
 
-  it('registerMatch navigates to record-match with the four player ids as query params', () => {
+  it('registerMatch navigates to quick match with circleId and the four player ids as query params', () => {
     const router = TestBed.inject(Router);
     spyOn(router, 'navigate');
     const fixture = TestBed.createComponent(CircleGatheringComponent);
@@ -170,8 +170,8 @@ describe('CircleGatheringComponent', () => {
     fixture.componentInstance.registerMatch({ team1: ['a', 'b'], team2: ['c', 'd'] });
 
     expect(router.navigate).toHaveBeenCalledWith(
-      ['/circles', CIRCLE_ID, 'match', 'new'],
-      { queryParams: { team1p1: 'a', team1p2: 'b', team2p1: 'c', team2p2: 'd' } },
+      ['/match/quick'],
+      { queryParams: { circleId: CIRCLE_ID, team1p1: 'a', team1p2: 'b', team2p1: 'c', team2p2: 'd' } },
     );
   });
 });

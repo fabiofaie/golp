@@ -1,12 +1,12 @@
 ﻿# Backlog — GOLP
 
-**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-07-11
+**Generato il:** 2026-06-11 | **Ultima modifica:** 2026-07-13
 
 ## Riepilogo
 
 - Epic totali: 11
-- Storie totali: 74
-- Storie TODO: 4 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 58 | ABANDONED: 1
+- Storie totali: 75
+- Storie TODO: 5 | PLANNED: 0 | IN_PROGRESS: 0 | REVIEW: 1 | DONE: 58 | ABANDONED: 1
 
 ---
 
@@ -2550,4 +2550,37 @@ Nello step 2 di "Registra Partita" (Doppio o Singolo), sotto il campo "Cerca gio
 
 ---
 
-> **PROSSIMO PASSO:** invoca `/eq-plan US-073` per pianificare il fix di coerenza classifica/metodo punteggio.
+#### US-075: Consolidamento registrazione partite sul flusso Quick Match
+
+**Epic:** EP-002 | **Priority:** HIGH | **Story Points:** 3 | **Status:** DONE
+**Approved (2026-07-13):** Review umana OK.
+**Review note (2026-07-13):** Codice in `frontend/golp-app/src/app/circles/quick-match/quick-match.component.ts` (prefill sport+giocatori da raduno), `app.routes.ts` (redirect funzione legacy→quick match), `my-circles`/`circle-match-history`/`circle-gathering` (retarget link), `match.service.ts` (rimozione `createMatch`/tipi orfani). Rimossi `RecordMatchComponent` + spec + e2e legacy (`record-match-guest.spec.ts`, `record-match-share.spec.ts`). Test: unit 340/340 verdi (+16 nuovi su prefill/race-condition), e2e mirati 11/11 verdi (quick-match, us-049-gathering, us-071); e2e completo 63/79 verdi con 16 fallimenti pre-esistenti non correlati (verificato isolando `auth.spec.ts`). Self-review ha trovato e corretto 2 bug: slot0 forzato su "me" invece di rispettare la posizione reale del prefill, e race condition `/auth/me` vs caricamento sport che poteva sovrascrivere il prefill. > **PROSSIMO PASSO:** revisione umana. Quando approvi, lancia `/eq-approve US-075` (o aggiorna manualmente lo status a `DONE`).
+**Blocked by:** -
+**Source:** AN-003
+
+**Story**
+Come giocatore, voglio un unico flusso per registrare una partita ovunque io parta (dashboard, card circolo, storico circolo), così che non debba capire quale dei due percorsi usare né incontrare due UI diverse per lo stesso compito.
+
+**Demonstrates**
+Cliccando "Registra partita" dalla card di un circolo in "I miei circoli" o dallo storico partite del circolo, si apre il flusso Quick Match (stepper sport → giocatori → punteggio) con il circolo di provenienza già preselezionato. Il vecchio form `record-match` non è più raggiungibile: navigare direttamente su `/circles/:id/match/new` porta a Quick Match con lo stesso circolo. L'esperienza di registrazione è identica da qualsiasi punto d'ingresso.
+
+**Acceptance Criteria**
+- [ ] I link "Registra partita" in `my-circles` e `circle-match-history` (incluso empty state) puntano a `/match/quick?circleId=<id>`
+- [ ] La route `/circles/:circleId/match/new` redirige a `/match/quick?circleId=:circleId` (periodo ponte: nessun link rotto, bookmark inclusi)
+- [ ] Arrivando con `?circleId=`, Quick Match preseleziona quel circolo quando compatibile con i giocatori scelti; se i giocatori scelti non sono compatibili col circolo di provenienza, l'utente vede la scelta circolo standard (nessuna registrazione silenziosa in un circolo diverso)
+- [ ] `RecordMatchComponent`, i suoi spec e gli e2e dedicati sono rimossi (o marcati deprecati se si decide un periodo ponte più lungo — vedi Open questions)
+- [ ] Nessuna regressione sul flusso Quick Match esistente da dashboard (suite unit + e2e verde)
+- [ ] `POST /circles/{circleId}/matches` (creazione classica) rimane funzionante finché il redirect è attivo; la sua eventuale rimozione è tracciata come decisione esplicita
+
+**Out of scope**
+- Modifiche funzionali al flusso Quick Match (nuovi step, nuove feature)
+- Rimozione degli endpoint backend classici di conferma/dispute/storico (usati da altri flussi)
+- Ridisegno grafico dello stepper
+
+**Open questions**
+- Con `?circleId=`: circolo bloccato (non modificabile) o solo preselezionato con possibilità di cambiare? (decisione UX in `/eq-plan`)
+- Durata del periodo ponte prima di eliminare componente + endpoint classico di creazione (proposta: 1 release)
+
+---
+
+> **PROSSIMO PASSO:** invoca `/eq-plan US-075` per pianificare il consolidamento della registrazione partite (vedi AN-003).

@@ -164,8 +164,9 @@ export class CircleGatheringComponent implements OnInit {
   }
 
   registerMatch(match: PlannedMatchDto): void {
-    this.router.navigate(['/circles', this.circleId, 'match', 'new'], {
+    this.router.navigate(['/match/quick'], {
       queryParams: {
+        circleId: this.circleId,
         team1p1: match.team1[0],
         team1p2: match.team1[1],
         team2p1: match.team2[0],

@@ -63,7 +63,7 @@ test.describe('US-044 — dashboard match history', () => {
     await loginAs(page, email);
     await page.goto('/my-matches');
 
-    await expect(page.getByText('Nessuna partita ancora')).toBeVisible();
+    await expect(page.getByText('Nessuna partita.')).toBeVisible();
   });
 
   test('Scenario 2: utente con partite vede lista con score e badge stato', async ({ page }) => {
@@ -84,11 +84,11 @@ test.describe('US-044 — dashboard match history', () => {
     await loginAs(page, email);
     await page.goto('/my-matches');
 
-    await expect(page.locator('.match-row').first()).toBeVisible();
-    // Score presente (6–4)
-    await expect(page.getByText('6–4')).toBeVisible();
-    // Status badge presente
-    await expect(page.locator('.status-pip').first()).toBeVisible();
+    await expect(page.locator('.match-card').first()).toBeVisible();
+    // Nomi giocatori presenti (nessuno score dettagliato in questa vista)
+    await expect(page.getByText('OwnerUser')).toBeVisible();
+    // Status badge presente (partita pending, mai confermata)
+    await expect(page.locator('.status-badge').first()).toBeVisible();
   });
 
   test('Scenario 3: toggle "In attesa" mostra solo partite pending', async ({ page }) => {
@@ -114,10 +114,10 @@ test.describe('US-044 — dashboard match history', () => {
     await page.getByRole('button', { name: 'In attesa' }).click();
 
     // Almeno una riga visibile con status pending
-    await expect(page.locator('.status-pip.status-pending').first()).toBeVisible();
+    await expect(page.locator('.status-badge.status-badge--pending').first()).toBeVisible();
 
-    // Nessun badge "Confermata"
-    await expect(page.locator('.status-pip.status-confirmed')).toHaveCount(0);
+    // Nessuna card confermata (il badge "confermata" non esiste per status=confirmed nel template)
+    await expect(page.locator('.match-card--confirmed')).toHaveCount(0);
   });
 
 });

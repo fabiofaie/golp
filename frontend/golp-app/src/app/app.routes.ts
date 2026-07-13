@@ -1,4 +1,5 @@
-import { Routes } from '@angular/router';
+import { Routes, UrlTree, Router } from '@angular/router';
+import { inject } from '@angular/core';
 import { authGuard } from './auth/auth.guard';
 import { superAdminGuard } from './auth/super-admin.guard';
 import { AppShellComponent } from './shell/app-shell.component';
@@ -51,9 +52,16 @@ export const routes: Routes = [
         canActivate: [authGuard]
       },
       {
+        // US-075: flusso legacy consolidato su /match/quick — redirect che conserva
+        // circleId (dal path) e gli eventuali query param di prefill (raduno, US-049).
         path: 'circles/:circleId/match/new',
-        loadComponent: () => import('./circles/record-match/record-match.component').then(m => m.RecordMatchComponent),
-        canActivate: [authGuard]
+        redirectTo: (route): UrlTree => {
+          const router = inject(Router);
+          const circleId = route.params['circleId'];
+          return router.createUrlTree(['/match/quick'], {
+            queryParams: { circleId, ...route.queryParams },
+          });
+        }
       },
       {
         path: 'circles/:circleId/leaderboard',

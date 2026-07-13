@@ -3,7 +3,7 @@ import { HttpClient } from "@angular/common/http";
 import { Component, OnDestroy, OnInit, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from "rxjs";
+import { Subject, debounceTime, distinctUntilChanged, forkJoin, takeUntil } from "rxjs";
 
 import { environment } from "../../../environments/environment";
 import { AuthService } from "../../auth/auth.service";
@@ -923,6 +923,7 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
         next: (me) => {
           this.currentUserName = me.name;
           this.slots[0] = { filled: true, userId: me.id, displayName: me.name, isMe: true, isGuest: false };
+          this.applyGatheringPrefillIfPresent();
         }
       });
 
@@ -931,13 +932,63 @@ export class QuickMatchComponent implements OnInit, OnDestroy {
       .getSports()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (sports) => (this.sports = sports)
+        next: (sports) => {
+          this.sports = sports;
+          this.applyGatheringPrefillIfPresent();
+        }
       });
 
     // Search debounce
     this.search$
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((q) => this.loadSuggestions(q));
+  }
+
+  // US-075: pre-fill sport + giocatori quando si arriva dal piano accoppiamenti del raduno
+  // (circle-gathering) via /match/quick?circleId=...&team1p1=...&team2p2=.... Attende sia i
+  // dati utente (/auth/me) sia gli sport, quindi viene richiamata da entrambi i subscribe.
+  private gatheringPrefillApplied = false;
+  private applyGatheringPrefillIfPresent(): void {
+    if (this.gatheringPrefillApplied) return;
+    if (this.sports.length === 0 || !this.currentUserId || !this.currentUserName) return;
+
+    const qp = this.route.snapshot.queryParamMap;
+    const circleId = qp.get("circleId");
+    const prefillIds = [qp.get("team1p1"), qp.get("team1p2"), qp.get("team2p1"), qp.get("team2p2")];
+    if (!circleId || prefillIds.every(v => !v)) return;
+
+    this.gatheringPrefillApplied = true;
+
+    forkJoin({
+      circles: this.circleSvc.getMyCircles(),
+      members: this.circleSvc.getMembers(circleId),
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ({ circles, members }) => {
+          const circle = circles.find(c => c.id === circleId);
+          if (!circle) return;
+          const sport = this.sports.find(s => s.sport === circle.sport);
+          if (!sport) return;
+
+          this.selectedSport = sport;
+          this.isSingles = false;
+
+          this.slots = prefillIds.map((userId): QuickSlot => {
+            if (!userId) return { filled: false, displayName: "", isMe: false, isGuest: false };
+            if (userId === this.currentUserId) {
+              return { filled: true, userId, displayName: this.currentUserName, isMe: true, isGuest: false };
+            }
+            const member = members.find(m => m.userId === userId);
+            if (!member) return { filled: false, displayName: "", isMe: false, isGuest: false };
+            return { filled: true, userId: member.userId, displayName: member.name, isMe: false, isGuest: false };
+          });
+
+          this.step = "players";
+          this.runCheck();
+        },
+        error: () => { /* circolo non trovato o non membro: si resta nel flusso standard */ }
+      });
   }
 
   ngOnDestroy(): void {

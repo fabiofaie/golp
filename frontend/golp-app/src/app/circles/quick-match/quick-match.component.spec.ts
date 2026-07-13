@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { QuickMatchComponent } from './quick-match.component';
 import { AuthService } from '../../auth/auth.service';
 import { CircleService } from '../circle.service';
@@ -189,5 +189,119 @@ describe('QuickMatchComponent — US-071 slot0 unlock', () => {
       expect(component.checkResult?.circles.length).toBe(2);
       done();
     }, 0);
+  });
+});
+
+describe('QuickMatchComponent — US-075 gathering prefill', () => {
+  let httpMock: HttpTestingController;
+
+  function setup(queryParams: Record<string, string>) {
+    const authSvc = jasmine.createSpyObj('AuthService', ['getCurrentUserId']);
+    authSvc.getCurrentUserId.and.returnValue('me-id');
+    const circleSvc = jasmine.createSpyObj('CircleService', ['getSports', 'getMyCircles', 'getMembers']);
+    const matchSvc = jasmine.createSpyObj('MatchService', ['getSuggestions', 'checkQuickMatch']);
+    matchSvc.checkQuickMatch.and.returnValue(of({ mode: 'exact', circles: [] }));
+
+    circleSvc.getSports.and.returnValue(of([
+      { sport: 'padel', displayName: 'Padel', pointUnit: 'game', sets: true, teamSize: 2, allowsSingles: false },
+    ]));
+    circleSvc.getMyCircles.and.returnValue(of([
+      { id: 'c1', name: 'Circolo Test', sport: 'padel', sets: true, pointUnit: 'game', ownerId: 'owner-id', memberCount: 4, myRating: 1000, myRank: 1 },
+    ]));
+    circleSvc.getMembers.and.returnValue(of([
+      { userId: 'p2', name: 'Luigi', rating: 1000, rank: 2 },
+      { userId: 'p3', name: 'Peach', rating: 1000, rank: 3 },
+      { userId: 'p4', name: 'Toad', rating: 1000, rank: 4 },
+    ]));
+
+    TestBed.configureTestingModule({
+      imports: [QuickMatchComponent],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        { provide: AuthService, useValue: authSvc },
+        { provide: CircleService, useValue: circleSvc },
+        { provide: MatchService, useValue: matchSvc },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } },
+        },
+      ],
+    }).compileComponents();
+
+    httpMock = TestBed.inject(HttpTestingController);
+    const fixture = TestBed.createComponent(QuickMatchComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+    return { component, fixture };
+  }
+
+  afterEach(() => {
+    httpMock?.verify();
+  });
+
+  it('preselects sport and fills slots when full prefill + circleId are present', () => {
+    const { component } = setup({
+      circleId: 'c1',
+      team1p1: 'me-id',
+      team1p2: 'p2',
+      team2p1: 'p3',
+      team2p2: 'p4',
+    });
+
+    const meReq = httpMock.expectOne(req => req.url.endsWith('/auth/me'));
+    meReq.flush({ id: 'me-id', name: 'Io Stesso', email: 'me@test.it' });
+
+    expect(component.selectedSport?.sport).toBe('padel');
+    expect(component.step).toBe('players');
+    expect(component.slots[0]).toEqual(jasmine.objectContaining({ filled: true, userId: 'me-id', isMe: true }));
+    expect(component.slots[1]).toEqual(jasmine.objectContaining({ filled: true, userId: 'p2', displayName: 'Luigi' }));
+    expect(component.slots[2]).toEqual(jasmine.objectContaining({ filled: true, userId: 'p3', displayName: 'Peach' }));
+    expect(component.slots[3]).toEqual(jasmine.objectContaining({ filled: true, userId: 'p4', displayName: 'Toad' }));
+  });
+
+  it('places the current user in the slot indicated by the prefill, not always slot 0', () => {
+    const { component } = setup({
+      circleId: 'c1',
+      team1p1: 'p2',
+      team1p2: 'p3',
+      team2p1: 'me-id',
+      team2p2: 'p4',
+    });
+
+    const meReq = httpMock.expectOne(req => req.url.endsWith('/auth/me'));
+    meReq.flush({ id: 'me-id', name: 'Io Stesso', email: 'me@test.it' });
+
+    expect(component.slots[0]).toEqual(jasmine.objectContaining({ filled: true, userId: 'p2', displayName: 'Luigi', isMe: false }));
+    expect(component.slots[1]).toEqual(jasmine.objectContaining({ filled: true, userId: 'p3', displayName: 'Peach', isMe: false }));
+    expect(component.slots[2]).toEqual(jasmine.objectContaining({ filled: true, userId: 'me-id', isMe: true }));
+    expect(component.slots[3]).toEqual(jasmine.objectContaining({ filled: true, userId: 'p4', displayName: 'Toad', isMe: false }));
+  });
+
+  it('leaves the standard flow untouched when no prefill query params are present', () => {
+    const { component } = setup({});
+
+    const meReq = httpMock.expectOne(req => req.url.endsWith('/auth/me'));
+    meReq.flush({ id: 'me-id', name: 'Io Stesso', email: 'me@test.it' });
+
+    expect(component.selectedSport).toBeNull();
+    expect(component.step).toBe('sport');
+  });
+
+  it('leaves an unresolved member slot empty instead of failing', () => {
+    const { component } = setup({
+      circleId: 'c1',
+      team1p1: 'me-id',
+      team1p2: 'unknown-user',
+      team2p1: 'p3',
+      team2p2: 'p4',
+    });
+
+    const meReq = httpMock.expectOne(req => req.url.endsWith('/auth/me'));
+    meReq.flush({ id: 'me-id', name: 'Io Stesso', email: 'me@test.it' });
+
+    expect(component.slots[1].filled).toBeFalse();
+    expect(component.slots[2]).toEqual(jasmine.objectContaining({ filled: true, userId: 'p3' }));
   });
 });

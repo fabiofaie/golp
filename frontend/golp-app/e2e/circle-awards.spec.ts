@@ -59,7 +59,7 @@ test.describe('CircleAwards — US-010', () => {
     await registerUser(email, 'Tester Link');
 
     await loginInBrowser(page, email);
-    await page.goto('http://localhost:4200/circles/me');
+    await page.goto('http://localhost:4200/circles');
 
     // Create a circle first so the card appears
     const ctx = await playwrightRequest.newContext();

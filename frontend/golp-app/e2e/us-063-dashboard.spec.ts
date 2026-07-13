@@ -82,9 +82,10 @@ test.describe('US-063 — Redesign dashboard', () => {
     await confirmMatch(p3.token, circleA, wonMatchId);
     await confirmMatch(p4.token, circleA, wonMatchId);
 
-    // Partita lasciata pending (nessuna conferma extra) → azione urgente per owner
+    // Partita pending creata da p3 (non da owner): l'inseritore riceve conferma implicita,
+    // quindi va creata da un altro giocatore perché resti "urgente" per owner (deve ancora confermare).
     await createMatch(
-      owner.token, circleA,
+      p3.token, circleA,
       [owner.id, p3.id], [p2.id, p4.id],
       [{ team1: 6, team2: 4 }, { team1: 6, team2: 2 }],
     );

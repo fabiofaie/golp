@@ -18,7 +18,7 @@ test.describe('Auth smoke tests', () => {
 
     // After register → dashboard
     await expect(page).toHaveURL(/dashboard/);
-    await expect(page.locator('h1')).toContainText('Dashboard');
+    await expect(page.locator('h1')).toContainText('Ciao!');
 
     // Logout
     await page.click('button:has-text("Esci")');

@@ -23,7 +23,7 @@
       <div class="empty-icon" aria-hidden="true">✓</div>
       <p class="empty-title">Nessuna partita.</p>
       <p class="empty-subtitle">Non sono ancora state registrate partite in questo circolo.</p>
-      <a [routerLink]="'/circles/' + circleId + '/match/new'" class="btn-primary" style="margin-top:24px;">+ Registra partita</a>
+      <a [routerLink]="'/match/quick'" [queryParams]="{ circleId: circleId }" class="btn-primary" style="margin-top:24px;">+ Registra partita</a>
     </div>
   } @else {
     @if (actionError) {
@@ -158,7 +158,7 @@
     </div>
 
     <div style="margin-top:24px;">
-      <a [routerLink]="'/circles/' + circleId + '/match/new'" class="btn-primary">+ Registra partita</a>
+      <a [routerLink]="'/match/quick'" [queryParams]="{ circleId: circleId }" class="btn-primary">+ Registra partita</a>
     </div>
   }
 </div>

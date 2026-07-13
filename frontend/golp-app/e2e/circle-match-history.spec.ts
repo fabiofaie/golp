@@ -101,6 +101,7 @@ test.describe('CircleMatchHistory — US-009', () => {
     await page.fill('#email', t1);
     await page.fill('#password', 'testpass123');
     await page.click('button[type="submit"]');
+    await expect(page).toHaveURL(/dashboard/);
 
     await page.goto(`/circles/${circleId}/matches`);
     const badge = page.locator('.delta-badge').first();
@@ -193,6 +194,7 @@ test.describe('CircleMatchHistory — US-036 force-confirm warning', () => {
     await page.fill('#email', t1);
     await page.fill('#password', 'testpass123');
     await page.click('button[type="submit"]');
+    await expect(page).toHaveURL(/dashboard/);
 
     await page.goto(`/circles/${circleId}/matches`);
     await page.click('.btn-force-confirm');
@@ -226,6 +228,7 @@ test.describe('CircleMatchHistory — US-036 force-confirm warning', () => {
     await page.fill('#email', t1);
     await page.fill('#password', 'testpass123');
     await page.click('button[type="submit"]');
+    await expect(page).toHaveURL(/dashboard/);
 
     await page.goto(`/circles/${circleId}/matches`);
     await page.click('.btn-force-confirm');
@@ -296,8 +299,14 @@ test.describe('CircleMatchHistory — US-005', () => {
 
     await page.goto(`/circles/${circleId}/matches`);
     await page.click('.btn-confirm');
-    await expect(page.locator('.btn-confirm')).not.toBeVisible();
-    await expect(page.locator('text=Hai già confermato')).toBeVisible();
+    // "Conferma" naviga alla pagina dedicata (flusso a due step): serve un click esplicito.
+    await expect(page.locator('.btn-confirm-hero')).toBeVisible();
+    await page.click('.btn-confirm-hero');
+    await expect(page.locator('text=Conferma registrata')).toBeVisible();
+
+    // Ricaricando la pagina di conferma, essendo già confermata da t2, mostra la nota persistente.
+    await page.reload();
+    await expect(page.locator('text=Hai già confermato questa partita')).toBeVisible();
   });
 
   test('clicking Contesta marks match as Contestata', async ({ page }) => {
@@ -322,6 +331,7 @@ test.describe('CircleMatchHistory — US-005', () => {
     await page.fill('#email', t2);
     await page.fill('#password', 'testpass123');
     await page.click('button[type="submit"]');
+    await expect(page).toHaveURL(/dashboard/);
 
     await page.goto(`/circles/${circleId}/matches`);
     await page.click('.btn-dispute');
@@ -354,9 +364,11 @@ test.describe('CircleMatchHistory — US-005', () => {
     await page.fill('#email', t1);
     await page.fill('#password', 'testpass123');
     await page.click('button[type="submit"]');
+    await expect(page).toHaveURL(/dashboard/);
 
     await page.goto(`/circles/${circleId}/matches`);
-    await expect(page.locator('text=Confermata')).toBeVisible();
+    // Confermata: nessun status-badge (mostrato solo per pending/disputed), la card ha la classe --confirmed.
+    await expect(page.locator('.match-card--confirmed')).toBeVisible();
     await expect(page.locator('.btn-confirm')).not.toBeVisible();
   });
 });
